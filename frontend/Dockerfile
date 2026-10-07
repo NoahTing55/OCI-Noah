@@ -3,6 +3,7 @@ FROM nginx:alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY index.html /usr/share/nginx/html/index.html
 COPY styles.css /usr/share/nginx/html/styles.css
+COPY ui-rbot.css /usr/share/nginx/html/ui-rbot.css
 COPY app.js /usr/share/nginx/html/app.js
 COPY rc.js /usr/share/nginx/html/rc.js
 COPY ui2.js /usr/share/nginx/html/ui2.js
@@ -12,6 +13,7 @@ RUN chmod 644 \
       /etc/nginx/conf.d/default.conf \
       /usr/share/nginx/html/index.html \
       /usr/share/nginx/html/styles.css \
+      /usr/share/nginx/html/ui-rbot.css \
       /usr/share/nginx/html/app.js \
       /usr/share/nginx/html/rc.js \
       /usr/share/nginx/html/ui2.js \
