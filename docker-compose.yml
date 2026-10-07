@@ -1,0 +1,128 @@
+services:
+  api:
+    build:
+      context: ./backend
+      network: host
+    image: oci-nt-api:v2.0.0
+    container_name: oci-nt-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_NAME: "OCI-N&T"
+      DATA_DIR: "/app/data"
+      DB_PATH: "/app/data/oci-nt.db"
+      BACKUP_DIR: "/app/data/backups"
+      TZ: "Asia/Taipei"
+      HOST_PROC_PATH: "/host/proc"
+      HOST_SYS_PATH: "/host/sys"
+      HOST_ETC_PATH: "/host/etc"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/hostname:/host/etc/hostname:ro
+    # Host networking avoids creating a veth pair on low-memory hosts.
+    # Uvicorn binds only to loopback, so the API remains private.
+    network_mode: host
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 127.0.0.1
+      - --port
+      - "9858"
+      - --proxy-headers
+      - --forwarded-allow-ips=*
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9858/api/v1/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  docker-guard:
+    image: oci-nt-api:v2.0.0
+    container_name: oci-nt-docker-guard
+    restart: unless-stopped
+    user: "10001:10001"
+    group_add:
+      - "${DOCKER_GID:-0}"
+    environment:
+      DOCKER_SOCKET_PATH: "/var/run/docker.sock"
+      DOCKER_GUARD_HOST: "127.0.0.1"
+      DOCKER_GUARD_PORT: "9861"
+      TZ: "Asia/Taipei"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    network_mode: host
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command:
+      - python
+      - -m
+      - app.docker_socket_guard
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9861/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  monitor:
+    image: oci-nt-api:v2.0.0
+    container_name: oci-nt-monitor-agent
+    restart: unless-stopped
+    user: "10001:10001"
+    depends_on:
+      docker-guard:
+        condition: service_healthy
+    environment:
+      MONITOR_AGENT_HOST: "127.0.0.1"
+      MONITOR_AGENT_PORT: "9860"
+      DOCKER_GUARD_HOST: "127.0.0.1"
+      DOCKER_GUARD_PORT: "9861"
+      TZ: "Asia/Taipei"
+    network_mode: host
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command:
+      - python
+      - -m
+      - app.monitor_agent
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9860/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  web:
+    build:
+      context: ./frontend
+      network: host
+    image: oci-nt-web:v2.0.0
+    container_name: oci-nt-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9859/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

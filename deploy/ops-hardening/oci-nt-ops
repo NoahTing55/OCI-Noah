@@ -1,0 +1,268 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT="${OCI_NT_DIR:-/opt/oci-nt}"
+LOG_DIR="$ROOT/logs/maintenance"
+STATE_DIR="/var/lib/oci-nt-ops"
+MONITOR_CONTAINER="oci-nt-monitor-agent"
+FAIL_FILE="$STATE_DIR/monitor-fail-count"
+LAST_RESTART_FILE="$STATE_DIR/monitor-last-restart"
+LOCK_FILE="$STATE_DIR/ops.lock"
+
+mkdir -p "$LOG_DIR" "$STATE_DIR"
+chmod 0750 "$LOG_DIR" "$STATE_DIR" 2>/dev/null || true
+
+now(){ date '+%Y-%m-%d %H:%M:%S %z'; }
+log(){ printf '[%s] %s\n' "$(now)" "$*"; }
+
+trim_watchdog_log(){
+  local f="$LOG_DIR/watchdog.log"
+  [[ -f "$f" ]] || return 0
+  local size
+  size=$(stat -c '%s' "$f" 2>/dev/null || echo 0)
+  if (( size > 2097152 )); then
+    tail -n 2500 "$f" >"$f.tmp" && mv "$f.tmp" "$f"
+  fi
+}
+
+redact_stream(){
+  sed -E \
+    -e 's/(Authorization:[[:space:]]*Bearer[[:space:]]+)[^[:space:]]+/\1[REDACTED]/Ig' \
+    -e 's/((token|password|passwd|secret|private[_-]?key|api[_-]?key)[=:][[:space:]]*)[^&[:space:]"]+/\1[REDACTED]/Ig' \
+    -e 's/(X-Auth-Token:[[:space:]]*)[^[:space:]]+/\1[REDACTED]/Ig'
+}
+
+project_preflight(){
+  [[ -d "$ROOT" ]] || { log "项目目录不存在：$ROOT"; return 1; }
+  cd "$ROOT"
+  docker compose config >/dev/null
+}
+
+container_state(){
+  local name="$1"
+  docker inspect -f '{{.State.Status}}' "$name" 2>/dev/null || printf 'missing'
+}
+
+container_health(){
+  local name="$1"
+  docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$name" 2>/dev/null || printf 'missing'
+}
+
+status_cmd(){
+  project_preflight
+  local api web mon_state mon_health
+  api=$(curl -fsS --max-time 5 http://127.0.0.1:9858/api/v1/health 2>/dev/null || true)
+  if curl -fsS --max-time 5 http://127.0.0.1:9859/ >/dev/null 2>&1; then web=ok; else web=failed; fi
+  mon_state=$(container_state "$MONITOR_CONTAINER")
+  mon_health=$(container_health "$MONITOR_CONTAINER")
+
+  echo "OCI-N&T 本地运行状态"
+  echo "时间：$(now)"
+  echo "API：${api:-failed}"
+  echo "Web：$web"
+  echo "Monitor：state=$mon_state health=$mon_health"
+  echo
+  docker compose ps
+}
+
+snapshot_cmd(){
+  project_preflight
+  local tmp latest stamp
+  stamp=$(date '+%Y%m%d-%H')
+  tmp=$(mktemp "$LOG_DIR/.snapshot.XXXXXX")
+  latest="$LOG_DIR/latest.txt"
+
+  {
+    echo "OCI-N&T 运行诊断快照"
+    echo "时间：$(now)"
+    echo
+    echo "===== compose ps ====="
+    docker compose ps -a || true
+    echo
+    echo "===== API health ====="
+    curl -sS --max-time 5 http://127.0.0.1:9858/api/v1/health || true
+    echo
+    echo "===== component state ====="
+    for c in oci-nt-api oci-nt-web "$MONITOR_CONTAINER"; do
+      printf '%s state=' "$c"
+      container_state "$c"
+      printf ' health='
+      container_health "$c"
+      printf ' restart_count='
+      docker inspect -f '{{.RestartCount}}' "$c" 2>/dev/null || echo missing
+    done
+    echo
+    echo "===== filesystem ====="
+    df -h "$ROOT" || true
+    echo
+    echo "===== SQLite ====="
+    docker compose exec -T api python - <<'PY' 2>&1 || true
+import os, sqlite3
+p='/app/data/oci-nt.db'
+try:
+    con=sqlite3.connect(f'file:{p}?mode=ro', uri=True, timeout=5)
+    try:
+        qc=con.execute('PRAGMA quick_check').fetchone()
+        uv=con.execute('PRAGMA user_version').fetchone()
+        jm=con.execute('PRAGMA journal_mode').fetchone()
+        print('path=',p)
+        print('size_bytes=',os.path.getsize(p) if os.path.exists(p) else 0)
+        print('quick_check=',qc[0] if qc else 'unknown')
+        print('user_version=',uv[0] if uv else 'unknown')
+        print('journal_mode=',jm[0] if jm else 'unknown')
+    finally:
+        con.close()
+except Exception as exc:
+    print('sqlite_error=',type(exc).__name__,str(exc))
+PY
+    echo
+    echo "===== recent warnings/errors (24h, tail) ====="
+    docker compose logs --since=24h --tail=1200 api monitor web 2>&1 \
+      | grep -Ei 'error|exception|traceback|warning|unhealthy|failed|failure|timeout|oom|killed' \
+      | tail -n 350 || true
+  } | redact_stream >"$tmp"
+
+  chmod 0640 "$tmp"
+  cp -f "$tmp" "$LOG_DIR/snapshot-$stamp.log"
+  mv -f "$tmp" "$latest"
+
+  # 快照只保留 14 天；不删除项目正式运行日志。
+  find "$LOG_DIR" -maxdepth 1 -type f -name 'snapshot-*.log' -mtime +14 -delete 2>/dev/null || true
+  trim_watchdog_log
+  log "诊断快照已更新：$latest"
+}
+
+logs_cmd(){
+  snapshot_cmd >/dev/null
+  cat "$LOG_DIR/latest.txt"
+}
+
+watchdog_cmd(){
+  project_preflight
+  exec 9>"$LOCK_FILE"
+  flock -n 9 || { log "另一个维护任务正在运行，跳过 watchdog"; exit 0; }
+
+  local state health count now_epoch last_restart
+  state=$(container_state "$MONITOR_CONTAINER")
+  health=$(container_health "$MONITOR_CONTAINER")
+
+  if [[ "$state" == "running" && "$health" == "healthy" ]]; then
+    echo 0 >"$FAIL_FILE"
+    exit 0
+  fi
+
+  count=$(cat "$FAIL_FILE" 2>/dev/null || echo 0)
+  [[ "$count" =~ ^[0-9]+$ ]] || count=0
+  count=$((count+1))
+  echo "$count" >"$FAIL_FILE"
+  log "Monitor 异常：state=$state health=$health consecutive=$count/3" >>"$LOG_DIR/watchdog.log"
+
+  # 连续 3 次异常才恢复，避免瞬时 Docker health 抖动导致重启。
+  (( count >= 3 )) || exit 0
+
+  now_epoch=$(date +%s)
+  last_restart=$(cat "$LAST_RESTART_FILE" 2>/dev/null || echo 0)
+  [[ "$last_restart" =~ ^[0-9]+$ ]] || last_restart=0
+  if (( now_epoch - last_restart < 600 )); then
+    log "距上次自动恢复不足 10 分钟，本次不重复重启" >>"$LOG_DIR/watchdog.log"
+    exit 0
+  fi
+
+  log "连续异常达到阈值，执行 docker compose restart monitor" >>"$LOG_DIR/watchdog.log"
+  docker compose restart monitor >>"$LOG_DIR/watchdog.log" 2>&1
+  echo "$now_epoch" >"$LAST_RESTART_FILE"
+  sleep 18
+
+  state=$(container_state "$MONITOR_CONTAINER")
+  health=$(container_health "$MONITOR_CONTAINER")
+  if [[ "$state" == "running" && "$health" == "healthy" ]]; then
+    echo 0 >"$FAIL_FILE"
+    log "Monitor 自动恢复成功" >>"$LOG_DIR/watchdog.log"
+    trim_watchdog_log
+    exit 0
+  fi
+
+  log "Monitor 重启后仍异常：state=$state health=$health" >>"$LOG_DIR/watchdog.log"
+  trim_watchdog_log
+  return 1
+}
+
+db_cmd(){
+  project_preflight
+  exec 9>"$LOCK_FILE"
+  flock -n 9 || { log "另一个维护任务正在运行，跳过数据库维护"; exit 0; }
+
+  log "开始 SQLite 在线维护（先备份，再 quick_check / checkpoint / ANALYZE / optimize）"
+  docker compose exec -T api python - <<'PY'
+from __future__ import annotations
+import os, sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+src=Path('/app/data/oci-nt.db')
+backup_dir=Path('/app/data/backups')
+backup_dir.mkdir(parents=True, exist_ok=True)
+stamp=datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
+dst=backup_dir / f'ops-maint-{stamp}.db'
+
+if not src.exists():
+    raise SystemExit(f'SQLite 不存在：{src}')
+
+con=sqlite3.connect(str(src), timeout=30)
+try:
+    con.execute('PRAGMA busy_timeout=30000')
+    quick=con.execute('PRAGMA quick_check').fetchone()
+    if not quick or str(quick[0]).lower() != 'ok':
+        raise SystemExit(f'维护前 quick_check 未通过：{quick}')
+
+    out=sqlite3.connect(str(dst), timeout=30)
+    try:
+        con.backup(out)
+        verify=out.execute('PRAGMA quick_check').fetchone()
+        if not verify or str(verify[0]).lower() != 'ok':
+            raise SystemExit(f'维护备份 quick_check 未通过：{verify}')
+    finally:
+        out.close()
+
+    checkpoint=con.execute('PRAGMA wal_checkpoint(PASSIVE)').fetchone()
+    con.execute('ANALYZE')
+    con.execute('PRAGMA optimize')
+    con.commit()
+    final=con.execute('PRAGMA quick_check').fetchone()
+    if not final or str(final[0]).lower() != 'ok':
+        raise SystemExit(f'维护后 quick_check 未通过：{final}')
+
+    print('backup=',dst)
+    print('backup_bytes=',dst.stat().st_size)
+    print('checkpoint=',checkpoint)
+    print('quick_check=',final[0])
+    print('database_bytes=',src.stat().st_size)
+finally:
+    con.close()
+
+# 只清理由本维护器创建的 ops-maint-* 备份，绝不碰 OCI-N&T 正式备份。
+cutoff=datetime.now(timezone.utc).timestamp() - 30*86400
+for p in backup_dir.glob('ops-maint-*.db'):
+    try:
+        if p.stat().st_mtime < cutoff:
+            p.unlink()
+    except OSError:
+        pass
+PY
+
+  # 自动维护只做在线友好操作，不自动 VACUUM，避免长期锁库。
+  # 深度维护仍使用现有“系统设置 → 检查数据库”。
+  log "SQLite 在线维护完成"
+}
+
+case "${1:-status}" in
+  status) status_cmd ;;
+  snapshot) snapshot_cmd ;;
+  logs) logs_cmd ;;
+  watchdog) watchdog_cmd ;;
+  db) db_cmd ;;
+  *)
+    echo "用法：$0 {status|snapshot|logs|watchdog|db}" >&2
+    exit 2
+    ;;
+esac

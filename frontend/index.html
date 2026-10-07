@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>OCI-N&amp;T</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rednt-1">
+  <link rel="alternate icon" href="/favicon.ico?v=rednt-1">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=rednt-1">
+  <link rel="stylesheet" href="/styles.css?v=2.0.0-stable-ui-freeze">
+</head>
+<body>
+  <main id="login-view" class="login-view">
+    <section class="login-card">
+      <div class="brand-mark">N&amp;T</div>
+      <div><h1>OCI-N&amp;T</h1><p>Oracle Cloud 实例创建与管理系统</p></div>
+      <form id="login-form" class="stack">
+        <label><span>用户名</span><input id="login-username" autocomplete="username" required></label>
+        <label><span>密码</span><input id="login-password" type="password" autocomplete="current-password" required></label>
+        <button class="button primary wide" type="submit">登录</button>
+      </form>
+      <button id="google-login" class="button google wide" type="button" hidden>使用 Gmail 登录</button>
+      <p id="login-error" class="form-error" hidden></p>
+      <small>N&amp;T 1.0</small>
+    </section>
+  </main>
+
+  <div id="app-view" class="app-root" hidden>
+    <header class="app-header">
+      <div class="header-brand"><span class="header-logo">N&amp;T</span><div><strong>OCI-N&amp;T</strong><small>Oracle Cloud 管理控制台</small></div></div>
+      <div class="header-actions"><span class="header-user">管理员：<strong id="current-username">—</strong></span><button id="logout" class="header-button" type="button">退出</button></div>
+    </header>
+    <div class="app-shell">
+    <aside class="sidebar">
+      <nav class="nav-list" aria-label="主导航">
+        <div class="nav-group-title">管理中心</div>
+        <button class="nav active" data-page="dashboard" type="button"><span>▦</span>仪表盘</button>
+        <button class="nav" data-page="accounts" type="button"><span>◆</span>API 管理</button>
+        <button class="nav" data-page="proxies" type="button"><span>PX</span>代理管理</button>
+        <button class="nav" data-page="tasks" type="button"><span>JOB</span>任务中心</button>
+        <button class="nav" data-page="instances" type="button"><span>☁</span>OCI 实例管理</button>
+        <button class="nav" data-page="launch" type="button"><span>◉</span>OCI 开机管理</button>
+        <div class="nav-group-title">扩展功能</div>
+        <button class="nav" data-page="cloudflare" type="button"><span>CF</span>Cloudflare DNS</button>
+        <div class="nav-group-title">系统管理</div>
+        <button class="nav" data-page="audit" type="button"><span>LOG</span>操作记录</button>
+        <button class="nav" data-page="settings" type="button"><span>SET</span>系统设置</button>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="sidebar-version">N&amp;T 1.0</span>
+      </div>
+    </aside>
+
+    <section class="main-column">
+      <header class="topbar">
+        <div><h1 id="page-title">仪表盘</h1><p id="page-copy">所有概览均读取本地缓存，OCI 后台查询已关闭</p></div>
+      </header>
+
+      <div id="bulk-progress" class="bulk-progress" hidden>
+        <div class="bulk-head"><div><strong id="bulk-title">批量检测</strong><span id="bulk-copy">准备中</span></div><button id="bulk-cancel" class="button danger ghost" type="button">取消</button></div>
+        <div class="progress-track"><span id="bulk-bar"></span></div>
+      </div>
+
+      <section id="dashboard-page" class="page dashboard-page-layout">
+        <div class="dashboard-stats" aria-label="本地缓存概览">
+          <article class="dashboard-stat-card dashboard-stat-account">
+            <div class="dashboard-stat-head"><span>OCI 账户</span><em>API</em></div>
+            <strong id="dash-account-count">0</strong>
+            <small id="dash-account-copy">本地缓存</small>
+          </article>
+          <article class="dashboard-stat-card dashboard-stat-alive">
+            <div class="dashboard-stat-head"><span>有效账户</span><em>状态</em></div>
+            <strong id="dash-alive-count">0</strong>
+            <small id="dash-alive-copy">未主动检测不更新</small>
+          </article>
+          <article class="dashboard-stat-card dashboard-stat-instance">
+            <div class="dashboard-stat-head"><span>缓存实例</span><em>实例</em></div>
+            <strong id="dash-instance-count">0</strong>
+            <small id="dash-instance-copy">未同步不访问 OCI</small>
+          </article>
+          <article class="dashboard-stat-card dashboard-stat-job">
+            <div class="dashboard-stat-head"><span>运行任务</span><em>任务</em></div>
+            <strong id="dash-job-count">0</strong>
+            <small id="dash-job-copy">仅本地任务状态</small>
+          </article>
+        </div>
+
+        <section class="panel dashboard-monitor-panel" aria-labelledby="dashboard-monitor-title">
+          <div class="panel-head dashboard-monitor-head">
+            <div><h2 id="dashboard-monitor-title">服务器运行状态</h2><p>每 10 秒读取本机实时数据；历史指标每分钟写入本地 SQLite，不访问 OCI。</p></div>
+            <div class="dashboard-monitor-actions"><span id="monitor-collected-at" class="muted">等待采样</span><button id="monitor-export" class="button" type="button">导出 CSV</button><button id="monitor-refresh" class="button primary" type="button">立即刷新</button></div>
+          </div>
+
+          <div class="monitor-resource-grid" aria-label="服务器资源概览">
+            <article class="monitor-resource-card"><div><span>CPU</span><em id="monitor-cpu-state">实时</em></div><strong id="monitor-cpu">—</strong><small id="monitor-cpu-copy">负载 —</small><div class="monitor-progress"><span id="monitor-cpu-bar"></span></div></article>
+            <article class="monitor-resource-card"><div><span>内存</span><em id="monitor-memory-state">实时</em></div><strong id="monitor-memory">—</strong><small id="monitor-memory-copy">— / —</small><div class="monitor-progress"><span id="monitor-memory-bar"></span></div></article>
+            <article class="monitor-resource-card"><div><span>磁盘</span><em id="monitor-disk-state">数据盘</em></div><strong id="monitor-disk">—</strong><small id="monitor-disk-copy">剩余 —</small><div class="monitor-progress"><span id="monitor-disk-bar"></span></div></article>
+            <article class="monitor-resource-card"><div><span>实时网络</span><em id="monitor-interface">自动</em></div><strong id="monitor-network">—</strong><small id="monitor-network-copy">上传 —</small></article>
+            <article class="monitor-resource-card"><div><span>本月流量</span><em id="monitor-traffic-state">累计</em></div><strong id="monitor-month-traffic">—</strong><small id="monitor-traffic-copy">今日 —</small></article>
+            <article class="monitor-resource-card"><div><span>运行时间</span><em>系统</em></div><strong id="monitor-uptime">—</strong><small id="monitor-hostname">—</small></article>
+          </div>
+
+          <div class="monitor-toolbar">
+            <div class="view-switch monitor-range-switch" aria-label="趋势时间范围"><button type="button" data-monitor-range="1h" class="active">1 小时</button><button type="button" data-monitor-range="24h">24 小时</button><button type="button" data-monitor-range="7d">7 天</button><button type="button" data-monitor-range="30d">30 天</button></div>
+            <span id="monitor-history-copy" class="muted">等待历史数据</span>
+          </div>
+          <div class="monitor-chart-grid">
+            <article class="monitor-chart-card"><header><strong>CPU 与负载</strong><span id="monitor-chart-cpu-value">—</span></header><div id="monitor-chart-cpu" class="monitor-chart"><div class="empty">正在读取……</div></div></article>
+            <article class="monitor-chart-card"><header><strong>内存与 Swap</strong><span id="monitor-chart-memory-value">—</span></header><div id="monitor-chart-memory" class="monitor-chart"><div class="empty">正在读取……</div></div></article>
+            <article class="monitor-chart-card"><header><strong>上传与下载速度</strong><span id="monitor-chart-network-value">—</span></header><div id="monitor-chart-network" class="monitor-chart"><div class="empty">正在读取……</div></div></article>
+          </div>
+
+          <div class="monitor-detail-grid">
+            <section class="monitor-detail-card"><div class="monitor-detail-head"><div><h3>系统信息</h3><p>宿主机与 OCI-N&amp;T 运行环境</p></div></div><dl id="monitor-system-info" class="monitor-system-info"><div><dt>主机</dt><dd>读取中</dd></div></dl></section>
+            <section class="monitor-detail-card"><div class="monitor-detail-head"><div><h3>容器健康</h3><p>通过只读本地监控代理读取</p></div><span id="monitor-docker-version" class="muted">Docker —</span></div><div id="monitor-container-list" class="monitor-container-list"><div class="empty">正在读取……</div></div></section>
+            <section class="monitor-detail-card"><div class="monitor-detail-head"><div><h3>资源告警</h3><p>只在状态变化时发送 Telegram</p></div><span id="monitor-alert-count" class="muted">0 项</span></div><div id="monitor-alert-list" class="monitor-alert-list"><div class="empty">暂无告警</div></div></section>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="panel dashboard-panel dashboard-account-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>账户状态</h2><p>账户状态来自本地缓存，点击账户可进入租户工作区。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-account-list-count" class="dashboard-panel-count">0 个账户</span><button class="button" data-page="accounts" type="button">API 管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-account-columns" aria-hidden="true"><span>账户</span><span>区域 / 类型</span><span>状态</span></div>
+            <div id="dashboard-account-list" class="compact-list dashboard-compact-list"><div class="empty">正在读取……</div></div>
+          </section>
+
+          <section class="panel dashboard-panel dashboard-instance-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>最近实例</h2><p>仅显示已经同步到 SQLite 的实例缓存，不会后台请求 OCI。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-instance-list-count" class="dashboard-panel-count">0 个实例</span><button class="button" data-page="instances" type="button">实例管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-instance-columns" aria-hidden="true"><span>实例 / 账户</span><span>配置 / 区域</span><span>状态</span></div>
+            <div id="dashboard-instance-list" class="compact-list dashboard-compact-list"><div class="empty">暂无实例缓存</div></div>
+          </section>
+        </div>
+
+        <section class="panel dashboard-system-panel dashboard-system-compact" aria-labelledby="dashboard-system-title">
+          <div class="panel-head dashboard-system-head">
+            <div>
+              <h2 id="dashboard-system-title">系统状态</h2>
+              <p>只检查本机 API、SQLite、存储和配置，不访问 OCI 或第三方服务。</p>
+            </div>
+            <div class="dashboard-system-actions">
+              <div class="dashboard-system-overall">
+                <strong id="system-status-overall" class="system-overall">正在检查</strong>
+                <span id="system-status-checked">本地运行状态</span>
+              </div>
+              <button id="system-status-copy" class="button" type="button" disabled>复制摘要</button>
+              <button id="system-status-export" class="button" type="button">导出诊断</button>
+              <button id="system-status-toggle" class="button" type="button" aria-expanded="false" aria-controls="dashboard-system-details">查看详情</button>
+              <button id="system-status-refresh" class="button primary" type="button">立即检查</button>
+            </div>
+          </div>
+
+          <div class="dashboard-system-summary" aria-label="系统状态概览">
+            <article class="dashboard-system-stat"><span>API 运行时间</span><strong id="system-status-uptime">—</strong><small id="system-status-version">N&amp;T 1.0</small></article>
+            <article class="dashboard-system-stat"><span>SQLite 数据库</span><strong id="system-status-database">检查中</strong><small id="system-status-database-copy">等待自检</small></article>
+            <article class="dashboard-system-stat"><span>本地数据</span><strong id="system-status-data">—</strong><small id="system-status-data-copy">账户 / 缓存实例</small></article>
+            <article class="dashboard-system-stat"><span>磁盘剩余</span><strong id="system-status-storage">—</strong><small id="system-status-storage-copy">数据目录所在磁盘</small></article>
+          </div>
+
+          <dl class="dashboard-system-quickdata" aria-label="本地数据统计">
+            <div><dt>OCI 账户</dt><dd id="system-count-accounts">0</dd></div>
+            <div><dt>缓存实例</dt><dd id="system-count-instances">0</dd></div>
+            <div><dt>代理库</dt><dd id="system-count-proxies">0</dd></div>
+            <div><dt>Cloudflare</dt><dd id="system-count-cloudflare">0</dd></div>
+            <div><dt>抢机配置</dt><dd id="system-count-launch">0</dd></div>
+            <div><dt>操作记录</dt><dd id="system-count-audit">0</dd></div>
+            <div><dt>本地备份</dt><dd id="system-count-backups">0</dd></div>
+            <div><dt>数据库大小</dt><dd id="system-database-size">—</dd></div>
+          </dl>
+
+          <div id="dashboard-system-details" class="dashboard-system-details" hidden>
+            <div class="dashboard-system-subhead">
+              <div><h3>运行自检</h3><p>异常时自动展开，也可随时手动查看。</p></div>
+              <span id="system-component-count" class="system-card-count">0 项</span>
+            </div>
+            <div id="system-component-list" class="system-component-list"><div class="empty">正在读取本地状态……</div></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="accounts-page" class="page accounts-page-layout" hidden>
+        <div class="accounts-command-row">
+          <div class="account-quick-count"><strong id="account-filter-count">0 个账户</strong><span>本地缓存</span></div>
+          <div class="page-toolbar account-actions-toolbar">
+            <div class="view-switch" aria-label="账户显示方式"><button id="account-view-list" class="active" type="button" title="列表视图">☷</button><button id="account-view-card" type="button" title="卡片视图">▦</button></div>
+            <label class="page-size-control"><span>每页</span><select id="account-page-size" aria-label="账户每页数量"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="all">全部</option></select></label>
+            <button id="account-columns" class="button" type="button">列设置</button>
+            <button id="account-export" class="button" type="button">导出</button>
+            <button id="bulk-check" class="button" type="button">批量检测</button>
+            <button id="account-add" class="button primary" type="button">添加 API</button>
+          </div>
+        </div>
+
+        <section class="accounts-filter-panel compact-account-filter" aria-label="OCI 账户筛选与排序">
+          <div class="account-filter-bar">
+            <label class="filter-field account-type-filter-field">
+              <span>类型</span>
+              <select id="account-type-filter" aria-label="账户类型">
+                <option value="">全部类型</option>
+                <option value="PERSONAL_FREE">个人免费号</option>
+                <option value="PERSONAL_UPGRADED">个人升级号</option>
+              </select>
+            </label>
+            <label class="filter-field"><span>主区域</span><select id="account-region-filter"><option value="">全部区域</option></select></label><label class="filter-field"><span>健康</span><select id="account-health-filter"><option value="">全部健康状态</option><option value="HEALTHY">健康</option><option value="WARNING">警告</option><option value="CRITICAL">异常</option></select></label>
+            <div class="filter-field account-sort-filter-field">
+              <span>排序</span>
+              <div id="account-sort-filter" class="sort-cycle-control" role="group" aria-label="账户排序">
+                <button type="button" data-account-sort-key="tenancy" aria-pressed="false"><span>租户</span><b aria-hidden="true">↕</b></button>
+                <button type="button" data-account-sort-key="survival" aria-pressed="false"><span>存活时间</span><b aria-hidden="true">↕</b></button>
+              </div>
+            </div>
+            <label class="filter-field filter-search"><span>搜索</span><input id="account-search" type="search" placeholder="名称、邮箱或租户"></label>
+            <button id="account-filter-reset" class="button account-filter-reset" type="button">重置</button>
+          </div>
+        </section>
+
+        <div class="api-summary-grid compact-api-summary" aria-label="API 账户概览">
+          <article class="api-summary-card api-summary-total"><div><span>API 总数</span></div><strong id="api-summary-total">0</strong><b>总数</b></article>
+          <article class="api-summary-card api-summary-alive"><div><span>健康</span></div><strong id="api-summary-alive">0</strong><b>健康</b></article>
+          <article class="api-summary-card api-summary-proxy"><div><span>警告</span></div><strong id="api-summary-proxy">0</strong><b>警告</b></article>
+          <article class="api-summary-card api-summary-abnormal"><div><span>异常</span></div><strong id="api-summary-abnormal">0</strong><b>异常</b></article>
+        </div>
+
+        <section class="accounts-list-panel compact-accounts-list-panel accounts-list-panel-no-title">
+          <div id="account-list" class="account-list"><div class="empty">正在读取本地账户……</div></div>
+          <div id="account-pagination" class="local-pagination" hidden><button class="button small" data-account-page="prev" type="button">上一页</button><span id="account-page-copy">第 1 / 1 页</span><button class="button small" data-account-page="next" type="button">下一页</button></div>
+        </section>
+      </section>
+
+      <section id="proxies-page" class="page proxy-library-page" hidden>
+        <div class="proxy-library-command">
+          <div class="proxy-page-count"><strong id="proxy-filter-count">0 / 0 个代理</strong><span id="proxy-enabled-count">0 个已测试</span></div>
+          <div class="page-toolbar proxy-page-toolbar">
+            <button id="proxy-test-all" class="button" type="button">检测全部代理</button>
+            <button id="proxy-auto-allocate" class="button" type="button">自动分配代理</button>
+            <button id="proxy-import-text" class="button" type="button">⇩ 批量导入</button>
+            <button id="proxy-add-single" class="button primary" type="button">添加代理</button>
+          </div>
+        </div>
+
+        <section class="proxy-account-panel proxy-library-list-panel">
+          <div class="proxy-panel-head proxy-list-head">
+            <div><strong>代理库</strong><span>统一维护代理，租户只保存代理引用。</span></div>
+            <div class="proxy-list-filters">
+              <select id="proxy-status-filter" aria-label="代理状态"><option value="">全部状态</option><option value="idle">未分配</option><option value="assigned">已分配</option><option value="available">健康可用</option><option value="untested">未测试</option><option value="abnormal">异常</option><option value="disabled">已停用</option><option value="rotate">已配置换 IP API</option></select>
+              <input id="proxy-search" type="search" placeholder="代理名称、服务器或出口 IP" aria-label="搜索代理">
+              <button id="proxy-filter-reset" class="button" type="button">重置</button>
+            </div>
+          </div>
+          <div id="proxy-account-list" class="table-wrap proxy-account-table-wrap"><div class="empty">正在读取代理库……</div></div>
+        </section>
+      </section>
+
+      <section id="tasks-page" class="page task-center-page" hidden>
+        <div class="task-center-head">
+          <div><h2>任务中心</h2><p>手动检测、API 定时检测、代理与实例批量任务统一记录在 SQLite，可查看来源、进度、耗时并按需取消或重试。</p></div>
+          <div class="page-toolbar"><button id="task-cleanup" class="button" type="button">清理历史</button><button id="task-refresh" class="button primary" type="button">刷新任务</button></div>
+        </div>
+
+        <div class="task-summary-grid" aria-label="任务概览">
+          <article><span>运行中</span><strong id="task-summary-active">0</strong><small>可取消</small></article>
+          <article><span>已完成</span><strong id="task-summary-completed">0</strong><small>全部成功</small></article>
+          <article><span>部分失败</span><strong id="task-summary-partial">0</strong><small>可重试失败项</small></article>
+          <article><span>任务总数</span><strong id="task-summary-total">0</strong><small>本地记录</small></article>
+        </div>
+
+        <section class="panel task-list-panel">
+          <div class="task-filter-bar">
+            <label><span>任务类型</span><select id="task-type-filter"><option value="">全部类型</option><option value="ACCOUNT_CHECK">账户检测</option><option value="PROXY_HEALTH">代理检测</option><option value="INSTANCE_BATCH">实例批量操作</option></select></label>
+            <label><span>任务状态</span><select id="task-status-filter"><option value="">全部状态</option><option value="active">运行中</option><option value="COMPLETED">已完成</option><option value="PARTIAL">部分失败</option><option value="FAILED">失败</option><option value="CANCELLED">已取消</option><option value="INTERRUPTED">已中断</option></select></label>
+            <label><span>任务来源</span><select id="task-source-filter"><option value="">全部来源</option><option value="manual">手动</option><option value="scheduled">定时检测</option><option value="schedule_now">立即检测</option></select></label>
+            <button id="task-filter-reset" class="button" type="button">重置</button>
+            <span id="task-filter-count" class="task-filter-count">0 条任务</span>
+          </div>
+          <div id="task-list" class="table-wrap task-table-wrap"><div class="empty">正在读取任务……</div></div>
+        </section>
+
+        <section id="task-detail-panel" class="panel task-detail-panel" hidden>
+          <div class="panel-head"><div><h2 id="task-detail-title">任务详情</h2><p id="task-detail-copy">选择任务后显示每个项目的结果。</p></div><div class="page-toolbar"><button id="task-safe-resume" class="button primary" type="button" hidden>安全恢复</button><button id="task-export-csv" class="button" type="button">导出 CSV</button><button id="task-export-json" class="button" type="button">导出 JSON</button><button id="task-detail-close" class="button" type="button">关闭</button></div></div>
+          <div id="task-detail-summary" class="task-detail-summary"></div>
+          <div id="task-detail-items" class="table-wrap task-items-wrap"></div>
+        </section>
+      </section>
+
+      <section id="instances-page" class="page instances-page-layout" hidden>
+        <div class="instances-page-head">
+          <div><h2>实例概览</h2><p>统一查看本地缓存实例，并按需执行同步、开关机、换 IP 与高级管理。</p></div>
+          <div class="instances-actions-toolbar">
+            <label class="page-size-control"><span>每页</span><select id="instance-page-size" aria-label="实例每页数量"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="all">全部</option></select></label>
+            <button id="instance-columns" class="button" type="button">列设置</button>
+            <button id="global-instance-local" class="button" type="button">读取本地缓存</button>
+            <button id="global-instance-sync" class="button primary" type="button">同步所选租户</button>
+          </div>
+        </div>
+
+        <section class="instances-filter-panel">
+          <div class="instances-filter-head">
+            <div><strong>租户与实例筛选</strong><span>默认显示全部租户的 SQLite 缓存；选择单个租户后才可手动同步 OCI。</span></div>
+            <span id="instance-filter-count" class="instance-filter-count">0 / 0 台实例</span>
+          </div>
+          <div class="instance-filter-bar">
+            <label class="filter-field"><span>OCI 租户</span><select id="global-instance-account"><option value="">全部租户</option></select></label>
+            <label class="filter-field"><span>实例状态</span><select id="global-instance-status"><option value="">全部状态</option><option value="RUNNING">运行中</option><option value="STOPPED">已停止</option><option value="OTHER">其他状态</option></select></label>
+            <label class="filter-field instance-search-field"><span>快速查找</span><input id="global-instance-search" type="search" placeholder="实例名、IP、配置、区域或 OCID"></label>
+            <button id="global-instance-reset" class="button instance-filter-reset" type="button">重置筛选</button>
+          </div>
+        </section>
+
+        <div id="global-instance-summary" class="cache-note instances-cache-note"><strong>尚未读取</strong><span>页面将读取全部租户的本地实例缓存。</span></div>
+
+        <div id="instance-batch-toolbar" class="instance-batch-toolbar" hidden>
+          <div class="instance-batch-copy"><strong id="instance-batch-count">已选择 0 台实例</strong><span>任务按串行低并发执行，并可在任务中心查看、取消或重试失败项。</span></div>
+          <div class="instance-batch-actions">
+            <button class="button small primary" data-instance-batch-operation="START" type="button">批量开机</button>
+            <button class="button small" data-instance-batch-operation="SOFTSTOP" type="button">批量关机</button>
+            <button class="button small" data-instance-batch-operation="SOFTRESET" type="button">批量重启</button>
+            <button class="button small danger" data-instance-batch-operation="REPLACE_PUBLIC_IP" type="button">批量换 IP</button>
+            <button class="button small" data-instance-batch-operation="SYNC_ACCOUNTS" type="button">同步所选租户</button>
+            <button id="instance-batch-clear" class="button small ghost" type="button">清空选择</button>
+          </div>
+        </div>
+
+        <div class="instance-summary-grid" aria-label="实例概览">
+          <article class="instance-summary-card instance-summary-total"><div><span>实例总数</span><small>全部租户缓存</small></div><strong id="instance-summary-total">0</strong><b>总数</b></article>
+          <article class="instance-summary-card instance-summary-running"><div><span>运行中</span><small>可正常提供服务</small></div><strong id="instance-summary-running">0</strong><b>运行</b></article>
+          <article class="instance-summary-card instance-summary-stopped"><div><span>已停止</span><small>当前未运行</small></div><strong id="instance-summary-stopped">0</strong><b>停止</b></article>
+          <article class="instance-summary-card instance-summary-ip"><div><span>公网 IP</span><small>已分配公网地址</small></div><strong id="instance-summary-public-ip">0</strong><b>网络</b></article>
+        </div>
+
+        <section class="instances-list-panel">
+          <div class="instances-list-head"><div><strong>实例清单</strong><span>统一显示全部租户实例；序号、租户和实例信息分别展示。</span></div></div>
+          <div id="global-instance-list" class="table-wrap instance-table-wrap"><div class="empty instance-empty">请选择账户并读取实例</div></div>
+          <div id="instance-pagination" class="local-pagination" hidden><button class="button small" data-instance-page="prev" type="button">上一页</button><span id="instance-page-copy">第 1 / 1 页</span><button class="button small" data-instance-page="next" type="button">下一页</button></div>
+        </section>
+      </section>
+
+      <section id="launch-page" class="page instances-page-layout launch-page-layout" hidden>
+        <div class="instances-page-head launch-page-head">
+          <div><h2>开机概览</h2><p>统一查看本地开机配置与任务，并按需创建、启停和管理抢机任务。</p></div>
+          <div class="instances-actions-toolbar launch-actions-toolbar">
+            <button id="global-launch-refresh" class="button" type="button">读取本地缓存</button>
+            <button id="global-launch-create" class="button primary" type="button">添加配置</button>
+          </div>
+        </div>
+
+        <section class="instances-filter-panel launch-filter-panel" aria-label="OCI 开机配置与任务筛选">
+          <div class="instances-filter-head launch-filter-head">
+            <div><strong>租户与任务筛选</strong><span>默认显示全部租户的 SQLite 开机配置与任务记录；选择单个租户后可执行租户级操作。</span></div>
+            <span id="launch-visible-summary" class="instance-filter-count launch-filter-count">0 个配置 · 0 条任务</span>
+          </div>
+          <div class="instance-filter-bar launch-filter-grid">
+            <label class="filter-field"><span>OCI 租户</span><select id="global-launch-account"><option value="">全部租户</option></select></label>
+            <label class="filter-field"><span>任务状态</span><select id="global-launch-status"><option value="">全部状态</option><option value="active">运行中</option><option value="completed">已完成</option><option value="failed">失败</option><option value="cancelled">已取消</option></select></label>
+            <label class="filter-field instance-search-field launch-search-field"><span>快速查找</span><input id="global-launch-search" type="search" placeholder="配置名、实例名、架构、Shape 或任务编号"></label>
+            <button id="global-launch-reset" class="button instance-filter-reset" type="button">重置筛选</button>
+          </div>
+        </section>
+
+        <div id="global-launch-summary" class="cache-note instances-cache-note launch-cache-note"><strong>尚未读取</strong><span>页面将读取全部租户的本地开机配置与任务记录。</span></div>
+
+        <div class="instance-summary-grid launch-summary-grid" aria-label="OCI 开机概览">
+          <article class="instance-summary-card instance-summary-total launch-summary-card launch-summary-profile"><div><span>保存配置</span><small>全部租户本地配置</small></div><strong id="boot-profile-count">0</strong><b>配置</b></article>
+          <article class="instance-summary-card instance-summary-running launch-summary-card launch-summary-running"><div><span>运行任务</span><small>当前仍在执行</small></div><strong id="boot-running-count">0</strong><b>运行</b></article>
+          <article class="instance-summary-card instance-summary-stopped launch-summary-card launch-summary-success"><div><span>成功实例</span><small>任务累计创建成功</small></div><strong id="boot-success-count">0</strong><b>成功</b></article>
+          <article class="instance-summary-card instance-summary-ip launch-summary-card launch-summary-failure"><div><span>执行次数</span><small>实际提交 OCI 创建请求</small></div><strong id="boot-failure-count">0</strong><b>执行</b></article>
+        </div>
+
+        <section class="instances-list-panel launch-list-panel launch-profiles-panel">
+          <div class="instances-list-head launch-list-head">
+            <div><strong>配置清单</strong><span>统一显示全部租户保存的开机配置；租户级批量操作需先选择单个租户。</span></div>
+            <div class="launch-list-actions"><span id="launch-profile-visible-count" class="launch-list-count">0 个配置</span><button id="global-profiles-enable" class="button subtle" type="button">全部启用</button><button id="global-profiles-disable" class="button subtle" type="button">全部停用</button></div>
+          </div>
+          <div id="global-launch-profiles"><div class="empty launch-empty">正在读取全部租户本地数据</div></div>
+        </section>
+
+        <section class="instances-list-panel launch-list-panel launch-jobs-panel">
+          <div class="instances-list-head launch-list-head">
+            <div><strong>任务清单</strong><span>统一显示全部租户的创建与抢机任务进度，任务详情均读取本地记录。</span></div>
+            <div class="launch-list-actions"><span id="launch-job-visible-count" class="launch-list-count">0 条任务</span><button id="global-jobs-reset" class="button subtle" type="button">重置统计</button><button id="global-jobs-cancel" class="button danger ghost" type="button">取消运行任务</button></div>
+          </div>
+          <div id="global-launch-jobs"><div class="empty launch-empty">正在读取全部租户本地数据</div></div>
+        </section>
+      </section>
+
+      <section id="cloudflare-page" class="page cloudflare-page-layout" hidden>
+        <div class="cloudflare-page-head compact-cloudflare-head">
+          <div><strong>账户与 DNS</strong><span>选择账户和域名后管理记录。</span></div>
+          <button id="cf-add" class="button primary" type="button">添加 Cloudflare</button>
+        </div>
+
+        <div class="cloudflare-workspace-grid">
+          <section class="cloudflare-account-panel cloudflare-account-sidebar">
+            <div class="cloudflare-panel-head compact-panel-head">
+              <div><strong>Cloudflare 账户</strong><span id="cf-account-visible-count">0 个账户</span></div>
+              <button id="cf-refresh" class="button subtle" type="button">刷新</button>
+            </div>
+            <div id="cf-list" class="cloudflare-account-list"><div class="empty cloudflare-empty">暂无 Cloudflare 账户</div></div>
+          </section>
+
+          <section id="dns-workspace" class="cloudflare-dns-panel cloudflare-dns-workspace">
+            <div class="cloudflare-dns-head compact-panel-head">
+              <div><strong id="dns-title">DNS 记录</strong><span id="dns-copy">在左侧选择账户；选择域名后自动读取记录。</span></div>
+            </div>
+
+            <div class="dns-primary-toolbar dns-primary-toolbar-no-account">
+              <label class="dns-zone-field"><span>域名</span><select id="cf-zone"><option value="">请先在左侧选择账户</option></select></label>
+              <div class="dns-zone-actions">
+                <button id="dns-zone-sync" class="button" type="button">同步域名</button>
+                <button id="dns-refresh" class="button" type="button">刷新 DNS</button>
+                <button id="dns-add" class="button primary" type="button">添加 DNS</button>
+              </div>
+            </div>
+
+            <div class="dns-filter-grid compact-dns-filter">
+              <label><span>类型</span><select id="dns-type-filter"><option value="">全部类型</option><option value="A">A</option><option value="AAAA">AAAA</option><option value="CNAME">CNAME</option><option value="TXT">TXT</option><option value="MX">MX</option><option value="SRV">SRV</option><option value="CAA">CAA</option><option value="NS">NS</option><option value="PTR">PTR</option><option value="URI">URI</option></select></label>
+              <label class="dns-search-field"><span>搜索</span><input id="dns-search" type="search" placeholder="名称、内容或备注"></label>
+              <button id="dns-filter-reset" class="button" type="button">重置</button>
+              <span id="dns-visible-count" class="dns-visible-count">0 / 0 条</span>
+            </div>
+
+            <div id="dns-list" class="table-wrap dns-table-wrap"><div class="empty cloudflare-empty"><strong>尚未选择账户</strong><span>请在左侧选择 Cloudflare 账户。</span></div></div>
+          </section>
+        </div>
+      </section>
+
+
+      <section id="audit-page" class="page" hidden>
+        <div class="audit-page-toolbar">
+          <div class="audit-page-status"><strong id="audit-total-summary">0 条记录</strong><span>本地数据库</span></div>
+          <div class="audit-page-buttons">
+            <button id="audit-export" class="button" type="button">导出</button>
+            <button id="audit-refresh" class="button primary" type="button">刷新</button>
+          </div>
+        </div>
+        <div class="page-card audit-page-card">
+          <div class="audit-filter-grid">
+            <label><span>类型</span><select id="audit-category-filter"><option value="">全部类型</option><option value="auth">账户与登录</option><option value="oci">OCI 账户</option><option value="instance">实例与网络</option><option value="proxy">代理</option><option value="cloudflare">Cloudflare</option><option value="system">系统</option><option value="other">其他</option></select></label>
+            <label><span>用户</span><select id="audit-user-filter"><option value="">全部用户</option></select></label>
+            <label><span>时间</span><select id="audit-time-filter"><option value="">全部时间</option><option value="today">今天</option><option value="7d">最近 7 天</option><option value="30d">最近 30 天</option></select></label>
+            <label class="audit-search-box"><span>搜索</span><input id="audit-search" type="search" placeholder="用户、操作、资源或详情"></label>
+            <button id="audit-filter-reset" class="button" type="button">重置</button>
+            <span id="audit-count" class="audit-count">0 / 0 条</span>
+          </div>
+          <div id="audit-list" class="table-wrap audit-table-wrap"><div class="empty">正在读取……</div></div>
+        </div>
+      </section>
+
+      <section class="page" hidden="" id="settings-page">
+<div class="settings-page-layout">
+<div class="settings-card-grid settings-unified-grid"><div class="settings-section-heading settings-account-heading"><div><span>账户与通知</span><p>管理登录凭据、登录设备及外部通知方式。</p></div></div><div class="settings-account-columns"><div class="settings-stack settings-stack-left"><form class="panel form-panel settings-card settings-login-card" id="credential-form">
+<div class="panel-head settings-action-head"><div><h2>登录账户</h2><p>修改本地用户名或密码，保存后重新签发登录令牌。</p></div><button class="button primary" form="credential-form" type="submit">保存登录账户</button></div>
+<div class="settings-field-stack">
+<label><span>当前密码</span><input id="credential-current" required="" type="password"/></label>
+<label><span>新用户名</span><input id="credential-username" placeholder="留空表示不修改"/></label>
+<label><span>新密码</span><input id="credential-password" placeholder="留空表示不修改" type="password"/></label>
+</div>
+</form><form class="panel form-panel settings-card settings-telegram-card" id="telegram-form">
+<div class="panel-head settings-toggle-head"><div><h2>Telegram 通知</h2><p>单个检测发送完整邮箱；批量检测结束后统一汇总。</p></div><div class="settings-head-actions"><input id="telegram-enabled" type="checkbox" hidden/><button aria-pressed="false" class="button settings-state-button" id="telegram-toggle" type="button">启用 Telegram</button></div></div>
+<div class="settings-field-stack">
+<label><span>Chat ID</span><input id="telegram-chat" placeholder="例如：123456789"/></label>
+<label><span>Bot Token</span><input id="telegram-token" placeholder="留空表示保留现有 Token" type="password"/></label>
+</div>
+<div aria-label="Telegram 通知类型" class="telegram-category-grid">
+<label class="switch-row compact-switch"><div><strong>账户检测</strong><small>单账户和全部检测汇总</small></div><input checked="" id="telegram-account-check" type="checkbox"/></label>
+<label class="switch-row compact-switch"><div><strong>实例操作</strong><small>批量开关机、重启和换 IP</small></div><input checked="" id="telegram-instance-operation" type="checkbox"/></label>
+<label class="switch-row compact-switch"><div><strong>开机任务</strong><small>创建与抢机任务结果</small></div><input checked="" id="telegram-launch-task" type="checkbox"/></label>
+<label class="switch-row compact-switch"><div><strong>代理异常</strong><small>批量代理检测结果</small></div><input checked="" id="telegram-proxy-alert" type="checkbox"/></label>
+<label class="switch-row compact-switch"><div><strong>系统备份</strong><small>备份创建与删除通知</small></div><input checked="" id="telegram-system-backup" type="checkbox"/></label>
+<label class="switch-row compact-switch"><div><strong>系统资源</strong><small>CPU、内存、磁盘、流量和服务告警</small></div><input checked="" id="telegram-system-resource" type="checkbox"/></label>
+</div>
+<div class="settings-card-footer"><button class="button primary" type="submit">保存 Telegram</button><button class="button" id="telegram-test" type="button">发送测试</button></div>
+</form></div><div class="settings-stack settings-stack-right"><section class="panel settings-card settings-session-card">
+<div class="panel-head"><div><h2>登录会话</h2><p>查看当前设备和其他登录设备，支持一键注销其他会话。</p></div><div class="page-toolbar"><button class="button danger ghost" id="session-logout-others" type="button">注销其他设备</button><button class="button" id="session-refresh" type="button">刷新</button></div></div>
+<div class="table-wrap session-list" id="session-list"><div class="empty">正在读取登录会话……</div></div>
+<details class="login-attempts-details"><summary>最近登录记录</summary><div class="table-wrap" id="login-attempt-list"><div class="empty">展开后读取</div></div></details>
+</section><form class="panel form-panel google-auth-panel settings-card settings-google-card" id="google-auth-form">
+<div class="panel-head settings-toggle-head"><div><h2>Gmail 登录</h2><p>使用 Google OpenID Connect 登录；本地用户名密码始终保留。</p></div><div class="settings-head-actions settings-auth-actions"><input id="google-auth-enabled" type="checkbox" hidden/><button aria-pressed="false" class="button settings-state-button" id="google-auth-toggle" type="button">启用 Gmail 登录</button><span class="settings-auth-note" id="google-status">本地用户名密码登录继续保留。</span><span id="google-auth-badge" hidden></span></div></div>
+<div class="settings-field-grid">
+<label><span>Google Client ID</span><input autocomplete="off" id="google-client-id" placeholder="xxxx.apps.googleusercontent.com"/></label>
+<label><span>Google Client Secret</span><input autocomplete="new-password" id="google-client-secret" placeholder="留空表示保留现有 Secret" type="password"/></label>
+</div>
+<label><span>允许登录的 Gmail / Google Workspace 邮箱</span><textarea id="google-allowed-emails" placeholder="每行一个邮箱，例如：noah@gmail.com" rows="3"></textarea><small>仅允许列表内且已由 Google 验证的邮箱登录。</small></label>
+<div class="settings-field-grid settings-callback-grid">
+<label><span>Google 回调地址</span><div class="input-copy-row"><input id="google-redirect-uri" placeholder="https://你的域名/api/v1/auth/google/callback"/><button class="button" id="google-copy-callback" type="button">复制</button></div><small>必须与 Google Cloud OAuth 客户端中的授权重定向 URI 完全一致。</small></label>
+<label><span>登录完成返回地址</span><input id="google-frontend-return-url" placeholder="https://你的域名/"/><small>授权成功后返回 OCI-N&amp;T 的地址。</small></label>
+</div>
+<div class="settings-card-footer"><button class="button primary" id="google-auth-save" type="submit">保存 Gmail 登录</button><button class="button" id="google-auth-test" type="button">测试配置</button></div>
+</form></div></div><section class="panel settings-card account-check-schedule-card" id="account-check-schedule-card">
+<div class="panel-head settings-toggle-head"><div><h2>API 定时检测</h2><p>按计划顺序检测全部 OCI API；任务统一进入任务中心，异常达到阈值后再通知。</p></div><div class="settings-head-actions account-check-schedule-head-actions"><label class="account-check-schedule-switch" for="account-check-schedule-enabled"><input id="account-check-schedule-enabled" type="checkbox"/><span class="account-check-schedule-switch-slider" aria-hidden="true"></span></label><button aria-pressed="false" class="button account-check-schedule-action" id="account-check-schedule-toggle" type="button">启用定时检测</button></div></div>
+<form class="form-grid four-col account-check-schedule-grid" id="account-check-schedule-form">
+<label><span>执行方式</span><select id="account-check-schedule-mode"><option value="interval">每隔 N 小时</option><option value="daily">每天固定时间</option></select></label>
+<label id="account-check-schedule-hours-field"><span>检测周期</span><input id="account-check-schedule-hours" min="1" max="720" step="1" type="number" value="24" required/><small>1–720 小时</small></label>
+<label id="account-check-schedule-daily-field" hidden><span>执行时间</span><input id="account-check-schedule-daily-time" type="time" value="02:00" required/><small>按当前时区保存</small></label>
+<label><span>账户间隔</span><input id="account-check-schedule-account-interval" min="0" max="86400" step="1" type="number" value="0" required/><small>0 秒 = 完成后立即检测下一个</small></label>
+<div class="account-check-schedule-alert-grid span-4">
+<label><span>通知方式</span><select id="account-check-schedule-notify-mode"><option value="abnormal_only">异常或恢复时通知</option><option value="all">每次检测都通知</option><option value="silent">不发送通知</option></select><small>异常模式不会每轮重复发送同一故障。</small></label>
+<label><span>连续异常阈值</span><input id="account-check-schedule-consecutive-failures" min="1" max="10" step="1" type="number" value="2" required/><small>连续达到次数后才首次告警。</small></label>
+<label><span>恢复通知</span><select id="account-check-schedule-recovery-notify"><option value="true">恢复正常时通知</option><option value="false">不通知恢复</option></select><small>仅对已经触发过的异常告警生效。</small></label>
+</div>
+<div class="account-check-schedule-status"><div><span>上次检测</span><strong id="account-check-schedule-last">—</strong></div><div><span>下次检测</span><strong id="account-check-schedule-next">未启用</strong></div><div><span>上次结果</span><strong id="account-check-schedule-result" title="">尚未执行</strong></div></div>
+<div class="settings-card-footer span-4"><span id="account-check-schedule-summary">当前关闭；保存启用后才会产生后台 OCI 检测请求。</span><div class="account-check-schedule-footer-actions"><button class="button" id="account-check-schedule-run-now" type="button">立即检测</button><button class="button primary" type="submit">保存设置</button></div></div>
+</form></section>
+<div class="settings-section-heading settings-system-heading"><div><span>系统与维护</span><p>管理备份、资源保护和本机运行监控。</p></div></div><section class="panel settings-card settings-resource-panel">
+<div class="panel-head"><div><h2>系统资源保护</h2><p>低内存或磁盘不足时阻止新的大型任务，避免拖垮同机其他容器。</p></div><button class="button" id="resource-refresh" type="button">刷新</button></div>
+<div class="resource-status-grid" id="resource-status"><div class="empty">正在读取系统资源……</div></div>
+<form class="form-grid four-col resource-limit-grid" id="resource-limit-form">
+<label><span>最低可用内存（MiB）</span><input id="resource-min-memory" max="65536" min="128" required="" type="number" value="384"/></label>
+<label><span>最低磁盘空间（MiB）</span><input id="resource-min-disk" max="1048576" min="256" required="" type="number" value="1024"/></label>
+<label><span>同时运行任务</span><input id="resource-max-active" max="20" min="1" required="" type="number" value="2"/></label>
+<label><span>单任务最大项目</span><input id="resource-max-items" max="1000" min="1" required="" type="number" value="100"/></label>
+<div class="settings-card-footer span-4"><span id="resource-limit-summary">达到阈值时仅阻止新任务，不影响当前任务。</span><button class="button primary" type="submit">保存资源保护</button></div>
+</form>
+</section><section class="panel settings-card settings-backup-panel">
+<div class="panel-head"><div><h2>本地备份</h2><p>创建、验证、保留或删除 SQLite 一致性备份，不查询 OCI。</p></div><div class="page-toolbar settings-header-actions"><input id="backup-schedule-enabled" type="checkbox" hidden/><button aria-pressed="false" class="button settings-state-button" id="backup-schedule-toggle" type="button">启用自动备份</button><button class="button" id="database-maintain" type="button">检查数据库</button><button class="button" id="backup-cleanup" type="button">清理备份</button><button class="button" id="backup-verify-all" type="button">验证全部备份</button><button class="button" id="backup-create" type="button">立即备份</button></div></div>
+<form class="form-grid three-col backup-policy-grid" id="backup-policy-form">
+<label><span>保留天数</span><input id="backup-retention-days" max="3650" min="1" required="" type="number" value="14"/></label>
+<label><span>至少保留</span><input id="backup-keep-latest" max="1000" min="1" required="" type="number" value="5"/></label>
+<label><span>最大份数</span><input id="backup-max-count" max="5000" min="1" required="" type="number" value="50"/></label>
+<div class="settings-card-footer backup-policy-footer"><span id="backup-policy-summary">正在读取备份策略……</span><button class="button primary" type="submit">保存策略</button></div>
+</form>
+<form class="backup-schedule-form" id="backup-schedule-form">
+<div class="settings-subsection-head"><div><strong>自动本地备份</strong><small>只备份 SQLite，不会查询 OCI。</small></div><span class="status-pill muted" id="backup-schedule-badge">已关闭</span></div>
+<div class="form-grid three-col backup-schedule-grid">
+<label><span>频率</span><select id="backup-schedule-frequency"><option value="DAILY">每天</option><option value="WEEKLY">每周</option></select></label>
+<label><span>执行时间</span><input id="backup-schedule-time" required="" type="time" value="03:00"/></label>
+<label><span>星期</span><select id="backup-schedule-weekday"><option value="0">星期一</option><option value="1">星期二</option><option value="2">星期三</option><option value="3">星期四</option><option value="4">星期五</option><option value="5">星期六</option><option value="6">星期日</option></select></label>
+</div>
+<div class="settings-card-footer backup-policy-footer"><span id="backup-schedule-summary">自动备份已关闭</span><button class="button primary" type="submit">保存自动备份</button></div>
+</form>
+<div id="backup-list"><div class="empty">正在读取……</div></div>
+</section><section class="panel settings-card settings-monitor-panel">
+<div class="panel-head"><div><h2>监控运行设置</h2><p>控制本地指标采样、流量统计、历史保留和系统资源告警。</p></div><div class="page-toolbar settings-header-actions"><input checked="" id="monitor-enabled" type="checkbox" hidden/><button aria-pressed="true" class="button settings-state-button active" id="monitor-enabled-toggle" type="button">停用历史指标</button><button class="button" id="monitor-settings-refresh" type="button">刷新</button><button class="button" id="monitor-history-cleanup" type="button">清理历史</button></div></div>
+<form class="monitor-settings-form" id="monitor-settings-form">
+<div class="settings-subsection-head monitor-history-head"><div><strong>历史指标</strong><small>关闭后仍可查看实时资源，但不再写入分钟历史。</small></div><span class="status-pill good" id="monitor-enabled-badge">已启用</span></div>
+<div class="form-grid four-col monitor-settings-grid">
+<label><span>统计网卡</span><select id="monitor-interface-select"><option value="auto">自动选择默认出口</option></select></label>
+<label><span>采样间隔（秒）</span><input id="monitor-sample-interval" max="300" min="30" required="" type="number" value="60"/></label>
+<label><span>历史保留（天）</span><input id="monitor-retention-days" max="365" min="1" required="" type="number" value="30"/></label>
+<label><span>告警持续（分钟）</span><input id="monitor-alert-duration" max="1440" min="1" required="" type="number" value="5"/></label>
+<label><span>CPU 告警（%）</span><input id="monitor-cpu-alert" max="100" min="10" required="" type="number" value="90"/></label>
+<label><span>Swap 告警（%）</span><input id="monitor-swap-alert" max="100" min="10" required="" type="number" value="70"/></label>
+<label><span>月流量额度（GB）</span><input id="monitor-traffic-quota" max="1000000" min="0" type="number" value="0"/><small>0 表示不告警</small></label>
+<div class="monitor-container-toggle-field"><span>容器显示范围</span><input id="monitor-all-containers" type="checkbox" hidden/><button aria-pressed="false" class="button settings-choice-button" id="monitor-all-containers-toggle" type="button">显示全部容器</button><small>默认只显示 OCI-N&amp;T</small></div>
+</div>
+<div class="settings-card-footer"><span id="monitor-settings-summary">指标只保存在本地 SQLite。</span><div><button class="button" id="monitor-traffic-reset" type="button">重置流量起点</button><button class="button primary" type="submit">保存监控设置</button></div></div>
+</form>
+</section><div class="settings-section-heading settings-version-heading"><div><span>版本信息</span><p>核对当前源码、数据库结构和最近升级记录。</p></div></div><section class="panel settings-card settings-release-panel">
+<div class="panel-head"><div><h2>版本与升级记录</h2><p>确认当前完整源码、数据库版本和最近升级结果。</p></div><button class="button" id="release-refresh" type="button">刷新</button></div>
+<div class="release-current" id="release-current"><div class="empty">正在读取版本信息……</div></div>
+<div class="table-wrap release-history" id="release-history"><div class="empty">正在读取升级记录……</div></div>
+</section></div>
+</div>
+</section>
+      <section id="tenant-page" class="tenant-page" hidden>
+        <div class="tenant-hero"><button id="tenant-back" class="back-button" type="button">← 返回</button><div class="tenant-identity"><div class="tenant-avatar" id="tenant-avatar">N</div><div><h1 id="tenant-name">—</h1><p id="tenant-email">—</p></div></div><div class="tenant-meta"><span id="tenant-type">—</span><span id="tenant-region">—</span><span id="tenant-status">—</span><span id="tenant-checked">—</span><span id="tenant-proxy">代理：未启用</span></div></div>
+        <nav id="tenant-tabs" class="tenant-tabs"><button class="active" data-tenant-tab="instances" type="button">实例</button><button data-tenant-tab="launch" type="button">开机任务</button><button data-tenant-tab="network" type="button">IP 与 VNIC</button><button data-tenant-tab="security" type="button">安全规则</button><button data-tenant-tab="volumes" type="button">引导卷与镜像</button><button data-tenant-tab="vnc" type="button">VNC</button><button data-tenant-tab="storage" type="button">对象存储</button><button data-tenant-tab="metrics" type="button">实例指标</button><button data-tenant-tab="costs" type="button">账户费用</button><button data-tenant-tab="insights" class="nt-analytics-native-tab" type="button" hidden aria-hidden="true" tabindex="-1">流量与费用</button><button data-tenant-tab="tenancy" type="button">区域、配额与审计</button><button data-tenant-tab="account" type="button">账户设置</button></nav>
+        <div id="tenant-content" class="tenant-content"></div>
+      </section>
+    </section>
+    </div>
+  </div>
+
+  <dialog id="account-dialog" class="wide-dialog">
+    <form id="account-form" class="dialog-form account-import-form" method="dialog">
+      <header><div><h2>添加 OCI API</h2><p>导入时查询一次账户资料，并可为该租户直接设置独立代理。</p></div><button class="dialog-close" type="button" data-close-dialog="account-dialog">×</button></header>
+      <div class="dialog-body">
+        <section class="form-section">
+          <div class="form-section-title"><span>1</span><div><strong>OCI API 配置</strong><small>粘贴完整 Config，私钥可上传或直接包含在配置后。</small></div></div>
+          <div class="oci-config-file-panel" data-feature="oci-config-import">
+            <div class="oci-config-file-row">
+              <label class="oci-config-file-picker"><span>导入 Config 文件</span><input id="api-config-file" type="file" multiple><small>可直接选择文件名为 config 的 OCI 配置；也可以同时选择 PEM 私钥。</small></label>
+              <button id="api-config-file-clear" class="button small" type="button" hidden>清除文件</button>
+            </div>
+            <div id="api-config-file-status" class="oci-config-file-status muted" aria-live="polite">未选择文件，也可以在下方直接粘贴 Config。</div>
+            <label id="api-config-profile-row" class="oci-config-profile-row" hidden><span>配置档案</span><select id="api-config-profile"></select><small>一个 Config 包含多个档案时，可在这里选择要导入的档案。</small></label>
+          </div>
+          <label><span>完整 OCI Config</span><textarea id="api-config" name="api_config" rows="9" placeholder="[DEFAULT]
+user=ocid1.user...
+fingerprint=...
+tenancy=ocid1.tenancy...
+region=..." required></textarea></label>
+          <div class="oci-config-detection" aria-live="polite"><span>区域识别</span><strong id="import-region-detected">等待输入 OCI Config</strong><small id="import-region-copy">选择 Config 文件或粘贴内容后，会自动识别 region 和必要字段。</small></div>
+          <div class="form-grid two-col"><label><span>PEM 私钥文件</span><input id="api-private-key-file" name="private_key_file" type="file" accept=".pem,.key,text/plain"><small id="api-private-key-copy">如果 Config 中只有 key_file 路径，请在这里选择对应 PEM 文件。</small></label><label><span>私钥密码（可选）</span><input name="private_key_passphrase" type="password"></label></div>
+        </section>
+        <section class="form-section proxy-import-section">
+          <div class="form-section-title"><span>2</span><div><strong>租户独立代理（可选）</strong><small>可直接选择代理库中的代理，也可新增代理；导入验证与后续 OCI 请求使用同一代理。</small></div></div>
+          <label class="switch-row"><div><strong>导入时启用独立代理</strong><small>启用后，请选择已保存代理或切换到新增代理。</small></div><input id="import-proxy-enabled" name="proxy_enabled" type="checkbox" value="true"></label>
+          <input id="import-proxy-profile-id" name="proxy_profile_id" type="hidden">
+          <input id="import-proxy-url" name="proxy_url" type="hidden">
+          <div id="import-proxy-options" class="import-proxy-options is-disabled">
+            <div class="proxy-choice-tabs import-proxy-choice-tabs" role="radiogroup" aria-label="导入代理来源">
+              <label><input id="import-proxy-mode-existing" name="import-proxy-mode" type="radio" value="existing" checked><span>选择已保存代理</span></label>
+              <label><input id="import-proxy-mode-new" name="import-proxy-mode" type="radio" value="new"><span>新增代理</span></label>
+            </div>
+            <section id="import-proxy-existing-section" class="proxy-choice-section import-proxy-choice-section">
+              <label><span>代理库</span><select id="import-proxy-profile-select"><option value="">正在读取代理库……</option></select><small id="import-proxy-profile-copy">代理账号和密码不会在页面回显。</small></label>
+            </section>
+            <section id="import-proxy-new-section" class="proxy-choice-section import-proxy-choice-section" hidden>
+              <div id="import-proxy-fields" class="manual-proxy-grid">
+                <label class="proxy-label-field"><span>代理名称</span><input id="import-proxy-label" name="proxy_label" placeholder="例如：凤凰城出口"></label>
+                <label><span>协议</span><select id="import-proxy-scheme"><option value="socks5">SOCKS5</option><option value="socks5h">SOCKS5H</option><option value="http">HTTP</option><option value="https">HTTPS</option></select></label>
+                <label class="proxy-host-field"><span>服务器地址</span><input id="import-proxy-host" placeholder="IP 或域名" autocomplete="off"></label>
+                <label><span>端口</span><input id="import-proxy-port" type="number" min="1" max="65535" placeholder="1080" inputmode="numeric"></label>
+                <label><span>用户名（可选）</span><input id="import-proxy-username" autocomplete="off"></label>
+                <label><span>密码（可选）</span><input id="import-proxy-password" type="password" autocomplete="new-password"></label>
+              </div>
+            </section>
+          </div>
+          <div class="proxy-test-row"><button id="import-proxy-test" class="button" type="button" disabled>测试所选代理</button><span id="import-proxy-result" class="muted">未启用，导入验证将直连 OCI</span></div>
+        </section>
+        <p id="account-error" class="form-error" hidden></p>
+      </div>
+      <footer><button class="button" type="button" data-close-dialog="account-dialog">取消</button><button id="account-submit" class="button primary" type="submit">验证并导入</button></footer>
+    </form>
+  </dialog>
+
+
+  <dialog id="account-rename-dialog" class="compact-dialog">
+    <form id="account-rename-form" class="dialog-form" method="dialog">
+      <header><div><h2>修改自定义名称</h2><p id="account-rename-copy">为当前 OCI API 设置便于识别的名称。</p></div><button class="dialog-close" type="button" data-close-dialog="account-rename-dialog">×</button></header>
+      <div class="dialog-body rename-dialog-body">
+        <input id="account-rename-id" type="hidden">
+        <div class="rename-account-card"><div id="account-rename-avatar" class="account-avatar">N</div><div><strong id="account-rename-current">—</strong><small id="account-rename-email">—</small></div></div>
+        <label><span>新的自定义名称</span><input id="account-rename-value" maxlength="120" autocomplete="off" required><small>仅修改 OCI-N&T 中的显示名称，不会修改 OCI 租户或 IAM 用户。</small></label>
+        <p id="account-rename-error" class="form-error" hidden></p>
+      </div>
+      <footer><button class="button" type="button" data-close-dialog="account-rename-dialog">取消</button><button id="account-rename-submit" class="button primary" type="submit">保存名称</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="proxy-dialog" class="proxy-dialog-v2 proxy-binding-dialog">
+    <form id="proxy-form" class="dialog-form proxy-manual-form" method="dialog">
+      <header><div><h2>租户独立代理</h2><p id="proxy-dialog-copy">选择代理库中的代理，或新增后立即绑定。</p></div><button class="dialog-close" type="button" data-close-dialog="proxy-dialog">×</button></header>
+      <div class="dialog-body">
+        <input id="proxy-account-id" type="hidden">
+        <label class="switch-row proxy-main-switch"><div><strong>启用独立代理</strong><small>启用后，此租户所有 OCI SDK 请求都走选中的代理。</small></div><input id="proxy-enabled" type="checkbox"></label>
+
+        <div class="proxy-current-config">
+          <div><span>当前代理</span><strong id="proxy-current-url">未启用</strong><small id="proxy-saved-copy">尚未绑定代理。</small></div>
+          <div><span>出口 IP</span><strong id="proxy-last-ip">尚未测试</strong><small id="proxy-last-test">从未测试</small></div>
+        </div>
+
+        <div class="proxy-choice-tabs" role="radiogroup" aria-label="代理来源">
+          <label><input id="proxy-mode-existing" name="proxy-mode" type="radio" value="existing" checked><span>选择已保存代理</span></label>
+          <label><input id="proxy-mode-new" name="proxy-mode" type="radio" value="new"><span>新增代理</span></label>
+        </div>
+
+        <section id="proxy-existing-section" class="proxy-choice-section">
+          <label><span>已保存代理</span><select id="proxy-profile-select"></select><small id="proxy-profile-copy">代理账号密码不会在页面回显。</small></label>
+        </section>
+
+        <section id="proxy-new-section" class="proxy-choice-section" hidden>
+          <div id="proxy-manual-fields" class="manual-proxy-grid">
+            <label class="proxy-label-field"><span>代理名称</span><input id="proxy-label" placeholder="例如：伦敦出口"></label>
+            <label><span>协议</span><select id="proxy-scheme"><option value="socks5">SOCKS5</option><option value="socks5h">SOCKS5H</option><option value="http">HTTP</option><option value="https">HTTPS</option></select></label>
+            <label class="proxy-host-field"><span>服务器地址</span><input id="proxy-host" placeholder="IP 或域名" autocomplete="off"></label>
+            <label><span>端口</span><input id="proxy-port" type="number" min="1" max="65535" placeholder="1080" inputmode="numeric"></label>
+            <label><span>用户名（可选）</span><input id="proxy-username" autocomplete="off"></label>
+            <label><span>密码（可选）</span><input id="proxy-password" type="password" autocomplete="new-password"></label>
+          </div>
+        </section>
+        <p id="proxy-test-result" class="proxy-inline-result muted" hidden></p>
+        <p id="proxy-form-error" class="form-error" hidden></p>
+      </div>
+      <footer class="split-footer"><button id="proxy-clear" class="button danger ghost-danger" type="button">取消绑定</button><div><button id="proxy-test-unsaved" class="button" type="button">测试代理</button><button class="button" type="button" data-close-dialog="proxy-dialog">取消</button><button id="proxy-save" class="button primary" type="submit">保存</button></div></footer>
+    </form>
+  </dialog>
+
+
+  <dialog id="iam-user-dialog" class="iam-dialog">
+    <form id="iam-user-form" class="dialog-form" method="dialog">
+      <header><div><h2>增加 OCI IAM 用户</h2><p>创建用户后可自动加入用户组，并生成一次性控制台密码。</p></div><button class="dialog-close" type="button" data-close-dialog="iam-user-dialog">×</button></header>
+      <div class="dialog-body iam-dialog-body">
+        <div class="iam-user-form-grid">
+          <label><span>登录用户名</span><input id="iam-user-name" maxlength="100" pattern="[A-Za-z0-9._+@-]+" autocomplete="off" required><small>不能包含空格；创建后不能修改。</small></label>
+          <label><span>通知邮箱</span><input id="iam-user-email" type="email" maxlength="255" required><small>该邮箱在租户内必须唯一。</small></label>
+          <label class="span-2"><span>描述</span><input id="iam-user-description" maxlength="400" placeholder="例如：实例运维账户"></label>
+          <label class="span-2"><span>初始用户组</span><select id="iam-user-group"><option value="">创建后暂不分配权限</option></select></label>
+          <label class="switch-row span-2"><div><strong>生成临时控制台密码</strong><small>密码只在创建结果中显示一次。</small></div><input id="iam-user-password" type="checkbox" checked></label>
+        </div>
+        <p id="iam-user-error" class="form-error" hidden></p>
+      </div>
+      <footer><button class="button" type="button" data-close-dialog="iam-user-dialog">取消</button><button id="iam-user-submit" class="button primary" type="submit">创建用户</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="iam-email-dialog" class="iam-dialog">
+    <form id="iam-email-form" class="dialog-form" method="dialog">
+      <header><div><h2>修改通知邮箱</h2><p id="iam-email-copy">更新当前 OCI IAM 用户的通知邮箱。</p></div><button class="dialog-close" type="button" data-close-dialog="iam-email-dialog">×</button></header>
+      <div class="dialog-body">
+        <input id="iam-email-user-id" type="hidden">
+        <label><span>新通知邮箱</span><input id="iam-email-value" type="email" maxlength="255" required></label>
+        <p id="iam-email-error" class="form-error" hidden></p>
+      </div>
+      <footer><button class="button" type="button" data-close-dialog="iam-email-dialog">取消</button><button id="iam-email-submit" class="button primary" type="submit">保存邮箱</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="iam-secret-dialog" class="iam-dialog">
+    <div class="dialog-form">
+      <header><div><h2>临时控制台密码</h2><p>该密码只显示一次，请立即安全保存。</p></div><button class="dialog-close" type="button" data-close-dialog="iam-secret-dialog">×</button></header>
+      <div class="dialog-body"><div class="iam-secret-box"><code id="iam-secret-value">—</code><button id="iam-secret-copy" class="button" type="button">复制</button></div><div id="iam-secret-warnings" class="rc-query-warning" hidden></div></div>
+      <footer><button class="button primary" type="button" data-close-dialog="iam-secret-dialog">已保存，关闭</button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="cf-dialog" class="compact-dialog cf-dialog-v2">
+    <form id="cf-form" class="dialog-form" method="dialog">
+      <header><div><h2>添加 Cloudflare</h2><p>验证 API Token 后加密保存。</p></div><button class="dialog-close" type="button" data-close-dialog="cf-dialog">×</button></header>
+      <div class="dialog-body cf-dialog-body">
+        <label><span>名称</span><input id="cf-name" placeholder="例如：主账户" autocomplete="off" required></label>
+        <label><span>API Token</span><input id="cf-token" type="password" placeholder="Cloudflare API Token" autocomplete="new-password" required></label>
+        <label><span>邮箱（可选）</span><input id="cf-email" type="email" placeholder="name@example.com" autocomplete="email"></label>
+        <p id="cf-error" class="form-error" hidden></p>
+      </div>
+      <footer><button class="button" type="button" data-close-dialog="cf-dialog">取消</button><button id="cf-submit" class="button primary" type="submit">验证并保存</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="utility-dialog" class="utility-dialog">
+    <form id="utility-dialog-form" class="dialog-form" novalidate>
+      <header><div><h2 id="utility-dialog-title">操作</h2><p id="utility-dialog-copy">请确认当前操作。</p></div><button id="utility-dialog-close" class="dialog-close" type="button" aria-label="关闭">×</button></header>
+      <div id="utility-dialog-body" class="dialog-body utility-dialog-body"></div>
+      <p id="utility-dialog-error" class="form-error utility-dialog-error" hidden></p>
+      <footer><button id="utility-dialog-cancel" class="button" type="button">取消</button><button id="utility-dialog-submit" class="button primary" type="submit">确认</button></footer>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script src="/app.js?v=2.0.0-stable-metrics-fix" defer></script>
+  <script src="/rc.js?v=2.0.0-r2" defer></script>
+  <script src="/ui2.js?v=2.0.0-r2" defer></script>
+  <!-- OCI-N&T V1.0 1.0-ui-finalize -->
+  <!-- OCI-N&T V1.0 1.0-dialog-fit-proxy-top1 -->
+  <!-- OCI-N&T V1.0 1.0-proxy-toggle-switch1 -->
+  <!-- OCI-N&T V1.0 1.0-global-toggle-switch1 -->
+  <!-- OCI-N&T V1.0 1.0-ux-freeze1 -->
+  <!-- OCI-N&T V1.0 1.0-ux-freeze1-fix1 -->
+
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+fastapi>=0.116,<1.0
+uvicorn[standard]>=0.35,<1.0
+oci>=2.182,<3.0
+pydantic-settings>=2.10,<3.0
+pwdlib[argon2]>=0.2,<1.0
+PyJWT>=2.10,<3.0
+python-multipart>=0.0.20,<1.0
+cryptography>=42,<47
+requests[socks]>=2.32,<3.0
+google-auth>=2.35,<3.0
