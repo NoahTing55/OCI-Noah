@@ -1,0 +1,1026 @@
+/* OCI-N&T · R-Bot inspired preview
+ * Visual direction inspired by the public java_oci_manage screenshots/docs:
+ * light shell, blue primary accent, compact navigation, low-shadow cards,
+ * and two-column cloud-operation forms.
+ * No source code is copied from that project.
+ */
+
+:root {
+  --bg: #f4f7fb !important;
+  --panel: #ffffff !important;
+  --panel-soft: #f7f9fc !important;
+  --line: #e4e9f0 !important;
+  --text: #172033 !important;
+  --muted: #758196 !important;
+  --primary: #1677ff !important;
+  --primary-soft: #eaf3ff !important;
+  --good: #16845f !important;
+  --good-soft: #eaf8f2 !important;
+  --warn: #b66b16 !important;
+  --warn-soft: #fff6e8 !important;
+  --bad: #ca4050 !important;
+  --bad-soft: #fff0f2 !important;
+  --shadow: 0 8px 28px rgba(31, 45, 61, .055) !important;
+  --radius: 9px !important;
+}
+
+html,
+body {
+  background: var(--bg) !important;
+}
+
+body {
+  color: var(--text) !important;
+}
+
+/* ---------- top shell ---------- */
+
+.app-header {
+  height: 50px !important;
+  min-height: 50px !important;
+  padding: 0 16px !important;
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid #e6ebf1 !important;
+  box-shadow: 0 1px 4px rgba(31, 45, 61, .035) !important;
+}
+
+.header-brand {
+  gap: 9px !important;
+}
+
+.header-brand strong {
+  color: #172033 !important;
+  font-size: 13px !important;
+  letter-spacing: -.01em !important;
+}
+
+.header-brand small {
+  margin-top: 0 !important;
+  color: #8a95a6 !important;
+  font-size: 9px !important;
+}
+
+.header-logo {
+  min-width: 44px !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  border: 1.5px solid #ef4444 !important;
+  border-radius: 7px !important;
+  background: #ffffff !important;
+  color: #dc2626 !important;
+  box-shadow: none !important;
+  font-size: 10px !important;
+  letter-spacing: .02em !important;
+}
+
+.header-actions {
+  gap: 8px !important;
+}
+
+.header-user {
+  color: #6f7d90 !important;
+  font-size: 10px !important;
+}
+
+.header-user strong {
+  color: #263244 !important;
+}
+
+.header-button {
+  min-height: 28px !important;
+  padding: 4px 9px !important;
+  border: 1px solid #dbe2ea !important;
+  border-radius: 6px !important;
+  background: #f8fafc !important;
+  color: #39485b !important;
+  font-size: 10px !important;
+}
+
+.header-button:hover {
+  border-color: #b9c8d8 !important;
+  background: #f1f5f9 !important;
+}
+
+/* ---------- light navigation ---------- */
+
+.app-shell {
+  grid-template-columns: 190px minmax(0, 1fr) !important;
+  min-height: calc(100vh - 50px) !important;
+}
+
+.sidebar {
+  top: 50px !important;
+  height: calc(100vh - 50px) !important;
+  padding: 12px 8px 10px !important;
+  background: #fbfcfe !important;
+  color: #3d4a5d !important;
+  border-right: 1px solid #e4e9ef !important;
+}
+
+.nav-list {
+  gap: 2px !important;
+}
+
+.nav-group-title {
+  padding: 13px 10px 6px !important;
+  color: #a0a9b7 !important;
+  font-size: 8.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: .08em !important;
+}
+
+.nav {
+  min-height: 38px !important;
+  margin: 0 1px !important;
+  padding: 6px 9px !important;
+  gap: 8px !important;
+  border: 1px solid transparent !important;
+  border-left: 1px solid transparent !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: #526174 !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  box-shadow: none !important;
+}
+
+.nav span {
+  width: 25px !important;
+  height: 25px !important;
+  border-radius: 6px !important;
+  background: #eef2f6 !important;
+  color: #66758a !important;
+  font-size: 8px !important;
+}
+
+.nav:hover {
+  border-color: #e3e9f0 !important;
+  background: #f5f8fb !important;
+  color: #263244 !important;
+}
+
+.nav.active {
+  border-color: #d9e8ff !important;
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+  box-shadow: none !important;
+}
+
+.nav.active span {
+  background: #dbeaff !important;
+  color: #1769dd !important;
+}
+
+.sidebar-foot {
+  margin: auto 10px 0 !important;
+  padding: 10px 2px 0 !important;
+  border-top: 1px solid #e8edf2 !important;
+  color: #9aa5b4 !important;
+}
+
+.sidebar-version {
+  color: #9ba6b4 !important;
+  font-size: 9px !important;
+  letter-spacing: .05em !important;
+}
+
+/* ---------- content frame ---------- */
+
+.main-column {
+  padding: 0 20px 34px !important;
+}
+
+.topbar {
+  min-height: 66px !important;
+  margin-bottom: 10px !important;
+}
+
+.topbar h1 {
+  color: #1d2939 !important;
+  font-size: 20px !important;
+  font-weight: 760 !important;
+  letter-spacing: -.02em !important;
+}
+
+.topbar p {
+  margin-top: 3px !important;
+  color: #7e8a9b !important;
+  font-size: 10px !important;
+}
+
+.page {
+  max-width: 1540px !important;
+}
+
+.panel,
+.page-card,
+.launch-filter-panel,
+.launch-list-panel,
+.instances-filter-panel,
+.instances-list-panel,
+.compact-account-filter,
+.compact-accounts-list-panel,
+.proxy-table-panel,
+.task-list-panel {
+  border-color: #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31, 45, 61, .035) !important;
+}
+
+.panel {
+  padding: 15px !important;
+}
+
+.panel-head {
+  margin-bottom: 11px !important;
+  gap: 12px !important;
+}
+
+.panel-head h2,
+.page-actions h2 {
+  color: #243142 !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+}
+
+.panel-head p,
+.page-actions p {
+  color: #7d899a !important;
+  font-size: 9.5px !important;
+  line-height: 1.5 !important;
+}
+
+/* ---------- controls ---------- */
+
+.button {
+  min-height: 33px !important;
+  padding: 6px 10px !important;
+  border-color: #d7e0e9 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #344054 !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+  box-shadow: none !important;
+}
+
+.button:hover {
+  border-color: #adc4df !important;
+  background: #f8fbff !important;
+}
+
+.button.primary {
+  border-color: #1677ff !important;
+  background: #1677ff !important;
+  color: #ffffff !important;
+}
+
+.button.primary:hover {
+  border-color: #0f6ce8 !important;
+  background: #0f6ce8 !important;
+}
+
+.button.primary-soft {
+  border-color: #c7dcff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+.button.danger {
+  border-color: #f1c8cf !important;
+  color: #c33c4d !important;
+}
+
+.button.small {
+  min-height: 28px !important;
+  padding: 4px 8px !important;
+  border-radius: 5px !important;
+  font-size: 9px !important;
+}
+
+input,
+textarea,
+select {
+  min-height: 35px !important;
+  padding: 7px 9px !important;
+  border-color: #dbe3eb !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #344054 !important;
+  font-size: 10.5px !important;
+  box-shadow: none !important;
+}
+
+textarea {
+  min-height: 74px !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #6aa8ff !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, .10) !important;
+}
+
+label {
+  gap: 5px !important;
+}
+
+label > span {
+  color: #566477 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+
+.badge {
+  min-height: 20px !important;
+  padding: 3px 6px !important;
+  border-radius: 999px !important;
+  font-size: 9px !important;
+}
+
+/* ---------- tables ---------- */
+
+.table-wrap,
+.api-table-wrap,
+.task-table-wrap,
+.instance-table-wrap {
+  border-color: #e3e9ef !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+th,
+.api-table th,
+.task-table th,
+.all-tenant-instance-table th,
+.launch-table-all-tenants th {
+  background: #f7f9fc !important;
+  color: #7b8797 !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0 !important;
+}
+
+td,
+.api-table td,
+.task-table td,
+.all-tenant-instance-table td,
+.launch-table-all-tenants td {
+  color: #344054 !important;
+  border-bottom-color: #edf1f4 !important;
+}
+
+.api-table tbody tr:nth-child(even),
+.task-table tbody tr:nth-child(even),
+.all-tenant-instance-table tbody tr:nth-child(even) {
+  background: #fcfdff !important;
+}
+
+.api-table tbody tr:hover td,
+.task-table tbody tr:hover td,
+.all-tenant-instance-table tbody tr:hover td,
+.launch-table-all-tenants tbody tr:hover td {
+  background: #f1f7ff !important;
+}
+
+/* ---------- dashboard ---------- */
+
+.dashboard-stats {
+  gap: 9px !important;
+}
+
+.dashboard-stat-card {
+  min-height: 92px !important;
+  padding: 12px 13px !important;
+  border-color: #e4e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+.dashboard-stat-card::before {
+  height: 2px !important;
+  background: #1677ff !important;
+}
+
+.dashboard-stat-head span {
+  color: #344054 !important;
+  font-size: 10px !important;
+}
+
+.dashboard-stat-head em {
+  padding: 2px 6px !important;
+  border-radius: 999px !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+  font-size: 8px !important;
+}
+
+.dashboard-stat-card > strong {
+  margin: 9px 0 3px !important;
+  color: #1d2939 !important;
+  font-size: 25px !important;
+}
+
+.dashboard-stat-card > small {
+  color: #8a95a4 !important;
+  font-size: 8.5px !important;
+}
+
+.dashboard-grid {
+  gap: 10px !important;
+}
+
+.dashboard-panel,
+.dashboard-monitor-panel,
+.dashboard-system-panel {
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+.monitor-resource-grid {
+  gap: 7px !important;
+}
+
+.monitor-resource-card,
+.monitor-chart-card,
+.monitor-detail-card {
+  border-color: #e6ebf0 !important;
+  border-radius: 7px !important;
+  background: #fbfcfe !important;
+  box-shadow: none !important;
+}
+
+/* ---------- account / proxy / task / instance lists ---------- */
+
+.compact-account-filter,
+.instances-filter-panel,
+.launch-filter-panel {
+  background: #ffffff !important;
+}
+
+.api-summary-card,
+.instance-summary-card,
+.launch-summary-card,
+.task-summary-grid > article {
+  min-height: 72px !important;
+  border-color: #e5eaf0 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.api-summary-card::before,
+.instance-summary-card::before,
+.launch-summary-card::before {
+  width: 2px !important;
+}
+
+.proxy-page-head,
+.task-center-head,
+.instances-page-head,
+.launch-page-head {
+  padding-bottom: 10px !important;
+  border-bottom-color: #e8edf2 !important;
+}
+
+/* ---------- tenant workspace ---------- */
+
+body.tenant-mode .main-column {
+  padding-top: 10px !important;
+}
+
+body.tenant-mode .tenant-hero {
+  gap: 10px !important;
+  padding: 9px 11px !important;
+  border-color: #e4e9ef !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+body.tenant-mode .tenant-hero .back-button {
+  min-width: 64px !important;
+  min-height: 30px !important;
+  border-color: #dce4ec !important;
+  border-radius: 6px !important;
+  background: #f9fbfd !important;
+  color: #4b5a6c !important;
+  font-size: 9.5px !important;
+}
+
+body.tenant-mode .tenant-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 7px !important;
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+}
+
+body.tenant-mode .tenant-identity h1 {
+  color: #243142 !important;
+  font-size: 15px !important;
+}
+
+body.tenant-mode .tenant-identity p {
+  color: #7d8999 !important;
+  font-size: 9.5px !important;
+}
+
+body.tenant-mode .tenant-meta span {
+  padding: 4px 7px !important;
+  border-radius: 5px !important;
+  background: #f5f7fa !important;
+  color: #667487 !important;
+  font-size: 9px !important;
+}
+
+body.tenant-mode .tenant-tabs {
+  top: 50px !important;
+  margin: 7px 0 10px !important;
+  padding: 5px !important;
+  gap: 2px !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+body.tenant-mode .tenant-tabs button {
+  min-height: 30px !important;
+  padding: 5px 8px !important;
+  border-radius: 6px !important;
+  color: #657286 !important;
+  font-size: 9.5px !important;
+}
+
+body.tenant-mode .tenant-tabs button.active {
+  border-color: #cfe1ff !important;
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+}
+
+/* ---------- R-Bot-style launch workspace ---------- */
+
+/* The reference uses the whole working width instead of reserving a permanent
+   empty right rail. Saved configs / jobs therefore move below the form. */
+#tenant-launch-layout.launch-workspace-v2 {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+#tenant-launch-form.launch-editor {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.launch-editor-head {
+  grid-column: 1 / -1 !important;
+  min-height: 54px !important;
+  padding: 10px 12px !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+.launch-editor-head h2 {
+  color: #243142 !important;
+  font-size: 14px !important;
+}
+
+.launch-editor-head p {
+  color: #7f8b9b !important;
+  font-size: 9px !important;
+}
+
+.launch-head-actions .button {
+  min-height: 30px !important;
+  height: 30px !important;
+  border-radius: 5px !important;
+  font-size: 9px !important;
+}
+
+.launch-section {
+  margin: 0 !important;
+  padding: 12px !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+#tenant-launch-form:not(:has(.launch-retry-section)) .launch-section {
+  grid-column: 1 / -1 !important;
+}
+
+.launch-section-title {
+  min-height: 28px !important;
+  margin-bottom: 9px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid #edf1f4 !important;
+}
+
+.launch-section-title > span {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px !important;
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+  font-size: 9px !important;
+}
+
+.launch-section-title strong {
+  color: #344054 !important;
+  font-size: 11px !important;
+}
+
+.launch-section-title small {
+  color: #8a95a5 !important;
+  font-size: 8.5px !important;
+}
+
+.launch-presets {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  margin: 7px 0 10px !important;
+}
+
+.launch-presets button {
+  min-height: 48px !important;
+  padding: 7px 8px !important;
+  border-color: #e1e7ed !important;
+  border-radius: 6px !important;
+  background: #f9fbfd !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.launch-presets button:hover {
+  border-color: #bcd5f7 !important;
+  background: #f3f8ff !important;
+  transform: none !important;
+}
+
+.launch-presets button.active {
+  border-color: #79adf7 !important;
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+  box-shadow: inset 0 0 0 1px rgba(22,119,255,.04) !important;
+}
+
+.launch-presets button strong {
+  font-size: 9.5px !important;
+}
+
+.launch-presets button small {
+  color: #7d899a !important;
+  font-size: 8px !important;
+}
+
+.launch-basic-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.launch-basic-grid > label:first-child,
+.launch-basic-grid > label:last-child {
+  grid-column: 1 / -1 !important;
+}
+
+.launch-retry-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.launch-login-row,
+.launch-password-row {
+  grid-column: 1 / -1 !important;
+}
+
+.launch-section input,
+.launch-section select {
+  min-height: 34px !important;
+  height: 34px !important;
+  border-radius: 6px !important;
+  font-size: 10px !important;
+}
+
+.launch-section label small {
+  color: #929dac !important;
+  font-size: 8px !important;
+}
+
+.launch-interval-presets {
+  margin: 5px 0 9px !important;
+  gap: 5px !important;
+}
+
+.launch-interval-presets button {
+  min-height: 27px !important;
+  padding: 0 8px !important;
+  border-radius: 5px !important;
+  background: #f8fafc !important;
+  font-size: 8.5px !important;
+}
+
+.launch-interval-presets button.active {
+  border-color: #79adf7 !important;
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+}
+
+.launch-auto-card {
+  grid-column: 1 / -1 !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  border: 1px solid #dbe7f4 !important;
+  border-radius: 8px !important;
+  background: #f7fbff !important;
+  box-shadow: none !important;
+}
+
+.launch-state {
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+}
+
+.launch-env-chips {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  margin-top: 7px !important;
+}
+
+.launch-env-chips > span {
+  min-height: 42px !important;
+  padding: 6px 8px !important;
+  border-color: #e2e8ef !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+}
+
+.launch-env-chips small {
+  color: #8c97a6 !important;
+  font-size: 7.5px !important;
+}
+
+.launch-env-chips strong {
+  color: #344054 !important;
+  font-size: 8.5px !important;
+}
+
+.launch-advanced {
+  grid-column: 1 / -1 !important;
+  margin: 0 !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.03) !important;
+}
+
+.launch-advanced > summary {
+  min-height: 38px !important;
+  padding: 9px 11px !important;
+  color: #516074 !important;
+}
+
+.launch-submit-bar {
+  grid-column: 1 / -1 !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+.launch-submit-bar strong {
+  color: #344054 !important;
+  font-size: 10.5px !important;
+}
+
+.launch-submit-bar p {
+  font-size: 8.5px !important;
+}
+
+.launch-submit-bar .button.primary {
+  min-width: 116px !important;
+  min-height: 34px !important;
+}
+
+#tenant-launch-side.launch-side-panel {
+  position: static !important;
+  top: auto !important;
+  width: 100% !important;
+  padding: 0 !important;
+  border-color: #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+.launch-side-head {
+  min-height: 42px !important;
+  padding: 6px 9px !important;
+  border-bottom: 1px solid #e8edf2 !important;
+}
+
+.launch-side-tabs button {
+  min-height: 29px !important;
+  padding: 5px 8px !important;
+  border-radius: 5px !important;
+  color: #657286 !important;
+  font-size: 9px !important;
+}
+
+.launch-side-tabs button.active {
+  background: #eaf3ff !important;
+  color: #1769dd !important;
+}
+
+.launch-side-body {
+  max-height: 340px !important;
+  padding: 9px !important;
+}
+
+/* ---------- global launch page ---------- */
+
+#launch-page .nt-scheduler-panel {
+  border-color: #e3e9ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(31,45,61,.035) !important;
+}
+
+#launch-page .nt-scheduler-overview-strip {
+  border-color: #dce8f7 !important;
+  border-radius: 6px !important;
+  background: #f4f9ff !important;
+}
+
+#launch-page .nt-scheduler-overview-strip strong,
+#launch-page .nt-scheduler-overview-strip span.good,
+#launch-page .nt-scheduler-overview-strip span.warn {
+  color: #1769dd !important;
+}
+
+#launch-page .nt-scheduler-stat-card {
+  border-color: #e4e9ef !important;
+  border-radius: 7px !important;
+  box-shadow: none !important;
+}
+
+#launch-page .nt-scheduler-stat-card::before {
+  background: #1677ff !important;
+}
+
+#launch-page .nt-stat-badge {
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+#launch-page .nt-scheduler-toggle-chip {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+#launch-page .launch-cache-note {
+  border-left-color: #1677ff !important;
+  background: #f3f8ff !important;
+}
+
+#launch-page .launch-summary-card::before {
+  background: #1677ff !important;
+}
+
+#launch-page .launch-empty {
+  min-height: 92px !important;
+  padding: 22px 16px !important;
+  border: 1px dashed #d4dce6 !important;
+  border-radius: 7px !important;
+  background: #fafcff !important;
+  color: #8a95a5 !important;
+}
+
+/* ---------- login ---------- */
+
+.login-view {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(22,119,255,.09), transparent 30%),
+    radial-gradient(circle at 82% 86%, rgba(99,102,241,.07), transparent 28%),
+    #f4f7fb !important;
+}
+
+.login-card {
+  width: min(390px, 100%) !important;
+  padding: 26px !important;
+  gap: 14px !important;
+  border-color: #e3e9ef !important;
+  border-radius: 10px !important;
+  box-shadow: 0 18px 50px rgba(31,45,61,.09) !important;
+}
+
+.brand-mark {
+  width: 50px !important;
+  height: 50px !important;
+  border: 1.5px solid #ef4444 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #dc2626 !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+}
+
+.login-card h1 {
+  font-size: 22px !important;
+}
+
+.login-card p {
+  font-size: 10px !important;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1200px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr) !important;
+  }
+
+  #tenant-launch-form.launch-editor {
+    grid-template-columns: 1fr !important;
+  }
+
+  .launch-section,
+  #tenant-launch-form:not(:has(.launch-retry-section)) .launch-section {
+    grid-column: 1 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-header {
+    height: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr !important;
+    min-height: calc(100vh - 48px) !important;
+  }
+
+  .sidebar {
+    position: static !important;
+    height: auto !important;
+    padding: 7px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid #e4e9ef !important;
+  }
+
+  .nav-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+
+  .nav {
+    justify-content: center !important;
+    min-height: 34px !important;
+    padding: 5px 3px !important;
+    font-size: 9px !important;
+  }
+
+  .nav span,
+  .nav-group-title,
+  .sidebar-foot {
+    display: none !important;
+  }
+
+  .main-column {
+    padding: 0 10px 24px !important;
+  }
+
+  .launch-basic-grid,
+  .launch-retry-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .launch-basic-grid > label:first-child,
+  .launch-basic-grid > label:last-child,
+  .launch-login-row,
+  .launch-password-row {
+    grid-column: auto !important;
+  }
+
+  .launch-env-chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
