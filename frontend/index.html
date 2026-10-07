@@ -22,7 +22,7 @@
       </form>
       <button id="google-login" class="button google wide" type="button" hidden>使用 Gmail 登录</button>
       <p id="login-error" class="form-error" hidden></p>
-      <small>N&amp;T 1.0</small>
+      <small>N&amp;T 2.0</small>
     </section>
   </main>
 
@@ -48,7 +48,7 @@
         <button class="nav" data-page="settings" type="button"><span>SET</span>系统设置</button>
       </nav>
       <div class="sidebar-foot">
-        <span class="sidebar-version">N&amp;T 1.0</span>
+        <span class="sidebar-version">N&amp;T 2.0</span>
       </div>
     </aside>
 
@@ -86,7 +86,27 @@
           </article>
         </div>
 
-        <section class="panel dashboard-monitor-panel" aria-labelledby="dashboard-monitor-title">
+        <div class="dashboard-grid">
+          <section class="panel dashboard-panel dashboard-account-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>账户状态</h2><p>账户状态来自本地缓存，点击账户可进入租户工作区。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-account-list-count" class="dashboard-panel-count">0 个账户</span><button class="button" data-page="accounts" type="button">API 管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-account-columns" aria-hidden="true"><span>账户</span><span>区域 / 类型</span><span>状态</span></div>
+            <div id="dashboard-account-list" class="compact-list dashboard-compact-list"><div class="empty">正在读取……</div></div>
+          </section>
+
+          <section class="panel dashboard-panel dashboard-instance-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>最近实例</h2><p>仅显示已经同步到 SQLite 的实例缓存，不会后台请求 OCI。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-instance-list-count" class="dashboard-panel-count">0 个实例</span><button class="button" data-page="instances" type="button">实例管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-instance-columns" aria-hidden="true"><span>实例 / 账户</span><span>配置 / 区域</span><span>状态</span></div>
+            <div id="dashboard-instance-list" class="compact-list dashboard-compact-list"><div class="empty">暂无实例缓存</div></div>
+          </section>
+        </div>
+
+        <section class="panel dashboard-monitor-panel dashboard-monitor-compact" aria-labelledby="dashboard-monitor-title">
           <div class="panel-head dashboard-monitor-head">
             <div><h2 id="dashboard-monitor-title">服务器运行状态</h2><p>每 10 秒读取本机实时数据；历史指标每分钟写入本地 SQLite，不访问 OCI。</p></div>
             <div class="dashboard-monitor-actions"><span id="monitor-collected-at" class="muted">等待采样</span><button id="monitor-export" class="button" type="button">导出 CSV</button><button id="monitor-refresh" class="button primary" type="button">立即刷新</button></div>
@@ -118,26 +138,6 @@
           </div>
         </section>
 
-        <div class="dashboard-grid">
-          <section class="panel dashboard-panel dashboard-account-panel">
-            <div class="panel-head dashboard-panel-head">
-              <div><h2>账户状态</h2><p>账户状态来自本地缓存，点击账户可进入租户工作区。</p></div>
-              <div class="dashboard-panel-actions"><span id="dash-account-list-count" class="dashboard-panel-count">0 个账户</span><button class="button" data-page="accounts" type="button">API 管理</button></div>
-            </div>
-            <div class="dashboard-list-columns dashboard-account-columns" aria-hidden="true"><span>账户</span><span>区域 / 类型</span><span>状态</span></div>
-            <div id="dashboard-account-list" class="compact-list dashboard-compact-list"><div class="empty">正在读取……</div></div>
-          </section>
-
-          <section class="panel dashboard-panel dashboard-instance-panel">
-            <div class="panel-head dashboard-panel-head">
-              <div><h2>最近实例</h2><p>仅显示已经同步到 SQLite 的实例缓存，不会后台请求 OCI。</p></div>
-              <div class="dashboard-panel-actions"><span id="dash-instance-list-count" class="dashboard-panel-count">0 个实例</span><button class="button" data-page="instances" type="button">实例管理</button></div>
-            </div>
-            <div class="dashboard-list-columns dashboard-instance-columns" aria-hidden="true"><span>实例 / 账户</span><span>配置 / 区域</span><span>状态</span></div>
-            <div id="dashboard-instance-list" class="compact-list dashboard-compact-list"><div class="empty">暂无实例缓存</div></div>
-          </section>
-        </div>
-
         <section class="panel dashboard-system-panel dashboard-system-compact" aria-labelledby="dashboard-system-title">
           <div class="panel-head dashboard-system-head">
             <div>
@@ -157,7 +157,7 @@
           </div>
 
           <div class="dashboard-system-summary" aria-label="系统状态概览">
-            <article class="dashboard-system-stat"><span>API 运行时间</span><strong id="system-status-uptime">—</strong><small id="system-status-version">N&amp;T 1.0</small></article>
+            <article class="dashboard-system-stat"><span>API 运行时间</span><strong id="system-status-uptime">—</strong><small id="system-status-version">N&amp;T 2.0</small></article>
             <article class="dashboard-system-stat"><span>SQLite 数据库</span><strong id="system-status-database">检查中</strong><small id="system-status-database-copy">等待自检</small></article>
             <article class="dashboard-system-stat"><span>本地数据</span><strong id="system-status-data">—</strong><small id="system-status-data-copy">账户 / 缓存实例</small></article>
             <article class="dashboard-system-stat"><span>磁盘剩余</span><strong id="system-status-storage">—</strong><small id="system-status-storage-copy">数据目录所在磁盘</small></article>
