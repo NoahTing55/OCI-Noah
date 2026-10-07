@@ -882,12 +882,25 @@ function ui2RenderGlobalInstances(result) {
   const visibleCopy = (filterState.status || filterState.query) ? ` · 显示 ${visibleInstances.length} 台` : "";
   $("global-instance-summary").innerHTML = `<strong>${scopedInstances.length} 台缓存实例</strong><span>${esc(scopeLabel)} · 更新于 ${esc(dataTime)}${visibleCopy}</span>`;
   if (!scopedInstances.length) {
-    $("global-instance-list").innerHTML = `<div class="empty instance-empty"><strong>${selectedAccount ? "该租户暂无实例缓存" : "全部租户暂无实例缓存"}</strong><span>${selectedAccount ? "点击“同步所选租户”后才会查询 OCI。" : "选择一个租户后可执行手动同步。"}</span></div>`;
+    const emptyTitle = selectedAccount ? "该租户暂无实例缓存" : "全部租户暂无实例缓存";
+    const emptyCopy = selectedAccount
+      ? "当前仅显示本地 SQLite 缓存。点击同步后才会请求这个 OCI 租户。"
+      : "先选择一个 OCI 租户，再按需同步；不会自动请求其他租户。";
+    const emptyAction = selectedAccount
+      ? '<button class="button primary small" data-instance-empty-sync type="button">同步所选租户</button>'
+      : '<button class="button small" data-instance-empty-focus type="button">选择 OCI 租户</button>';
+    $("global-instance-list").innerHTML = `<div class="instance-empty-state">
+      <div class="instance-empty-mark" aria-hidden="true">OCI</div>
+      <strong>${esc(emptyTitle)}</strong>
+      <span>${esc(emptyCopy)}</span>
+      <div class="instance-empty-actions">${emptyAction}</div>
+      <small>同步结果仅写入本地缓存；后续浏览不会自动访问 OCI。</small>
+    </div>`;
     ui2UpdateInstanceBatchToolbar([]);
     return;
   }
   if (!visibleInstances.length) {
-    $("global-instance-list").innerHTML = '<div class="empty instance-empty"><strong>没有符合条件的实例</strong><span>请调整租户、状态或搜索条件。</span></div>';
+    $("global-instance-list").innerHTML = '<div class="instance-empty-state compact"><div class="instance-empty-mark" aria-hidden="true">⌕</div><strong>没有符合条件的实例</strong><span>请调整租户、状态或搜索条件。</span><div class="instance-empty-actions"><button class="button small" data-instance-empty-reset type="button">重置筛选</button></div></div>';
     ui2UpdateInstanceBatchToolbar([]);
     return;
   }
@@ -1616,7 +1629,10 @@ function ui2Bind() {
       showPage("launch");
       ui2FillSelector("global-launch-account", state.ui2.selectedLaunchAccount);
       ui2LoadGlobalLaunch();
-    } else if (button.dataset.ui2InstanceAction) ui2InstanceAction(button);
+    } else if (button.dataset.instanceEmptySync !== undefined) $("global-instance-sync")?.click();
+    else if (button.dataset.instanceEmptyFocus !== undefined) $("global-instance-account")?.focus();
+    else if (button.dataset.instanceEmptyReset !== undefined) $("global-instance-reset")?.click();
+    else if (button.dataset.ui2InstanceAction) ui2InstanceAction(button);
     else if (button.dataset.ui2ReplaceIp) ui2ReplaceIp(button);
     else if (button.dataset.ui2EditInstance) ui2EditInstance(button);
     else if (button.dataset.ui2InstanceMore) ui2OpenTenant(button.dataset.ui2InstanceMore, "instances", "instances");
