@@ -9,6 +9,7 @@
   <link rel="alternate icon" href="/favicon.ico?v=rednt-1">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=rednt-1">
   <link rel="stylesheet" href="/styles.css?v=2.0.0-stable-ui-freeze">
+  <link rel="stylesheet" href="/ui21-preview.css?v=2.1-preview-1">
 </head>
 <body>
   <main id="login-view" class="login-view">
@@ -22,13 +23,13 @@
       </form>
       <button id="google-login" class="button google wide" type="button" hidden>使用 Gmail 登录</button>
       <p id="login-error" class="form-error" hidden></p>
-      <small>N&amp;T 1.0</small>
+      <small>N&amp;T 2.0</small>
     </section>
   </main>
 
   <div id="app-view" class="app-root" hidden>
     <header class="app-header">
-      <div class="header-brand"><span class="header-logo">N&amp;T</span><div><strong>OCI-N&amp;T</strong><small>Oracle Cloud 管理控制台</small></div></div>
+      <div class="header-brand"><span class="header-logo">N&amp;T</span><div><strong>OCI-N&amp;T</strong><small>Oracle Cloud 管理控制台</small></div><span class="ui21-preview-badge">UI 2.1 Preview</span></div>
       <div class="header-actions"><span class="header-user">管理员：<strong id="current-username">—</strong></span><button id="logout" class="header-button" type="button">退出</button></div>
     </header>
     <div class="app-shell">
@@ -48,7 +49,7 @@
         <button class="nav" data-page="settings" type="button"><span>SET</span>系统设置</button>
       </nav>
       <div class="sidebar-foot">
-        <span class="sidebar-version">N&amp;T 1.0</span>
+        <span class="sidebar-version">N&amp;T 2.0</span>
       </div>
     </aside>
 
@@ -157,7 +158,7 @@
           </div>
 
           <div class="dashboard-system-summary" aria-label="系统状态概览">
-            <article class="dashboard-system-stat"><span>API 运行时间</span><strong id="system-status-uptime">—</strong><small id="system-status-version">N&amp;T 1.0</small></article>
+            <article class="dashboard-system-stat"><span>API 运行时间</span><strong id="system-status-uptime">—</strong><small id="system-status-version">N&amp;T 2.0</small></article>
             <article class="dashboard-system-stat"><span>SQLite 数据库</span><strong id="system-status-database">检查中</strong><small id="system-status-database-copy">等待自检</small></article>
             <article class="dashboard-system-stat"><span>本地数据</span><strong id="system-status-data">—</strong><small id="system-status-data-copy">账户 / 缓存实例</small></article>
             <article class="dashboard-system-stat"><span>磁盘剩余</span><strong id="system-status-storage">—</strong><small id="system-status-storage-copy">数据目录所在磁盘</small></article>
