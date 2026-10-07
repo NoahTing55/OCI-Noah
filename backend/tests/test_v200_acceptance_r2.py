@@ -28,8 +28,10 @@ def test_monitor_disconnect_noise_is_suppressed_and_guard_is_listed():
 
 def test_upgrade_backup_is_host_side_and_verified():
     root = Path(__file__).resolve().parents[2]
-    script = (root / "deploy/atomic-upgrade-v2.0.0.sh").read_text(encoding="utf-8")
-    assert 'DB_SOURCE="$PROJECT_DIR/data/oci-nt.db"' in script
-    assert 'DB_BACKUP_PATH="$PROJECT_DIR/data/backups/$DB_BACKUP_NAME"' in script
-    assert "HOST_DB_BACKUP_OK" in script
-    assert "docker exec oci-nt-api python - \"$DB_BACKUP_NAME\"" not in script
+    script = (root / "deploy/update-from-github.sh").read_text(encoding="utf-8")
+    assert 'DB="$PROJECT/data/oci-nt.db"' in script
+    assert 'BACKUP_DIR="$PROJECT/data/backups"' in script
+    assert 'DB_BACKUP="$BACKUP_DIR/pre-git-update-${STAMP}.db"' in script
+    assert "a.backup(b)" in script
+    assert 'PRAGMA quick_check' in script
+    assert "docker exec oci-nt-api python" not in script

@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       network: host
-    image: oci-nt-api:v2.0.0
+    image: ghcr.io/noahting55/oci-noah-api:${OCI_NOAH_IMAGE_TAG:-latest}
     container_name: oci-nt-api
     restart: unless-stopped
     env_file:
@@ -44,7 +44,7 @@ services:
       start_period: 20s
 
   docker-guard:
-    image: oci-nt-api:v2.0.0
+    image: ghcr.io/noahting55/oci-noah-api:${OCI_NOAH_IMAGE_TAG:-latest}
     container_name: oci-nt-docker-guard
     restart: unless-stopped
     user: "10001:10001"
@@ -77,7 +77,7 @@ services:
       start_period: 10s
 
   monitor:
-    image: oci-nt-api:v2.0.0
+    image: ghcr.io/noahting55/oci-noah-api:${OCI_NOAH_IMAGE_TAG:-latest}
     container_name: oci-nt-monitor-agent
     restart: unless-stopped
     user: "10001:10001"
@@ -113,7 +113,7 @@ services:
     build:
       context: ./frontend
       network: host
-    image: oci-nt-web:v2.0.0
+    image: ghcr.io/noahting55/oci-noah-web:${OCI_NOAH_IMAGE_TAG:-latest}
     container_name: oci-nt-web
     restart: unless-stopped
     depends_on:

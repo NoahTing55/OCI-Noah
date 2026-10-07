@@ -241,14 +241,16 @@ def test_resource_guard_blocks_large_or_low_resource_tasks(monkeypatch):
         assert_task_resources(1)
 
 
-def test_v2_atomic_upgrade_contract_is_low_memory_safe_and_schema_seven():
+def test_github_upgrade_contract_pulls_commit_pinned_images_without_local_builds():
     root = Path(__file__).resolve().parents[2]
-    script = (root / "deploy/atomic-upgrade-v2.0.0.sh").read_text(encoding="utf-8")
-    assert "--low-memory" in script
-    assert "--normal-memory" in script
-    assert "LOW_MEMORY_MODE" in script
-    assert "docker compose build api" in script
-    assert "docker compose build web" in script
-    assert "DATABASE_SCHEMA_OK version=7" in script
-    assert "migrations[:7] == [1, 2, 3, 4, 5, 6, 7]" in script
-    assert "pre-v2-upgrade" in script
+    script = (root / "deploy/update-from-github.sh").read_text(encoding="utf-8")
+    assert "git fetch --prune origin" in script
+    assert 'git merge-base --is-ancestor "$OLD_HEAD" "$REMOTE_HEAD"' in script
+    assert 'python3 - "$DB" "$DB_BACKUP"' in script
+    assert 'PRAGMA quick_check' in script
+    assert 'NEW_IMAGE_TAG="sha-$NEW_HEAD"' in script
+    assert 'export OCI_NOAH_IMAGE_TAG="$NEW_IMAGE_TAG"' in script
+    assert "docker compose pull api web" in script
+    assert "docker compose build api" not in script
+    assert "docker compose build web" not in script
+    assert "pre-git-update-" in script
