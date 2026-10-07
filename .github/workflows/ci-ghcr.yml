@@ -56,6 +56,11 @@ jobs:
           node --check frontend/rc.js
           node --check frontend/ui2.js
 
+      - name: Validate Docker Compose
+        env:
+          OCI_NOAH_IMAGE_TAG: ci
+        run: docker compose config >/dev/null
+
   publish:
     name: Publish ${{ matrix.name }} image
     if: github.event_name != 'pull_request'
