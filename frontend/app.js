@@ -2890,7 +2890,7 @@ function renderTaskDetail(task) {
 function taskExportPayload(task) {
   return {
     exported_at: new Date().toISOString(),
-    system_version: "N&T 1.0",
+    system_version: "N&T 2.0",
     task: {
       id: task.id,
       task_type: task.task_type,
@@ -3425,7 +3425,7 @@ function renderSystemDiagnostics(data) {
   overallBox.className = `system-overall system-overall-${overall}`;
   $("system-status-checked").textContent = `检查于 ${fmtDate(data?.checked_at).replace(",", "")}`;
   $("system-status-uptime").textContent = formatSystemDuration(data?.uptime_seconds);
-  $("system-status-version").textContent = `${data?.display_version || "N&T 1.0"}`;
+  $("system-status-version").textContent = `${data?.display_version || "N&T 2.0"}`;
   $("system-status-database").textContent = systemStatusText(database.status || "error");
   $("system-status-database").className = `system-stat-value system-stat-${database.status || "error"}`;
   $("system-status-database-copy").textContent = database.summary || "数据库未完成检查";
