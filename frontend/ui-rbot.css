@@ -2662,3 +2662,381 @@ input[type="checkbox"][id^="enable-"]:focus-visible,
   }
 }
 /* END R-BOT PREVIEW R5 BLUE CONSISTENCY + OVERLAP FIX */
+
+/* BEGIN R-BOT PREVIEW R6 FULL BLUE AUDIT + SIDEBAR
+ * Screenshot-driven full palette audit.
+ * The normal UI has one accent only: #1677ff blue.
+ * Amber/red remain only for warnings/errors/danger actions.
+ */
+
+/* ---------- global blue interaction tokens ---------- */
+:root {
+  --primary: #1677ff !important;
+  --primary-hover: #0f6ce8 !important;
+  --primary-soft: #edf5ff !important;
+  --good: #1677ff !important;
+  --good-soft: #edf5ff !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #79adf7 !important;
+  box-shadow: 0 0 0 3px rgba(22,119,255,.12) !important;
+}
+
+.header-button:hover {
+  border-color: #9fc4f5 !important;
+  background: #f5f9ff !important;
+  color: #1769dd !important;
+}
+
+/* ---------- sidebar: R-Bot classic-inspired, N&T blue ---------- */
+/* Public R-Bot repository exposes screenshots/docs rather than the Web UI CSS,
+   so this is a visual implementation, not copied source. */
+.app-shell {
+  grid-template-columns: 196px minmax(0, 1fr) !important;
+}
+
+.sidebar {
+  padding: 12px 9px 11px !important;
+  background: #ffffff !important;
+  border-right: 1px solid #e4e9f0 !important;
+  color: #344054 !important;
+}
+
+.nav-list {
+  gap: 3px !important;
+}
+
+.nav-group-title {
+  padding: 14px 8px 6px !important;
+  color: #98a2b3 !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em !important;
+}
+
+.nav {
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 7px 9px !important;
+  gap: 9px !important;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: #475467 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+  box-shadow: none !important;
+}
+
+.nav span {
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  margin: 0 !important;
+  border-radius: 6px !important;
+  background: #f2f4f7 !important;
+  color: #667085 !important;
+  font-size: 8.5px !important;
+}
+
+.nav:hover {
+  border-color: #e4eaf1 !important;
+  background: #f7f9fc !important;
+  color: #1d2939 !important;
+}
+
+.nav.active {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+  box-shadow: inset 3px 0 0 #1677ff !important;
+}
+
+.nav.active span {
+  background: #1677ff !important;
+  color: #ffffff !important;
+}
+
+.sidebar-foot {
+  margin: auto 8px 0 !important;
+  padding: 10px 2px 0 !important;
+  border-top: 1px solid #e9edf2 !important;
+}
+
+.sidebar-version {
+  color: #98a2b3 !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .04em !important;
+}
+
+/* ---------- all generic normal/success markers ---------- */
+.badge.good,
+.status-pill.good,
+.status-badge.good,
+.account-health-good,
+.proxy-status-good,
+.launch-state.good,
+.system-card-count.good {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+.status-dot.good,
+.status-indicator.good,
+.system-component-ok .system-component-indicator {
+  background: #1677ff !important;
+}
+
+.sequence-cell > span,
+.proxy-row-number,
+.card-sequence {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+/* ---------- version / release ---------- */
+#settings-page .release-product {
+  border-color: #bfd8ff !important;
+  background: #f3f8ff !important;
+}
+
+#settings-page .release-product strong {
+  color: #1769dd !important;
+}
+
+#settings-page .release-history-table .badge.good {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+/* ---------- audit log ---------- */
+#audit-page .sequence-cell > span {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+/* Audit categories are classifications, not warning states: one blue family. */
+#audit-page .audit-category,
+#audit-page .audit-category-auth,
+#audit-page .audit-category-oci,
+#audit-page .audit-category-instance,
+#audit-page .audit-category-proxy,
+#audit-page .audit-category-cloudflare,
+#audit-page .audit-category-system,
+#audit-page .audit-category-other {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+#audit-page .audit-resource {
+  border: 1px solid #d8e7ff !important;
+  background: #f3f8ff !important;
+  color: #1769dd !important;
+}
+
+#audit-page .audit-action {
+  background: #f2f4f7 !important;
+  color: #344054 !important;
+}
+
+#audit-page .audit-table tbody tr:hover td,
+#audit-page .audit-table tbody tr:hover {
+  background: #f3f7ff !important;
+}
+
+/* ---------- Cloudflare ---------- */
+.cloudflare-account-item.is-selected {
+  border-color: #bfd8ff !important;
+  background: #f3f8ff !important;
+  box-shadow: inset 3px 0 0 #1677ff !important;
+}
+
+.cf-account-avatar {
+  border: 1px solid #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+.cloudflare-account-table tr.is-selected {
+  background: #f3f8ff !important;
+}
+
+.cloudflare-cache-note {
+  border-left-color: #1677ff !important;
+  background: #f3f8ff !important;
+}
+
+.cloudflare-summary-card::before {
+  background: #1677ff !important;
+}
+
+.cloudflare-summary-card > b {
+  border: 1px solid #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+/* DNS record type is informational; use one accent instead of green/purple/orange. */
+.dns-type-badge,
+.dns-type-a,
+.dns-type-aaaa,
+.dns-type-cname,
+.dns-type-txt,
+.dns-type-mx,
+.dns-type-srv,
+.dns-type-caa,
+.dns-type-ns,
+.dns-type-ptr,
+.dns-type-uri {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+/* ---------- instance / launch / proxy residual green ---------- */
+.instance-ip-label.public {
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+.button.subtle:hover {
+  border-color: #bfd8ff !important;
+  background: #f3f8ff !important;
+  color: #1769dd !important;
+}
+
+.launch-job-id {
+  color: #1769dd !important;
+}
+
+.launch-progress-track i {
+  background: #1677ff !important;
+}
+
+.launch-auto-card {
+  border-color: #d5e5ff !important;
+  background: linear-gradient(135deg, #f3f8ff 0%, #f8fbff 100%) !important;
+}
+
+.instance-batch-toolbar {
+  border-color: #bfd8ff !important;
+  background: #f3f8ff !important;
+}
+
+#proxies-page .proxy-binding-chip.is-used,
+.nt-a53-cache-badge.is-cached,
+.nt-a55-domain-cache,
+.nt-a55-domain-status.good,
+.nt-final-cache.is-cached {
+  border-color: rgba(22,119,255,.24) !important;
+  background: rgba(22,119,255,.07) !important;
+  color: #1769dd !important;
+}
+
+.nt-a53-policy-state.good,
+.nt-a55-domain-grid label small b {
+  color: #1769dd !important;
+}
+
+/* ---------- tenant/detail residual green ---------- */
+.instance-detail-link:hover {
+  color: #1769dd !important;
+}
+
+.nt-detail-icon {
+  background: #1677ff !important;
+}
+
+.nt-detail-ip,
+.button.primary-soft {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+.nt-detail-tabs button.active,
+.nt-detail-range button.active {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+.settings-card-index {
+  border: 1px solid #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+/* ---------- table focus/hover ---------- */
+.api-table tbody tr:hover td,
+.api-table tbody tr:focus-within td,
+.dense-table tbody tr:hover td,
+.task-table tbody tr:hover td,
+.all-tenant-instance-table tbody tr:hover td,
+.launch-table-all-tenants tbody tr:hover td {
+  background: #f3f7ff !important;
+}
+
+/* ---------- summary/status cards: preserve the no-overlap grid from R5 ---------- */
+.instance-summary-card,
+.launch-summary-card,
+.api-summary-card {
+  grid-template-columns: minmax(0, 1fr) 82px !important;
+  grid-template-rows: 24px minmax(28px, auto) !important;
+}
+
+.instance-summary-card::before,
+.instance-summary-running::before,
+.instance-summary-stopped::before,
+.instance-summary-ip::before,
+.launch-summary-card::before,
+.api-summary-card::before,
+.api-summary-total::before,
+.api-summary-alive::before,
+.api-summary-proxy::before,
+.api-summary-abnormal::before,
+.dashboard-system-stat::before,
+.dashboard-system-stat:nth-child(2)::before,
+.dashboard-system-stat:nth-child(3)::before,
+.dashboard-system-stat:nth-child(4)::before {
+  background: #1677ff !important;
+}
+
+.instance-summary-card > b,
+.launch-summary-card > b,
+.api-summary-card > b,
+.instance-summary-running > b,
+.instance-summary-stopped > b,
+.instance-summary-ip > b,
+.launch-summary-running > b,
+.launch-summary-success > b,
+.launch-summary-failure > b,
+.api-summary-total > b,
+.api-summary-alive > b,
+.api-summary-proxy > b,
+.api-summary-abnormal > b {
+  border-color: #cfe1ff !important;
+  background: #edf5ff !important;
+  color: #1769dd !important;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nav.active {
+    box-shadow: none !important;
+  }
+}
+/* END R-BOT PREVIEW R6 FULL BLUE AUDIT + SIDEBAR */
