@@ -13608,3 +13608,429 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 /* END OCI-N&T 2.0 UI POLISH R2 */
 
+/* BEGIN OCI-N&T 2.0 UI POLISH R3 */
+/* Launch page refinement based on the real preview screenshot:
+   fewer nested boxes, clearer hierarchy, less vertical whitespace. */
+
+#launch-page {
+  --launch-border: #dbe4e8;
+  --launch-soft: #f7fafb;
+  --launch-soft-green: #f1faf7;
+}
+
+/* Scheduler becomes a compact two-column control plane instead of a tall stack. */
+#launch-page .nt-scheduler-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(360px, .98fr);
+  gap: 10px 14px;
+  padding: 14px 16px 12px;
+  border-color: var(--launch-border);
+  box-shadow: 0 4px 16px rgba(31, 41, 51, .035);
+}
+
+#launch-page .nt-scheduler-head-compact {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #e6ecef;
+}
+
+#launch-page .nt-scheduler-head-compact h2 {
+  font-size: 15px;
+}
+
+#launch-page .nt-scheduler-head-compact p {
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-actions-top .button {
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-toggle-chip {
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-overview-strip {
+  grid-column: 1 / -1;
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid #d8ebe6;
+  border-radius: 8px;
+  background: #f3fbf8;
+}
+
+#launch-page .nt-scheduler-overview-strip strong,
+#launch-page .nt-scheduler-overview-strip span {
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-overview-strip small {
+  font-size: 9px;
+}
+
+#launch-page .nt-scheduler-stat-grid {
+  grid-column: 1;
+  grid-row: 3;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  margin: 0;
+}
+
+#launch-page .nt-scheduler-stat-card {
+  min-height: 76px;
+  padding: 10px 11px 9px;
+  border-color: var(--launch-border);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: none;
+}
+
+#launch-page .nt-scheduler-stat-card > div > span {
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-stat-card > strong {
+  margin: 6px 0 1px;
+  font-size: 22px;
+}
+
+#launch-page .nt-scheduler-stat-card > small {
+  font-size: 9px;
+}
+
+#launch-page .nt-stat-badge {
+  padding: 2px 6px;
+  font-size: 8px;
+}
+
+#launch-page .nt-scheduler-form-compact {
+  grid-column: 2;
+  grid-row: 3;
+  margin: 0;
+  padding: 10px 0 0 14px;
+  border-top: 0;
+  border-left: 1px solid #e6ecef;
+}
+
+#launch-page .nt-scheduler-basic-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 10px;
+}
+
+#launch-page .nt-scheduler-basic-grid label > span {
+  margin-bottom: 4px;
+  font-size: 9.5px;
+}
+
+#launch-page .nt-scheduler-basic-grid input,
+#launch-page .nt-scheduler-advanced-grid input {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+#launch-page .nt-scheduler-range > div {
+  gap: 5px;
+}
+
+#launch-page .nt-scheduler-advanced {
+  margin-top: 9px;
+  padding-top: 8px;
+}
+
+#launch-page .nt-scheduler-advanced > summary,
+#launch-page .nt-scheduler-runtime-compact > summary {
+  color: #2d6f62;
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-advanced-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#launch-page .nt-scheduler-form-footer-compact {
+  margin-top: 8px;
+  padding-top: 7px;
+}
+
+#launch-page .nt-scheduler-form-footer-compact span {
+  font-size: 9px;
+}
+
+#launch-page .nt-scheduler-runtime-compact {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  margin: 0;
+  padding-top: 8px;
+}
+
+#launch-page .nt-scheduler-runtime-compact[open] {
+  padding-top: 9px;
+}
+
+#launch-page .nt-scheduler-runtime-compact .table-wrap {
+  max-height: 260px;
+}
+
+/* Main launch workspace: fewer stacked borders, tighter vertical rhythm. */
+#launch-page .launch-filter-panel {
+  padding: 12px 14px;
+  border-color: var(--launch-border);
+  box-shadow: none;
+}
+
+#launch-page .launch-filter-head {
+  margin-bottom: 9px;
+}
+
+#launch-page .launch-cache-note {
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+#launch-page .launch-summary-grid {
+  gap: 9px;
+}
+
+#launch-page .launch-summary-card {
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+#launch-page .launch-summary-card > strong {
+  font-size: 23px;
+}
+
+#launch-page .launch-summary-card > div span {
+  font-size: 11px;
+}
+
+#launch-page .launch-summary-card > div small {
+  font-size: 9px;
+}
+
+#launch-page .launch-list-panel {
+  padding: 12px 14px;
+  border-color: var(--launch-border);
+  box-shadow: none;
+}
+
+#launch-page .launch-list-head {
+  margin-bottom: 9px;
+}
+
+/* Zero state is a balanced split console, not a tall decorative hero. */
+#launch-page .launch-empty-console {
+  grid-template-columns: minmax(250px, .72fr) minmax(0, 1.28fr);
+  align-items: stretch;
+  justify-items: stretch;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--launch-border);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+}
+
+#launch-page .launch-empty-primary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 22px 22px;
+  background:
+    linear-gradient(145deg, rgba(229,247,241,.8), rgba(247,251,250,.96));
+  border-right: 1px solid #e0e8eb;
+}
+
+#launch-page .launch-empty-primary .launch-empty-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 0 12px;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+#launch-page .launch-empty-kicker {
+  margin-bottom: 5px;
+  color: #16866f !important;
+  font-size: 8.5px !important;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+#launch-page .launch-empty-copy {
+  max-width: none;
+}
+
+#launch-page .launch-empty-copy strong {
+  font-size: 17px;
+  letter-spacing: -.01em;
+}
+
+#launch-page .launch-empty-copy > span:last-child {
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+#launch-page .launch-empty-steps {
+  justify-content: flex-start;
+  margin-top: 13px;
+  gap: 5px;
+}
+
+#launch-page .launch-empty-steps span {
+  min-height: 26px;
+  padding: 4px 7px;
+  font-size: 8.5px;
+}
+
+#launch-page .launch-empty-steps b {
+  width: 16px;
+  height: 16px;
+  font-size: 8px;
+}
+
+#launch-page .launch-empty-tenants-panel {
+  min-width: 0;
+  padding: 17px 18px 15px;
+  background: #fff;
+}
+
+#launch-page .launch-empty-tenants-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+#launch-page .launch-empty-tenants-head strong,
+#launch-page .launch-empty-tenants-head small {
+  display: block;
+}
+
+#launch-page .launch-empty-tenants-head strong {
+  font-size: 11px;
+}
+
+#launch-page .launch-empty-tenants-head small,
+#launch-page .launch-empty-tenants-head > span,
+#launch-page .launch-empty-more-hint {
+  color: var(--muted);
+  font-size: 8.5px;
+}
+
+#launch-page .launch-quick-grid {
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+#launch-page .launch-quick-tenant {
+  min-height: 50px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+#launch-page .launch-quick-tenant:hover {
+  transform: none;
+}
+
+#launch-page .launch-quick-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+}
+
+#launch-page .launch-quick-tenant strong {
+  font-size: 9.5px;
+}
+
+#launch-page .launch-quick-tenant small {
+  font-size: 8px;
+}
+
+#launch-page .launch-quick-tenant > b {
+  font-size: 8px;
+}
+
+#launch-page .launch-empty-more-hint {
+  display: block;
+  margin-top: 9px;
+}
+
+/* The empty task section should acknowledge the state without consuming a large box. */
+#launch-page .launch-jobs-panel.is-empty {
+  padding-bottom: 10px;
+}
+
+#launch-page .launch-jobs-panel.is-empty #global-launch-jobs .launch-empty {
+  min-height: 58px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #d8e0e5;
+  border-radius: 8px;
+  background: #fafcfd;
+  color: #7b8790;
+  font-size: 9.5px;
+}
+
+#launch-page.is-zero-state .launch-profiles-panel {
+  padding-bottom: 12px;
+}
+
+@media (max-width: 1180px) {
+  #launch-page .nt-scheduler-panel {
+    grid-template-columns: 1fr;
+  }
+  #launch-page .nt-scheduler-stat-grid,
+  #launch-page .nt-scheduler-form-compact,
+  #launch-page .nt-scheduler-runtime-compact {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  #launch-page .nt-scheduler-form-compact {
+    padding: 10px 0 0;
+    border-left: 0;
+    border-top: 1px solid #e6ecef;
+  }
+}
+
+@media (max-width: 900px) {
+  #launch-page .launch-empty-console {
+    grid-template-columns: 1fr;
+  }
+  #launch-page .launch-empty-primary {
+    border-right: 0;
+    border-bottom: 1px solid #e0e8eb;
+  }
+}
+
+@media (max-width: 620px) {
+  #launch-page .nt-scheduler-basic-grid,
+  #launch-page .nt-scheduler-stat-grid,
+  #launch-page .launch-quick-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* END OCI-N&T 2.0 UI POLISH R3 */
+
+
