@@ -1107,6 +1107,10 @@ function ui2RenderGlobalLaunch(account = null) {
     0
   );
   const scopeText = account ? (account.custom_name || "当前租户") : "全部租户";
+  const zeroState = allProfiles.length === 0 && allJobs.length === 0;
+  $("launch-page")?.classList.toggle("is-zero-state", zeroState);
+  $("global-launch-profiles")?.closest(".launch-profiles-panel")?.classList.toggle("is-empty", allProfiles.length === 0);
+  $("global-launch-jobs")?.closest(".launch-jobs-panel")?.classList.toggle("is-empty", allJobs.length === 0);
 
   $("boot-profile-count").textContent = String(allProfiles.length);
   $("boot-running-count").textContent = String(activeJobs);
@@ -1126,12 +1130,23 @@ function ui2RenderGlobalLaunch(account = null) {
     return `<tr class="launch-profile-row"><td><strong>${esc(profile.name || "未命名配置")}</strong><small>实例名 ${esc(payload.display_name || "N&T")}</small></td><td><strong>${esc(profile._accountName || "未命名租户")}</strong><small>${esc(profile._accountEmail || "未读取邮箱")}</small></td><td><span class="launch-architecture">${esc(payload.architecture || "—")}</span><small>${esc(payload.shape || "未选择 Shape")}</small></td><td><strong>${Number(payload.requested_count || 1)} 台</strong><small>并发 ${Number(payload.concurrency || 1)}</small></td><td><strong>直到成功</strong><small>每 ${Number(payload.retry_interval_seconds || 30)} 秒</small></td><td><span class="badge ${profile.enabled ? "good" : "muted"}">${profile.enabled ? "已启用" : "已停用"}</span></td><td><div class="launch-profile-actions"><button class="button small primary" data-ui2-account-id="${profile._accountId}" data-ui2-profile-run="${profile.id}" type="button" ${profile.enabled ? "" : "disabled"}>运行</button><button class="button small" data-ui2-account-id="${profile._accountId}" data-ui2-profile-once="${profile.id}" type="button">单次</button><button class="button small" data-ui2-account-id="${profile._accountId}" data-ui2-profile-preflight="${profile.id}" type="button">预检</button><button class="button small" data-ui2-account-id="${profile._accountId}" data-ui2-profile-edit="${profile.id}" type="button">编辑</button><div class="more-menu"><button class="more-toggle" data-ui2-menu="launch-profile-${profile._accountId}-${profile.id}" type="button" aria-expanded="false" aria-label="更多配置操作">⋮</button><div class="more-popover" data-ui2-menu-box="launch-profile-${profile._accountId}-${profile.id}" hidden><button data-ui2-account-id="${profile._accountId}" data-ui2-profile-clone="${profile.id}" type="button">复制当前租户副本</button><button data-ui2-account-id="${profile._accountId}" data-ui2-profile-copy-to="${profile.id}" type="button">复制到其他租户</button><button data-ui2-account-id="${profile._accountId}" data-ui2-profile-toggle="${profile.id}" data-ui2-enabled="${profile.enabled ? "1" : "0"}" type="button">${profile.enabled ? "停用配置" : "启用配置"}</button><button class="danger-text" data-ui2-account-id="${profile._accountId}" data-ui2-profile-delete="${profile.id}" type="button">删除配置</button></div></div></div></td></tr>`;
   }).join("")}</tbody></table></div>` : (() => {
     if (allProfiles.length) return '<div class="empty launch-empty">没有符合当前筛选条件的配置</div>';
-    const quickTenants = state.accounts.slice(0, 10).map((item) => `<button class="launch-quick-tenant" data-ui2-open-launch-config="${item.id}" type="button"><span class="launch-quick-avatar">${esc((item.custom_name || item.tenancy_name || "N")[0].toUpperCase())}</span><span><strong>${esc(item.custom_name || item.tenancy_name || `租户 #${item.id}`)}</strong><small>${esc(item.home_region_key || item.region || "未读取区域")} · ${esc(item.email || "未读取邮箱")}</small></span><b>配置 →</b></button>`).join("");
-    return `<div class="launch-empty-start">
-      <div class="launch-empty-icon">OCI</div>
-      <div class="launch-empty-copy"><strong>还没有开机配置</strong><span>直接选择一个 OCI 租户进入开机工作区，系统会读取该租户可用区域、网络和 Ubuntu 镜像，再保存为可重复运行的配置。</span></div>
-      <div class="launch-empty-steps"><span><b>1</b>选择租户</span><span><b>2</b>自动读取环境</span><span><b>3</b>保存并运行</span></div>
-      <div class="launch-quick-grid">${quickTenants}</div>
+    const quickTenants = state.accounts.slice(0, 6).map((item) => `<button class="launch-quick-tenant" data-ui2-open-launch-config="${item.id}" type="button"><span class="launch-quick-avatar">${esc((item.custom_name || item.tenancy_name || "N")[0].toUpperCase())}</span><span><strong>${esc(item.custom_name || item.tenancy_name || `租户 #${item.id}`)}</strong><small>${esc(item.home_region_key || item.region || "未读取区域")} · ${esc(item.email || "未读取邮箱")}</small></span><b>配置 →</b></button>`).join("");
+    const remaining = Math.max(0, state.accounts.length - 6);
+    return `<div class="launch-empty-start launch-empty-console">
+      <div class="launch-empty-primary">
+        <div class="launch-empty-icon">OCI</div>
+        <div class="launch-empty-copy">
+          <span class="launch-empty-kicker">QUICK START</span>
+          <strong>创建第一套开机配置</strong>
+          <span>选择一个租户进入工作区，N&T 会按需读取该租户的区域、网络和兼容 Ubuntu 镜像；保存后可重复运行。</span>
+        </div>
+        <div class="launch-empty-steps"><span><b>1</b>选择租户</span><span><b>2</b>读取环境</span><span><b>3</b>保存运行</span></div>
+      </div>
+      <div class="launch-empty-tenants-panel">
+        <div class="launch-empty-tenants-head"><div><strong>快速选择租户</strong><small>不会自动访问 OCI</small></div><span>${Math.min(6, state.accounts.length)} / ${state.accounts.length}${remaining ? ` · 另有 ${remaining}` : ""}</span></div>
+        <div class="launch-quick-grid">${quickTenants}</div>
+        <small class="launch-empty-more-hint">更多租户可从上方“OCI 租户”筛选框选择。</small>
+      </div>
     </div>`;
   })();
 
