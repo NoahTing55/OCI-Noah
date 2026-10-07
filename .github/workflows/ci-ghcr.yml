@@ -22,6 +22,8 @@ jobs:
   test:
     name: Test source
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
       - name: Checkout
