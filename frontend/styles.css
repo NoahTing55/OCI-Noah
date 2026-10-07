@@ -13111,3 +13111,226 @@ html,body{max-width:100%;overflow-x:hidden}
   }
 }
 /* END OCI-N&T 2.0 stable UI freeze */
+
+
+/* BEGIN OCI-N&T 2.0 UI POLISH R1 */
+/*
+ * Targeted refinement of the existing production visual language.
+ * No global theme replacement: only dashboard density, instance empty states,
+ * and the tenant launch-side summary are adjusted here.
+ */
+
+/* Dashboard: OCI account/instance overview now appears before host monitoring.
+   Keep monitoring intact, but reduce its visual dominance. */
+#dashboard-page .dashboard-monitor-compact {
+  padding: 16px;
+}
+#dashboard-page .dashboard-monitor-compact .dashboard-monitor-head {
+  margin-bottom: 11px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-grid {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-card {
+  min-height: 92px;
+  padding: 10px 12px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-card strong {
+  margin: 8px 0 4px;
+  font-size: 20px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-card small {
+  font-size: 10px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-progress {
+  right: 12px;
+  bottom: 8px;
+  left: 12px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-toolbar {
+  margin: 0 0 8px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-chart-grid {
+  gap: 8px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-chart-card {
+  padding: 10px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-chart {
+  height: 124px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-detail-grid {
+  gap: 8px;
+  margin-top: 8px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-detail-card {
+  padding: 11px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-detail-head {
+  margin-bottom: 7px;
+}
+
+/* Instance management: turn the empty list into an actionable state without
+   changing the dense table used when cached instances exist. */
+#instances-page .instance-empty-state {
+  min-height: 220px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border: 1px dashed #cfd8de;
+  border-radius: 9px;
+  background: #fafcfc;
+  text-align: center;
+}
+#instances-page .instance-empty-state.compact {
+  min-height: 170px;
+}
+#instances-page .instance-empty-mark {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid #bfe3da;
+  border-radius: 12px;
+  background: #eef9f6;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+#instances-page .instance-empty-state > strong {
+  margin-top: 3px;
+  color: #33414c;
+  font-size: 14px;
+}
+#instances-page .instance-empty-state > span {
+  max-width: 520px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+#instances-page .instance-empty-state > small {
+  max-width: 520px;
+  color: #8a96a1;
+  font-size: 10px;
+  line-height: 1.45;
+}
+#instances-page .instance-empty-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+/* Tenant launch workspace: the right column remains useful even before any
+   saved profile or job exists. It now acts as a live configuration summary. */
+#tenant-launch-side.launch-side-panel {
+  display: block !important;
+}
+#tenant-launch-side.launch-side-panel.launch-side-empty {
+  display: block !important;
+}
+#tenant-launch-layout.launch-workspace-v2:has(.launch-side-empty) {
+  grid-template-columns: minmax(0, 1fr) 300px !important;
+}
+.launch-live-summary {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.launch-live-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.launch-live-summary-head strong,
+.launch-live-summary-head small {
+  display: block;
+}
+.launch-live-summary-head strong {
+  font-size: 13px;
+}
+.launch-live-summary-head small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9.5px;
+}
+.launch-live-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+.launch-live-summary-grid > div {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafb;
+}
+.launch-live-summary-grid dt {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.2;
+}
+.launch-live-summary-grid dd {
+  margin: 3px 0 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.launch-live-summary-network {
+  margin-top: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: var(--primary-soft);
+}
+.launch-live-summary-network span,
+.launch-live-summary-network strong {
+  display: block;
+}
+.launch-live-summary-network span {
+  color: var(--primary);
+  font-size: 9px;
+}
+.launch-live-summary-network strong {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #176b5c;
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#tenant-launch-side .launch-side-body {
+  min-height: 110px !important;
+  max-height: min(360px, calc(100vh - 500px));
+}
+@media (max-width: 1280px) {
+  #tenant-launch-layout.launch-workspace-v2:has(.launch-side-empty) {
+    grid-template-columns: minmax(0, 1fr) 280px !important;
+  }
+}
+@media (max-width: 1120px) {
+  #tenant-launch-layout.launch-workspace-v2:has(.launch-side-empty) {
+    grid-template-columns: 1fr !important;
+  }
+  #tenant-launch-side .launch-side-body {
+    max-height: 420px;
+  }
+}
+@media (max-width: 520px) {
+  .launch-live-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* END OCI-N&T 2.0 UI POLISH R1 */
