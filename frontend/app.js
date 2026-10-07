@@ -1571,10 +1571,10 @@ function renderLaunchWorkspace(tab, { automatic = true } = {}) {
           <div><dt>数量</dt><dd id="tenant-launch-summary-count">1 台</dd></div>
           <div><dt>计算</dt><dd id="tenant-launch-summary-compute">1 OCPU · 6 GB</dd></div>
           <div><dt>引导卷</dt><dd id="tenant-launch-summary-boot">50 GB</dd></div>
-          <div><dt>区域</dt><dd id="tenant-launch-summary-region">\${esc(account.home_region_key || account.region || "读取中")}</dd></div>
+          <div><dt>区域</dt><dd id="tenant-launch-summary-region">${esc(account.home_region_key || account.region || "读取中")}</dd></div>
           <div><dt>可用域</dt><dd id="tenant-launch-summary-ad">自动选择</dd></div>
           <div><dt>登录</dt><dd id="tenant-launch-summary-login">SSH 密钥</dd></div>
-          <div><dt>策略</dt><dd id="tenant-launch-summary-strategy">\${isRetry ? "每 120 秒 · 并发 1" : "单次创建"}</dd></div>
+          <div><dt>策略</dt><dd id="tenant-launch-summary-strategy">${isRetry ? "每 120 秒 · 并发 1" : "单次创建"}</dd></div>
         </dl>
         <div class="launch-live-summary-network"><span>网络</span><strong id="tenant-launch-summary-network">正在读取自动环境</strong></div>
       </div>
@@ -1788,31 +1788,31 @@ function renderLaunchLiveSummary() {
   };
 
   setText("tenant-launch-summary-shape", architecture === "ARM" ? "ARM · A1.Flex" : "AMD · E2.1.Micro");
-  setText("tenant-launch-summary-count", \`\${count} 台\`);
+  setText("tenant-launch-summary-count", `${count} 台`);
   setText(
     "tenant-launch-summary-compute",
     architecture === "ARM"
-      ? \`\${ocpus || "—"} OCPU · \${memory || "—"} GB\`
+      ? `${ocpus || "—"} OCPU · ${memory || "—"} GB`
       : "固定规格 · 1 GB",
   );
-  setText("tenant-launch-summary-boot", \`\${boot || "—"} GB\`);
+  setText("tenant-launch-summary-boot", `${boot || "—"} GB`);
   setText("tenant-launch-summary-region", region);
   setText("tenant-launch-summary-ad", ad);
   setText("tenant-launch-summary-login", loginMode === "ROOT_PASSWORD" ? "Root 密码" : "SSH 密钥");
   setText(
     "tenant-launch-summary-strategy",
-    retryMode ? \`每 \${interval} 秒 · 并发 \${concurrency}\` : "单次创建",
+    retryMode ? `每 ${interval} 秒 · 并发 ${concurrency}` : "单次创建",
   );
   setText(
     "tenant-launch-summary-network",
     subnet
-      ? \`\${subnet.display_name || "已选择子网"} · \${subnet.cidr_block || "网络已就绪"}\`
+      ? `${subnet.display_name || "已选择子网"} · ${subnet.cidr_block || "网络已就绪"}`
       : state.launchCatalog ? "等待可用网络" : "正在读取自动环境",
   );
 
   const stateBadge = $("tenant-launch-summary-state");
   if (stateBadge) {
-    stateBadge.className = \`badge \${ready ? "good" : state.launchCatalog ? "warn" : "muted"}\`;
+    stateBadge.className = `badge ${ready ? "good" : state.launchCatalog ? "warn" : "muted"}`;
     stateBadge.textContent = ready ? "已就绪" : state.launchCatalog ? "待完善" : "准备中";
   }
 }
