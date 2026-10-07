@@ -61,7 +61,9 @@ jobs:
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
-        run: docker compose config >/dev/null
+        run: |
+          cp .env.example .env
+          docker compose config >/dev/null
 
   publish:
     name: Publish ${{ matrix.name }} image
