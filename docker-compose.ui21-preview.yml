@@ -1,0 +1,16 @@
+services:
+  web-ui21-preview:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.preview
+      network: host
+    image: oci-nt-web:ui21-preview
+    container_name: oci-nt-web-ui21-preview
+    restart: unless-stopped
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9869/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
