@@ -5983,7 +5983,7 @@ function ntAnalyticsCompactControlsA3(mode, card) {
     const input = $s(ID + "enabled");
     const button = $s(ID + "toggle");
     if (!input || !button) return;
-    button.textContent = input.checked ? "已启用" : "启用定时检测";
+    button.textContent = input.checked ? "停用定时检测" : "启用定时检测";
     button.setAttribute("aria-pressed", input.checked ? "true" : "false");
     button.classList.toggle("active", input.checked);
   }
