@@ -1024,3 +1024,775 @@ body.tenant-mode .tenant-tabs button.active {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+/* BEGIN R-BOT PREVIEW R2 ALIGNMENT FIX
+ * Corrects the first visual pass after reviewing full-page production screenshots.
+ * Priorities: one typography scale, no clipped actions, no fixed-height collisions,
+ * natural-height settings cards, and balanced tenant launch layout.
+ */
+
+:root {
+  --font-ui: 13px !important;
+  --font-meta: 11px !important;
+  --font-label: 12px !important;
+  --font-card-title: 16px !important;
+  --font-section-title: 18px !important;
+  --font-page-title: 22px !important;
+  --nt-font-body: 12px !important;
+  --nt-font-head: 11px !important;
+  --nt-font-help: 10.5px !important;
+  --nt-font-section: 15px !important;
+  --nt-control-h: 36px !important;
+}
+
+/* Typography: keep Chinese/Latin baselines and weights predictable. */
+html { font-size: 16px !important; }
+body {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit !important;
+}
+
+.page,
+.page input,
+.page select,
+.page textarea,
+.page button,
+dialog,
+dialog input,
+dialog select,
+dialog textarea,
+dialog button {
+  font-size: 12px !important;
+}
+
+.topbar h1,
+.page-title {
+  font-size: 22px !important;
+  line-height: 1.22 !important;
+  font-weight: 800 !important;
+}
+
+.page-actions h2,
+.page-header-row h2 {
+  font-size: 17px !important;
+  line-height: 1.3 !important;
+}
+
+.panel h2,
+.settings-card .panel-head h2,
+.tenant-toolbar h2 {
+  font-size: 15px !important;
+  line-height: 1.35 !important;
+}
+
+h3,
+.rc-section h3,
+.proxy-section-head strong {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.topbar p,
+.page-actions p,
+.page-header-row p,
+.panel p,
+.panel-head p,
+.tenant-toolbar p,
+.settings-card .panel-head p {
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+label > span,
+.filter-field > span {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+}
+
+small,
+.muted,
+.helper,
+.hint,
+.subtext,
+.description {
+  font-size: 10.5px !important;
+  line-height: 1.45 !important;
+}
+
+/* Header and navigation: compact, but not micro-sized. */
+.app-header {
+  height: 54px !important;
+  min-height: 54px !important;
+}
+
+.header-brand strong {
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+}
+
+.header-brand small,
+.header-user {
+  font-size: 10.5px !important;
+  line-height: 1.3 !important;
+}
+
+.header-logo {
+  min-width: 46px !important;
+  height: 30px !important;
+  font-size: 11px !important;
+}
+
+.header-button {
+  min-height: 30px !important;
+  padding: 5px 10px !important;
+  font-size: 11px !important;
+}
+
+.app-shell {
+  grid-template-columns: 204px minmax(0, 1fr) !important;
+  min-height: calc(100vh - 54px) !important;
+}
+
+.sidebar {
+  top: 54px !important;
+  height: calc(100vh - 54px) !important;
+}
+
+.nav-group-title {
+  font-size: 9.5px !important;
+  line-height: 1.2 !important;
+}
+
+.nav {
+  min-height: 40px !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+
+.nav span {
+  font-size: 8.5px !important;
+}
+
+.sidebar-version {
+  font-size: 10px !important;
+}
+
+.main-column {
+  padding-left: 22px !important;
+  padding-right: 22px !important;
+}
+
+.topbar {
+  min-height: 70px !important;
+}
+
+/* Controls: one size family across every page. */
+.button {
+  min-height: 34px !important;
+  padding: 6px 11px !important;
+  font-size: 11.5px !important;
+  line-height: 1.2 !important;
+}
+
+.button.small {
+  min-height: 29px !important;
+  padding: 5px 8px !important;
+  font-size: 10.5px !important;
+}
+
+input,
+textarea,
+select {
+  min-height: 36px !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+textarea {
+  line-height: 1.45 !important;
+}
+
+.badge,
+.status-badge,
+.status-pill {
+  min-height: 22px !important;
+  padding: 3px 7px !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+}
+
+/* Tables: same text metrics everywhere; wrappers own overflow, never the page. */
+.table-wrap,
+.api-table-wrap,
+.task-table-wrap,
+.instance-table-wrap,
+.audit-table-wrap,
+.proxy-account-table-wrap,
+.dns-table-wrap {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: auto;
+  scrollbar-gutter: stable !important;
+}
+
+.api-table th,
+.proxy-library-table th,
+.task-table th,
+.all-tenant-instance-table th,
+.launch-table-all-tenants th,
+.audit-table th,
+.dns-table th,
+.instance-table th {
+  padding: 8px 10px !important;
+  font-size: 10.5px !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+  vertical-align: middle !important;
+}
+
+.api-table td,
+.proxy-library-table td,
+.task-table td,
+.all-tenant-instance-table td,
+.launch-table-all-tenants td,
+.audit-table td,
+.dns-table td,
+.instance-table td {
+  padding: 9px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  vertical-align: middle !important;
+}
+
+.api-table td strong,
+.proxy-library-table td strong,
+.task-table td strong,
+.all-tenant-instance-table td strong,
+.launch-table-all-tenants td strong,
+.audit-table td strong,
+.dns-table td strong,
+.instance-table td strong {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+.api-table td small,
+.proxy-library-table td small,
+.task-table td small,
+.all-tenant-instance-table td small,
+.launch-table-all-tenants td small,
+.audit-table td small,
+.dns-table td small,
+.instance-table td small {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+/* API page: keep operation buttons inside the table viewport. */
+.api-table {
+  width: 100% !important;
+  min-width: 1130px !important;
+}
+
+.api-table th:last-child,
+.api-table td:last-child {
+  width: 186px !important;
+  min-width: 186px !important;
+}
+
+.api-table td:last-child .row-actions {
+  width: 100%;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+}
+
+/* Proxy page: readable without changing the information density. */
+#proxies-page .proxy-library-table {
+  width: 100% !important;
+  min-width: 1080px !important;
+}
+
+#proxies-page .proxy-library-table th {
+  font-size: 10.5px !important;
+}
+
+#proxies-page .proxy-library-table td,
+#proxies-page .proxy-library-table td strong {
+  font-size: 12px !important;
+}
+
+#proxies-page .proxy-library-table td small,
+#proxies-page .proxy-library-table code {
+  font-size: 10px !important;
+}
+
+/* Task Center: previous base rule forced 1380px and clipped the action column. */
+#tasks-page .task-table-wrap {
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+#tasks-page .task-table {
+  width: 100% !important;
+  min-width: 1120px !important;
+  table-layout: fixed !important;
+}
+
+#tasks-page .task-table th:nth-child(1),
+#tasks-page .task-table td:nth-child(1) { width: 54px !important; }
+#tasks-page .task-table th:nth-child(2),
+#tasks-page .task-table td:nth-child(2) { width: 170px !important; }
+#tasks-page .task-table th:nth-child(3),
+#tasks-page .task-table td:nth-child(3) { width: 86px !important; }
+#tasks-page .task-table th:nth-child(4),
+#tasks-page .task-table td:nth-child(4) { width: 145px !important; }
+#tasks-page .task-table th:nth-child(5),
+#tasks-page .task-table td:nth-child(5) { width: 120px !important; }
+#tasks-page .task-table th:nth-child(6),
+#tasks-page .task-table td:nth-child(6) { width: 145px !important; }
+#tasks-page .task-table th:nth-child(7),
+#tasks-page .task-table td:nth-child(7) { width: 158px !important; }
+#tasks-page .task-table th:nth-child(8),
+#tasks-page .task-table td:nth-child(8) {
+  width: 220px !important;
+  min-width: 220px !important;
+  overflow: visible !important;
+}
+
+#tasks-page .task-table td:nth-child(8) .row-actions,
+#tasks-page .task-table td:nth-child(8) > div {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+  flex-wrap: nowrap !important;
+}
+
+#tasks-page .task-table .button {
+  min-height: 29px !important;
+  padding: 5px 8px !important;
+  font-size: 10.5px !important;
+}
+
+/* Audit: avoid micro text and keep filters aligned. */
+#audit-page .audit-filter-grid {
+  align-items: end !important;
+}
+
+#audit-page .audit-filter-grid label > span {
+  min-height: 16px;
+  margin-bottom: 5px !important;
+  font-size: 10.5px !important;
+}
+
+#audit-page .audit-filter-grid select,
+#audit-page .audit-filter-grid input,
+#audit-page .audit-filter-grid > .button,
+#audit-page .audit-filter-grid > .audit-count {
+  min-height: 36px !important;
+}
+
+#audit-page .audit-table {
+  width: 100% !important;
+  min-width: 1180px !important;
+}
+
+#audit-page .audit-time-inline,
+#audit-page .audit-detail,
+#audit-page .audit-source {
+  font-size: 11px !important;
+}
+
+/* Dashboard: readable numbers and labels without returning to oversized cards. */
+.dashboard-stat-head span {
+  font-size: 11px !important;
+}
+
+.dashboard-stat-head em {
+  font-size: 9px !important;
+}
+
+.dashboard-stat-card > strong {
+  font-size: 26px !important;
+}
+
+.dashboard-stat-card > small {
+  font-size: 10px !important;
+}
+
+.monitor-resource-card > div span,
+.monitor-resource-card > div em {
+  font-size: 10.5px !important;
+}
+
+.monitor-resource-card > strong {
+  font-size: 21px !important;
+}
+
+.monitor-resource-card > small {
+  font-size: 10px !important;
+}
+
+.monitor-chart-card header strong,
+.monitor-detail-head h3 {
+  font-size: 12px !important;
+}
+
+/* Tenant header / tabs: align text to a single baseline. */
+body.tenant-mode .tenant-identity h1 {
+  font-size: 17px !important;
+  line-height: 1.3 !important;
+}
+
+body.tenant-mode .tenant-identity p {
+  font-size: 10.5px !important;
+}
+
+body.tenant-mode .tenant-meta span {
+  min-height: 26px;
+  display: inline-flex !important;
+  align-items: center;
+  font-size: 10px !important;
+}
+
+body.tenant-mode .tenant-tabs button {
+  min-height: 32px !important;
+  padding: 6px 9px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+/* Launch workspace: natural card heights, no stretched blank right column. */
+#tenant-launch-form.launch-editor {
+  align-items: start !important;
+  grid-auto-rows: auto !important;
+}
+
+.launch-section {
+  align-self: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.launch-editor-head h2 {
+  font-size: 15px !important;
+}
+
+.launch-editor-head p {
+  font-size: 10.5px !important;
+}
+
+.launch-head-actions .button {
+  min-height: 32px !important;
+  height: 32px !important;
+  font-size: 10.5px !important;
+}
+
+.launch-section-title strong {
+  font-size: 12px !important;
+}
+
+.launch-section-title small {
+  font-size: 10px !important;
+}
+
+.launch-section-title > span {
+  font-size: 10px !important;
+}
+
+.launch-presets button strong {
+  font-size: 11px !important;
+}
+
+.launch-presets button small {
+  font-size: 9.5px !important;
+}
+
+.launch-section label > span {
+  font-size: 10.5px !important;
+}
+
+.launch-section input,
+.launch-section select {
+  min-height: 36px !important;
+  height: 36px !important;
+  font-size: 11.5px !important;
+}
+
+.launch-section label small {
+  font-size: 9.5px !important;
+}
+
+.launch-interval-presets > span,
+.launch-interval-presets button {
+  font-size: 10px !important;
+}
+
+.launch-auto-title strong {
+  font-size: 12px !important;
+}
+
+.launch-auto-title p {
+  font-size: 10px !important;
+}
+
+.launch-state {
+  font-size: 9.5px !important;
+}
+
+.launch-env-chips small {
+  font-size: 9px !important;
+}
+
+.launch-env-chips strong {
+  font-size: 10.5px !important;
+}
+
+/* Prevent the generic loading pseudo-element from floating at the far right
+   of the whole environment card. The state chip owns the spinner instead. */
+.launch-auto-card.is-loading::after {
+  display: none !important;
+}
+
+.launch-state.loading::after {
+  display: inline-block !important;
+  width: 10px !important;
+  height: 10px !important;
+  margin-left: 5px !important;
+  border-width: 1.5px !important;
+}
+
+.launch-submit-bar strong {
+  font-size: 11.5px !important;
+}
+
+.launch-submit-bar p {
+  font-size: 10px !important;
+}
+
+/* Settings: remove the fixed 310px cards that caused header/table collisions. */
+#settings-page .settings-page-layout {
+  width: min(1180px, 100%) !important;
+}
+
+#settings-page .settings-account-columns {
+  align-items: start !important;
+  gap: 14px !important;
+}
+
+#settings-page .settings-stack {
+  gap: 14px !important;
+}
+
+#settings-page .settings-card {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 16px !important;
+}
+
+#settings-page .settings-login-card,
+#settings-page .settings-session-card {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+#settings-page .settings-card .panel-head {
+  min-height: 0 !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 10px !important;
+  align-items: flex-start !important;
+  flex-wrap: wrap !important;
+}
+
+#settings-page .settings-card .panel-head h2 {
+  font-size: 15px !important;
+}
+
+#settings-page .settings-card .panel-head p {
+  max-width: 720px !important;
+  font-size: 10.5px !important;
+  line-height: 1.5 !important;
+}
+
+#settings-page .settings-action-head > .button,
+#settings-page .settings-head-actions {
+  flex: 0 0 auto !important;
+}
+
+#settings-page .settings-session-card .session-list {
+  flex: none !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  max-height: 220px !important;
+  overflow: auto !important;
+  margin-top: 0 !important;
+}
+
+#settings-page .settings-session-card .login-attempts-details {
+  margin-top: 10px !important;
+}
+
+#settings-page .settings-session-card .page-toolbar {
+  min-height: 32px !important;
+  flex-wrap: nowrap !important;
+}
+
+#settings-page .settings-session-card .page-toolbar .button {
+  flex: 0 0 auto;
+}
+
+#settings-page .settings-auth-actions {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex-wrap: wrap !important;
+}
+
+#settings-page .settings-auth-note {
+  max-width: 260px !important;
+  white-space: normal !important;
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+#settings-page .settings-field-stack,
+#settings-page .settings-field-grid,
+#settings-page .settings-callback-grid {
+  gap: 10px !important;
+}
+
+#settings-page input,
+#settings-page textarea,
+#settings-page select {
+  font-size: 12px !important;
+}
+
+#settings-page label > span {
+  font-size: 11px !important;
+}
+
+#settings-page label > small,
+#settings-page .settings-switch small,
+#settings-page .settings-subsection-head small {
+  font-size: 10px !important;
+}
+
+#settings-page .settings-switch strong,
+#settings-page .settings-subsection-head strong {
+  font-size: 11.5px !important;
+}
+
+#settings-page .telegram-category-grid {
+  align-items: stretch !important;
+}
+
+#settings-page .telegram-category-grid .switch-row {
+  min-width: 0 !important;
+}
+
+#settings-page .settings-card-footer {
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+#settings-page .account-check-schedule-card {
+  overflow: visible !important;
+}
+
+/* Empty states should never look like a broken giant panel. */
+.empty,
+.list-empty,
+.launch-empty,
+.dashboard-empty,
+.cloudflare-empty,
+.empty-state,
+.table-empty {
+  min-height: 92px !important;
+  padding: 18px !important;
+  font-size: 11px !important;
+}
+
+/* Responsive safeguards. */
+@media (max-width: 1280px) {
+  .app-shell {
+    grid-template-columns: 190px minmax(0, 1fr) !important;
+  }
+
+  .main-column {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  #settings-page .settings-account-columns {
+    grid-template-columns: 1fr !important;
+  }
+
+  #settings-page .settings-session-card .session-list {
+    max-height: 260px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  #tenant-launch-form.launch-editor {
+    grid-template-columns: 1fr !important;
+  }
+
+  .launch-section {
+    grid-column: 1 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-header {
+    height: 50px !important;
+    min-height: 50px !important;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr !important;
+    min-height: calc(100vh - 50px) !important;
+  }
+
+  .nav {
+    font-size: 10px !important;
+  }
+
+  .main-column {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .topbar h1,
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  #settings-page .settings-card .panel-head,
+  #settings-page .settings-action-head {
+    align-items: stretch !important;
+  }
+
+  #settings-page .settings-session-card .page-toolbar {
+    flex-wrap: wrap !important;
+  }
+}
+/* END R-BOT PREVIEW R2 ALIGNMENT FIX */
