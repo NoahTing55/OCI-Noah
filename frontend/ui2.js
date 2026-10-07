@@ -889,11 +889,13 @@ function ui2RenderGlobalInstances(result) {
     const emptyAction = selectedAccount
       ? '<button class="button primary small" data-instance-empty-sync type="button">同步所选租户</button>'
       : '<button class="button small" data-instance-empty-focus type="button">选择 OCI 租户</button>';
-    $("global-instance-list").innerHTML = `<div class="instance-empty-state">
+    const tenantChoices = state.accounts.slice(0, 8).map((item) => `<button class="empty-tenant-chip" data-ui2-account-instances="${item.id}" type="button"><strong>${esc(item.custom_name || item.tenancy_name || `租户 #${item.id}`)}</strong><small>${esc(item.home_region_key || item.region || "未读取区域")}</small></button>`).join("");
+    $("global-instance-list").innerHTML = `<div class="instance-empty-state instance-empty-rich">
       <div class="instance-empty-mark" aria-hidden="true">OCI</div>
       <strong>${esc(emptyTitle)}</strong>
       <span>${esc(emptyCopy)}</span>
       <div class="instance-empty-actions">${emptyAction}</div>
+      ${tenantChoices ? `<div class="instance-empty-tenants"><div class="empty-section-label">快速选择租户</div><div class="empty-tenant-grid">${tenantChoices}</div></div>` : ""}
       <small>同步结果仅写入本地缓存；后续浏览不会自动访问 OCI。</small>
     </div>`;
     ui2UpdateInstanceBatchToolbar([]);
@@ -1122,7 +1124,16 @@ function ui2RenderGlobalLaunch(account = null) {
   $("global-launch-profiles").innerHTML = profiles.length ? `<div class="launch-table-wrap"><table class="launch-table launch-table-all-tenants"><thead><tr><th>配置名称</th><th>租户</th><th>架构 / Shape</th><th>数量 / 并发</th><th>重试策略</th><th>状态</th><th>操作</th></tr></thead><tbody>${profiles.map((profile) => {
     const payload = profile.payload || {};
     return `<tr class="launch-profile-row"><td><strong>${esc(profile.name || "未命名配置")}</strong><small>实例名 ${esc(payload.display_name || "N&T")}</small></td><td><strong>${esc(profile._accountName || "未命名租户")}</strong><small>${esc(profile._accountEmail || "未读取邮箱")}</small></td><td><span class="launch-architecture">${esc(payload.architecture || "—")}</span><small>${esc(payload.shape || "未选择 Shape")}</small></td><td><strong>${Number(payload.requested_count || 1)} 台</strong><small>并发 ${Number(payload.concurrency || 1)}</small></td><td><strong>直到成功</strong><small>每 ${Number(payload.retry_interval_seconds || 30)} 秒</small></td><td><span class="badge ${profile.enabled ? "good" : "muted"}">${profile.enabled ? "已启用" : "已停用"}</span></td><td><div class="launch-profile-actions"><button class="button small primary" data-ui2-account-id="${profile._accountId}" data-ui2-profile-run="${profile.id}" type="button" ${profile.enabled ? "" : "disabled"}>运行</button><button class="button small" data-ui2-account-id="${profile._accountId}" data-ui2-profile-once="${profile.id}" type="button">单次</button><button class="button small" data-ui2-account-id="${profile._accountId}" data-ui2-profile-preflight="${profile.id}" type="button">预检</button><button class="button small" data-ui2-account-id="${profile._accountId}" data-ui2-profile-edit="${profile.id}" type="button">编辑</button><div class="more-menu"><button class="more-toggle" data-ui2-menu="launch-profile-${profile._accountId}-${profile.id}" type="button" aria-expanded="false" aria-label="更多配置操作">⋮</button><div class="more-popover" data-ui2-menu-box="launch-profile-${profile._accountId}-${profile.id}" hidden><button data-ui2-account-id="${profile._accountId}" data-ui2-profile-clone="${profile.id}" type="button">复制当前租户副本</button><button data-ui2-account-id="${profile._accountId}" data-ui2-profile-copy-to="${profile.id}" type="button">复制到其他租户</button><button data-ui2-account-id="${profile._accountId}" data-ui2-profile-toggle="${profile.id}" data-ui2-enabled="${profile.enabled ? "1" : "0"}" type="button">${profile.enabled ? "停用配置" : "启用配置"}</button><button class="danger-text" data-ui2-account-id="${profile._accountId}" data-ui2-profile-delete="${profile.id}" type="button">删除配置</button></div></div></div></td></tr>`;
-  }).join("")}</tbody></table></div>` : `<div class="empty launch-empty">${allProfiles.length ? "没有符合当前筛选条件的配置" : "全部租户暂无保存配置"}</div>`;
+  }).join("")}</tbody></table></div>` : (() => {
+    if (allProfiles.length) return '<div class="empty launch-empty">没有符合当前筛选条件的配置</div>';
+    const quickTenants = state.accounts.slice(0, 10).map((item) => `<button class="launch-quick-tenant" data-ui2-open-launch-config="${item.id}" type="button"><span class="launch-quick-avatar">${esc((item.custom_name || item.tenancy_name || "N")[0].toUpperCase())}</span><span><strong>${esc(item.custom_name || item.tenancy_name || `租户 #${item.id}`)}</strong><small>${esc(item.home_region_key || item.region || "未读取区域")} · ${esc(item.email || "未读取邮箱")}</small></span><b>配置 →</b></button>`).join("");
+    return `<div class="launch-empty-start">
+      <div class="launch-empty-icon">OCI</div>
+      <div class="launch-empty-copy"><strong>还没有开机配置</strong><span>直接选择一个 OCI 租户进入开机工作区，系统会读取该租户可用区域、网络和 Ubuntu 镜像，再保存为可重复运行的配置。</span></div>
+      <div class="launch-empty-steps"><span><b>1</b>选择租户</span><span><b>2</b>自动读取环境</span><span><b>3</b>保存并运行</span></div>
+      <div class="launch-quick-grid">${quickTenants}</div>
+    </div>`;
+  })();
 
   $("global-launch-jobs").innerHTML = jobs.length ? `<div class="launch-job-stack">${jobs.map((job) => {
     const request = job.request || {};
@@ -1629,7 +1640,8 @@ function ui2Bind() {
       showPage("launch");
       ui2FillSelector("global-launch-account", state.ui2.selectedLaunchAccount);
       ui2LoadGlobalLaunch();
-    } else if (button.dataset.instanceEmptySync !== undefined) $("global-instance-sync")?.click();
+    } else if (button.dataset.ui2OpenLaunchConfig !== undefined) ui2OpenTenant(button.dataset.ui2OpenLaunchConfig, "launch", "launch");
+    else if (button.dataset.instanceEmptySync !== undefined) $("global-instance-sync")?.click();
     else if (button.dataset.instanceEmptyFocus !== undefined) $("global-instance-account")?.focus();
     else if (button.dataset.instanceEmptyReset !== undefined) $("global-instance-reset")?.click();
     else if (button.dataset.ui2InstanceAction) ui2InstanceAction(button);
