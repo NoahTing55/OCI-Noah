@@ -1796,3 +1796,343 @@ body.tenant-mode .tenant-tabs button {
   }
 }
 /* END R-BOT PREVIEW R2 ALIGNMENT FIX */
+
+/* BEGIN R-BOT PREVIEW R3 CONSISTENCY FIX
+ * Screenshot-driven cleanup:
+ * - blue is the only interactive accent
+ * - green is status/success only
+ * - enabled controls use the same switch + secondary action pattern
+ * - disabled buttons are neutral, not washed-out blue
+ * - settings/session/header actions stay in normal document flow
+ */
+
+/* One interaction palette. */
+:root {
+  --nt-toggle-on: #1677ff !important;
+  --nt-toggle-on-hover: #0f6ce8 !important;
+}
+
+/* Global switches: blue on-state, green remains reserved for success badges. */
+input[type="checkbox"][id$="-enabled"]:checked,
+input[type="checkbox"][id^="enable-"]:checked,
+.switch-row input[type="checkbox"]:checked,
+[class*="toggle"] input[type="checkbox"]:checked,
+#proxy-enabled:checked,
+#import-proxy-enabled:checked,
+#telegram-enabled:checked,
+#google-auth-enabled:checked {
+  border-color: #1677ff !important;
+  background: #1677ff !important;
+}
+
+input[type="checkbox"][id$="-enabled"]:checked:hover,
+input[type="checkbox"][id^="enable-"]:checked:hover,
+.switch-row input[type="checkbox"]:checked:hover,
+[class*="toggle"] input[type="checkbox"]:checked:hover,
+#proxy-enabled:checked:hover,
+#import-proxy-enabled:checked:hover,
+#telegram-enabled:checked:hover,
+#google-auth-enabled:checked:hover {
+  border-color: #0f6ce8 !important;
+  background: #0f6ce8 !important;
+}
+
+input[type="checkbox"][id$="-enabled"]:focus-visible,
+input[type="checkbox"][id^="enable-"]:focus-visible,
+.switch-row input[type="checkbox"]:focus-visible,
+[class*="toggle"] input[type="checkbox"]:focus-visible,
+#proxy-enabled:focus-visible,
+#import-proxy-enabled:focus-visible,
+#telegram-enabled:focus-visible,
+#google-auth-enabled:focus-visible {
+  box-shadow: 0 0 0 3px rgba(22,119,255,.16) !important;
+}
+
+/* Consistent button hierarchy:
+   primary = blue, secondary = white/gray, danger = red only. */
+.button {
+  border-color: #d7e0e9 !important;
+  background: #fff !important;
+  color: #344054 !important;
+  box-shadow: none !important;
+}
+
+.button:hover:not(:disabled) {
+  border-color: #a9bdd5 !important;
+  background: #f8fbff !important;
+  color: #26364a !important;
+}
+
+.button.primary {
+  border-color: #1677ff !important;
+  background: #1677ff !important;
+  color: #fff !important;
+}
+
+.button.primary:hover:not(:disabled) {
+  border-color: #0f6ce8 !important;
+  background: #0f6ce8 !important;
+  color: #fff !important;
+}
+
+.button.danger,
+.button.ghost-danger {
+  border-color: #efc0c6 !important;
+  background: #fff !important;
+  color: #c43e4e !important;
+}
+
+.button.danger:hover:not(:disabled),
+.button.ghost-danger:hover:not(:disabled) {
+  border-color: #e99aa4 !important;
+  background: #fff6f7 !important;
+  color: #b83243 !important;
+}
+
+.button:disabled,
+.button[disabled],
+.button.primary:disabled,
+.button.primary[disabled] {
+  border-color: #e1e6ec !important;
+  background: #f2f4f7 !important;
+  color: #98a2b3 !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+
+/* Telegram / Gmail:
+   ON = blue switch + neutral "disable" action.
+   OFF = gray switch + blue "enable" action. */
+#settings-page .settings-state-button {
+  min-width: 108px !important;
+  min-height: 32px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+#settings-page .settings-state-button:not(.active) {
+  border-color: #1677ff !important;
+  background: #1677ff !important;
+  color: #fff !important;
+}
+
+#settings-page .settings-state-button.active {
+  border-color: #d7e0e9 !important;
+  background: #fff !important;
+  color: #344054 !important;
+}
+
+#settings-page .settings-state-button.active:hover {
+  border-color: #a9bdd5 !important;
+  background: #f8fbff !important;
+  color: #26364a !important;
+}
+
+/* API schedule uses the exact same interaction pattern. */
+#settings-page .account-check-schedule-head-actions {
+  position: static !important;
+  inset: auto !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+#settings-page .account-check-schedule-switch {
+  position: relative !important;
+  display: inline-block !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 22px !important;
+  flex: 0 0 40px !important;
+}
+
+#settings-page .account-check-schedule-switch-slider {
+  border: 1px solid #cbd5dc !important;
+  background: #dfe5e9 !important;
+  box-sizing: border-box !important;
+}
+
+#settings-page .account-check-schedule-switch input:checked + .account-check-schedule-switch-slider {
+  border-color: #1677ff !important;
+  background: #1677ff !important;
+}
+
+#settings-page .account-check-schedule-card #account-check-schedule-toggle {
+  min-width: 118px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  line-height: 30px !important;
+  font-weight: 650 !important;
+  box-shadow: none !important;
+}
+
+#settings-page .account-check-schedule-card #account-check-schedule-toggle[aria-pressed="false"] {
+  border-color: #1677ff !important;
+  background: #1677ff !important;
+  color: #fff !important;
+}
+
+#settings-page .account-check-schedule-card #account-check-schedule-toggle[aria-pressed="true"] {
+  border-color: #d7e0e9 !important;
+  background: #fff !important;
+  color: #344054 !important;
+}
+
+#settings-page .account-check-schedule-card #account-check-schedule-toggle[aria-pressed="true"]:hover {
+  border-color: #a9bdd5 !important;
+  background: #f8fbff !important;
+  color: #26364a !important;
+}
+
+/* Schedule header must never overlap the form. */
+#settings-page .account-check-schedule-card .panel-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 12px 18px !important;
+  min-height: 0 !important;
+  margin-bottom: 14px !important;
+  overflow: visible !important;
+}
+
+#settings-page .account-check-schedule-card .panel-head > div:first-child {
+  min-width: 0 !important;
+}
+
+#settings-page .account-check-schedule-card .panel-head p {
+  max-width: 760px !important;
+}
+
+/* Session card: no visual clipping; table scrolls inside its own viewport. */
+#settings-page .settings-session-card {
+  overflow: visible !important;
+}
+
+#settings-page .settings-session-card .session-list {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 150px !important;
+  max-height: 260px !important;
+  overflow: auto !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 7px !important;
+}
+
+#settings-page .settings-session-card .session-table {
+  width: 100% !important;
+  min-width: 690px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+#settings-page .settings-session-card .session-table th,
+#settings-page .settings-session-card .session-table td {
+  padding: 8px 9px !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  vertical-align: middle !important;
+}
+
+#settings-page .settings-session-card .session-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f7f9fc !important;
+}
+
+#settings-page .settings-session-card .session-table td:first-child {
+  min-width: 250px !important;
+}
+
+#settings-page .settings-session-card .session-table td:first-child strong {
+  display: block;
+  max-width: 245px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#settings-page .settings-session-card .login-attempts-details {
+  position: static !important;
+  margin-top: 10px !important;
+  clear: both !important;
+}
+
+/* Settings header groups stay aligned and never float over card content. */
+#settings-page .settings-card .panel-head,
+#settings-page .settings-card .settings-action-head,
+#settings-page .settings-card .settings-toggle-head {
+  position: static !important;
+  overflow: visible !important;
+}
+
+#settings-page .settings-head-actions,
+#settings-page .settings-header-actions,
+#settings-page .page-toolbar {
+  position: static !important;
+  inset: auto !important;
+}
+
+/* Keep toggles/buttons aligned to the title row. */
+#settings-page .settings-toggle-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 12px 16px !important;
+}
+
+#settings-page .settings-toggle-head > div:first-child {
+  min-width: 0 !important;
+}
+
+#settings-page .settings-toggle-head .settings-head-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  min-width: 0 !important;
+}
+
+#settings-page .settings-auth-note {
+  max-width: 220px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Resource/status cards keep neutral surfaces; status itself carries color. */
+#settings-page .resource-status-grid > article,
+#settings-page .account-check-schedule-status > div {
+  border: 1px solid #e3e9ef !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+/* Responsive: once title/action width is tight, stack cleanly instead of overlap. */
+@media (max-width: 980px) {
+  #settings-page .settings-toggle-head,
+  #settings-page .account-check-schedule-card .panel-head {
+    grid-template-columns: 1fr !important;
+  }
+
+  #settings-page .settings-toggle-head .settings-head-actions,
+  #settings-page .account-check-schedule-head-actions {
+    justify-content: flex-start !important;
+  }
+
+  #settings-page .settings-auth-note {
+    max-width: none !important;
+    white-space: normal !important;
+  }
+}
+/* END R-BOT PREVIEW R3 CONSISTENCY FIX */
