@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="light">
   <title>OCI-N&amp;T</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rednt-1">
   <link rel="alternate icon" href="/favicon.ico?v=rednt-1">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=rednt-1">
   <link rel="stylesheet" href="/styles.css?v=2.0.0-stable-ui-freeze">
-  <link rel="stylesheet" href="/ui-rbot.css?v=2.0-rbot-preview-1">
+  <link rel="stylesheet" href="/ui-rbot.css?v=2.0-ui-foundation-1">
 </head>
 <body>
   <main id="login-view" class="login-view">
@@ -36,17 +36,17 @@
     <aside class="sidebar">
       <nav class="nav-list" aria-label="主导航">
         <div class="nav-group-title">管理中心</div>
-        <button class="nav active" data-page="dashboard" type="button"><span>▦</span>仪表盘</button>
-        <button class="nav" data-page="accounts" type="button"><span>◆</span>API 管理</button>
-        <button class="nav" data-page="proxies" type="button"><span>PX</span>代理管理</button>
-        <button class="nav" data-page="tasks" type="button"><span>JOB</span>任务中心</button>
-        <button class="nav" data-page="instances" type="button"><span>☁</span>OCI 实例管理</button>
-        <button class="nav" data-page="launch" type="button"><span>◉</span>OCI 开机管理</button>
+        <button class="nav active" data-page="dashboard" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>仪表盘</button>
+        <button class="nav" data-page="accounts" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 14.5 5 19v2h2l1-1 1 1 2-2-1-1 2-2"/><circle cx="15.5" cy="8.5" r="4.5"/></svg>API 管理</button>
+        <button class="nav" data-page="proxies" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="6" cy="7" r="2.5"/><circle cx="18" cy="7" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.2 8.4 10.8 15M15.8 8.4 13.2 15M8.5 7h7"/></svg>代理管理</button>
+        <button class="nav" data-page="tasks" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="m8 9 1.5 1.5L12 8M14 9h3M8 15l1.5 1.5L12 14M14 15h3"/></svg>任务中心</button>
+        <button class="nav" data-page="instances" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 18.5h10a4 4 0 0 0 .8-7.9A6 6 0 0 0 6.2 9.4 4.6 4.6 0 0 0 7 18.5Z"/></svg>OCI 实例管理</button>
+        <button class="nav" data-page="launch" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v8"/><path d="M7.1 5.8a8 8 0 1 0 9.8 0"/></svg>OCI 开机管理</button>
         <div class="nav-group-title">扩展功能</div>
-        <button class="nav" data-page="cloudflare" type="button"><span>CF</span>Cloudflare DNS</button>
+        <button class="nav" data-page="cloudflare" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.4 2.3 3.7 5.1 3.7 8.5S14.4 18.2 12 20.5M12 3.5C9.6 5.8 8.3 8.6 8.3 12s1.3 6.2 3.7 8.5"/></svg>Cloudflare DNS</button>
         <div class="nav-group-title">系统管理</div>
-        <button class="nav" data-page="audit" type="button"><span>LOG</span>操作记录</button>
-        <button class="nav" data-page="settings" type="button"><span>SET</span>系统设置</button>
+        <button class="nav" data-page="audit" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3.5h9l3 3v14H6z"/><path d="M15 3.5v4h4M9 11h6M9 15h6"/></svg>操作记录</button>
+        <button class="nav" data-page="settings" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M4 12h4M12 12h8"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/><circle cx="10" cy="12" r="2"/></svg>系统设置</button>
       </nav>
       <div class="sidebar-foot">
         <span class="sidebar-version">N&amp;T 2.0</span>
