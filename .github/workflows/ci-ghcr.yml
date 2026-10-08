@@ -108,6 +108,9 @@ jobs:
       - name: Test unified backend release preflight
         run: python -m unittest discover -s tests -p 'test_backend_release_unified_preflight.py' -v
 
+      - name: Test backend process topology audit
+        run: python -m unittest discover -s tests -p 'test_backend_process_topology.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
