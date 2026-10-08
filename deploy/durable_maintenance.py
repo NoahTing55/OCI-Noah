@@ -59,6 +59,21 @@ def begin(db: Path, *, operator: str, reason: str) -> dict:
             old = json.loads(row[0])
             if not isinstance(old, dict) or old.get("active") is not False:
                 raise RuntimeError("Maintenance already active or marker malformed")
+        # Cross-process request leases must be fully drained before maintenance.
+        # This is checked under the same SQLite write transaction as activation.
+        lease_row = con.execute(
+            "SELECT setting_value FROM system_settings WHERE setting_key=?",
+            ("oci_nt_http_operation_leases_v1",),
+        ).fetchone()
+        if lease_row:
+            try:
+                leases = json.loads(lease_row[0])
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("OCI operation leases malformed") from exc
+            if not isinstance(leases, dict):
+                raise RuntimeError("OCI operation leases malformed")
+            if leases:
+                raise RuntimeError(f"OCI HTTP operations still active: {len(leases)}")
         state = {
             "active": True,
             "operator": operator.strip(),

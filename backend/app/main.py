@@ -137,6 +137,7 @@ from .maintenance_state import status as maintenance_status
 from .runtime_drain_snapshot import snapshot as runtime_drain_snapshot
 from .maintenance_route_guard import maintenance_active, protected_oci_write
 from .oci_http_inflight import track_oci_http_write
+from .oci_operation_leases import acquire as acquire_oci_lease, release as release_oci_lease, OCIAdmissionBlocked
 from .task_recovery_service import preview_safe_resume, resume_task_safely
 from .release_service import (
     current_release_info, list_release_history, record_application_start,
@@ -674,8 +675,20 @@ async def maintenance_request_guard(request: Request, call_next):
                 content={"detail": "无法确认发布维护状态，已安全阻止 OCI 操作"},
             )
     if protected_oci_write(request.method, request.url.path):
-        with track_oci_http_write(request.url.path):
-            response = await call_next(request)
+        # Atomic gate check + operation registration prevents a request from
+        # passing maintenance checks just before maintenance is activated.
+        try:
+            lease_token = acquire_oci_lease(settings.db_path, request.url.path)
+        except (OCIAdmissionBlocked, OSError, sqlite3.Error):
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "OCI 操作准入被维护锁或数据库状态阻止"},
+            )
+        try:
+            with track_oci_http_write(request.url.path):
+                response = await call_next(request)
+        finally:
+            release_oci_lease(settings.db_path, lease_token)
     else:
         response = await call_next(request)
     if request.url.path.startswith(f"{settings.api_prefix}/auth/"):
