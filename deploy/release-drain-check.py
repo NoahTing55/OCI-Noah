@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 KEY = "oci_nt_release_maintenance_v1"
+LEASE_KEY = "oci_nt_http_operation_leases_v1"
 TERMINAL = frozenset(("COMPLETED", "PARTIAL", "FAILED", "CANCELLED", "INTERRUPTED", "SUCCESS", "FINISHED", "STOPPED"))
 TABLES = ("manual_tasks", "launch_jobs")
 
@@ -47,15 +48,29 @@ def report(db: Path) -> dict:
                     for status, count in rows
                     if status is None or str(status).upper() not in TERMINAL
                 }
+            lease_row = con.execute(
+                "SELECT setting_value FROM system_settings WHERE setting_key=?", (LEASE_KEY,)
+            ).fetchone()
+            try:
+                leases = json.loads(lease_row[0]) if lease_row else {}
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("Malformed OCI operation leases") from exc
+            if not isinstance(leases, dict):
+                raise RuntimeError("Malformed OCI operation leases")
+            for lease_id, entry in leases.items():
+                if not isinstance(lease_id, str) or not isinstance(entry, dict):
+                    raise RuntimeError("Malformed OCI operation lease entry")
             gate = state["active"] is True
             empty = all(not count for count in counts.values())
+            no_leases = not leases
             return {
                 "maintenance_active": gate,
                 "nonterminal_tasks": counts,
                 "database_quick_check": "ok",
-                "db_task_drain_ready": gate and empty,
+                "oci_operation_leases": len(leases),
+                "db_task_drain_ready": gate and empty and no_leases,
                 "release_authorized": False,
-                "limitations": "Does not prove no in-flight OCI HTTP requests, worker activity or in-memory operations.",
+                "limitations": "Only persisted leases are counted; untracked and detached OCI requests across other processes may still be active.",
             }
         finally:
             con.execute("ROLLBACK")
