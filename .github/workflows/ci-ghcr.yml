@@ -111,6 +111,9 @@ jobs:
       - name: Test backend process topology audit
         run: python -m unittest discover -s tests -p 'test_backend_process_topology.py' -v
 
+      - name: Test backend release coordinator plan
+        run: python -m unittest discover -s tests -p 'test_backend_release_plan.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
