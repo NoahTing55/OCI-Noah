@@ -66,6 +66,9 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_backend_release_preflight.py' -v
 
+      - name: Test verified release snapshots
+        run: python -m unittest discover -s tests -p 'test_verified_release_backup.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
