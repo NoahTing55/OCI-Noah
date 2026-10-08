@@ -153,6 +153,8 @@ async def start_instance_batch_task(
     retry_of_task_id: int | None = None,
     idempotency_key: str | None = None,
 ) -> dict:
+    from .maintenance_state import reject_new_work_during_maintenance
+    reject_new_work_during_maintenance()
     operation = _normalize_operation(operation)
     interval_seconds = max(0, min(int(interval_seconds), 60))
     normalized = _dedupe_items(operation, items)

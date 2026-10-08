@@ -37,6 +37,7 @@ from .telegram_service import format_bulk_check_message, send_configured_telegra
 from .account_check_alert_service import process_scheduled_account_check
 from .oci_resilience import ResilientOperationError, adaptive_oci_call
 from .system_resource_service import assert_task_resources
+from .maintenance_state import reject_new_work_during_maintenance
 
 
 class TaskBusyError(RuntimeError):
@@ -124,6 +125,7 @@ async def start_account_check_task(
     idempotency_key: str | None = None,
     source: str = "manual",
 ) -> dict:
+    reject_new_work_during_maintenance()
     interval_seconds = int(interval_seconds)
     source = str(source or "manual").strip().lower()
     if source not in {"manual", "scheduled", "schedule_now"}:
@@ -336,6 +338,7 @@ async def start_proxy_health_task(
     retry_of_task_id: int | None = None,
     idempotency_key: str | None = None,
 ) -> dict:
+    reject_new_work_during_maintenance()
     profiles = list_proxy_profiles()
     if profile_ids is not None:
         allowed = {int(value) for value in profile_ids}
