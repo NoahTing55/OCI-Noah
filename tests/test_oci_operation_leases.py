@@ -24,6 +24,8 @@ class LeaseTests(unittest.TestCase):
         self.db = Path(self.temp.name)/"db.sqlite"
         with sqlite3.connect(self.db) as con:
             con.execute("CREATE TABLE system_settings(setting_key TEXT PRIMARY KEY,setting_value TEXT,is_secret INTEGER DEFAULT 0,updated_at TEXT)")
+            con.execute("CREATE TABLE manual_tasks(id INTEGER,status TEXT)")
+            con.execute("CREATE TABLE launch_jobs(id INTEGER,status TEXT)")
 
     def test_lease_prevents_maintenance_until_finished(self):
         token = leases.acquire(self.db, "/api/v1/accounts/1/instances/x/actions")
