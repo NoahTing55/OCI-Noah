@@ -22,8 +22,8 @@ def audit(runner=subprocess.run) -> dict:
         rows = [line.strip() for line in result.stdout.splitlines() if line.strip()]
         if len(rows) < 2 or "PID" not in rows[0].upper():
             raise RuntimeError(f"Cannot verify running process list: {name}")
-        processes[name] = {"reported_process_rows": len(rows) - 1,
-                           "process_summary": rows[1:11]}
+        # Do not expose process arguments: they can contain secret values.
+        processes[name] = {"reported_process_rows": len(rows) - 1}
     return {
         "processes": processes,
         "topology_observed": True,
