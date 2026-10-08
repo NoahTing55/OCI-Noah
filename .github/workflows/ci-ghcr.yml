@@ -69,6 +69,15 @@ jobs:
           cp .env.example .env
           docker compose config >/dev/null
 
+      - name: Validate safe Web release procedure
+        env:
+          OCI_NOAH_IMAGE_TAG: ci
+          OCI_NT_RELEASE_WEB_IMAGE: ghcr.io/noahting55/oci-noah-web:sha-0000000000000000000000000000000000000000
+        run: |
+          bash -n deploy/release-web.sh
+          docker compose -f docker-compose.yml -f deploy/compose.web-release.yml config --quiet
+          docker compose -f docker-compose.yml -f deploy/compose.web-release.yml config --format json | python3 -c 'import json,sys; s=json.load(sys.stdin)["services"]; assert s["web"]["image"].endswith("sha-" + "0"*40); assert s["api"]["image"].endswith(":ci"); assert s["monitor"]["image"].endswith(":ci"); assert s["docker-guard"]["image"].endswith(":ci")'
+
   publish:
     name: Publish ${{ matrix.name }} image
     if: github.event_name != 'pull_request'
