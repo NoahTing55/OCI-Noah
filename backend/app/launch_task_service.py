@@ -212,6 +212,8 @@ async def start_launch_task(
     concurrency: int,
     trusted_saved_request: bool = False,
 ) -> dict:
+    from .maintenance_state import reject_new_work_during_maintenance
+    reject_new_work_during_maintenance()
     mode = str(mode or "CREATE").upper()
     if mode not in {"CREATE", "CAPACITY_RETRY"}:
         raise ValueError("任务模式只允许 CREATE 或 CAPACITY_RETRY")
