@@ -33,3 +33,15 @@ def end() -> None:
 def status() -> dict:
     with _lock:
         return dict(_state)
+
+
+class MaintenanceAdmissionBlocked(RuntimeError):
+    """New OCI work is disallowed while an in-process maintenance operation is active."""
+
+
+def reject_new_work_during_maintenance() -> None:
+    with _lock:
+        if _state["active"]:
+            raise MaintenanceAdmissionBlocked(
+                "系统正在维护，暂不接受新的 OCI 任务"
+            )
