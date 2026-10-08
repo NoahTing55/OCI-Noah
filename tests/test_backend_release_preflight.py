@@ -24,19 +24,23 @@ class BackendPreflightTests(unittest.TestCase):
             """)
 
     def test_idle(self):
-        self.assertTrue(module.inspect(self.db)["safe_to_restart"])
+        result = module.inspect(self.db)
+        self.assertTrue(result["db_task_rows_terminal"])
+        self.assertFalse(result["safe_to_restart"])
+        self.assertFalse(result["release_authorized"])
 
     def test_manual_running_blocks(self):
         with sqlite3.connect(self.db) as con:
             con.execute("INSERT INTO manual_tasks VALUES(1,'RUNNING')")
         result = module.inspect(self.db)
         self.assertFalse(result["safe_to_restart"])
+        self.assertFalse(result["db_task_rows_terminal"])
         self.assertEqual(result["nonterminal_tasks"]["manual_tasks"]["RUNNING"], 1)
 
     def test_launch_pending_blocks(self):
         with sqlite3.connect(self.db) as con:
             con.execute("INSERT INTO launch_jobs VALUES(1,'PENDING')")
-        self.assertFalse(module.inspect(self.db)["safe_to_restart"])
+        self.assertFalse(module.inspect(self.db)["db_task_rows_terminal"])
 
     def test_unknown_status_blocks(self):
         with sqlite3.connect(self.db) as con:
