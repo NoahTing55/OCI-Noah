@@ -75,6 +75,9 @@ jobs:
       - name: Test atomic maintenance admission protocol
         run: python -m unittest discover -s tests -p 'test_atomic_admission.py' -v
 
+      - name: Test repository durable maintenance admission
+        run: python -m unittest discover -s tests -p 'test_repository_durable_admission.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci

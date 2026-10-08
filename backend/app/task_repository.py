@@ -141,6 +141,8 @@ def create_task(
     dedupe_until = (now_dt + timedelta(seconds=max(1, int(dedupe_seconds)))).isoformat()
     with database() as connection:
         connection.execute("BEGIN IMMEDIATE")
+        from .durable_admission import assert_admission_in_transaction
+        assert_admission_in_transaction(connection)
         clauses: list[str] = []
         params: list[object] = []
         if normalized_idempotency:
