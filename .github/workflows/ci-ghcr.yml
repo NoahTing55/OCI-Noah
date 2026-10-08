@@ -105,6 +105,9 @@ jobs:
       - name: Test staged backend candidate image inspection
         run: python -m unittest discover -s tests -p 'test_backend_candidate_check.py' -v
 
+      - name: Test unified backend release preflight
+        run: python -m unittest discover -s tests -p 'test_backend_release_unified_preflight.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
