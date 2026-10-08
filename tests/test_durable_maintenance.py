@@ -24,6 +24,8 @@ class DurableMarkerTests(unittest.TestCase):
                 is_secret INTEGER NOT NULL DEFAULT 0,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
             )""")
+            con.execute("CREATE TABLE manual_tasks(id INTEGER,status TEXT)")
+            con.execute("CREATE TABLE launch_jobs(id INTEGER,status TEXT)")
 
     def test_persists_across_connections(self):
         self.assertFalse(module.read_state(self.db)["active"])
