@@ -45,7 +45,7 @@ def inspect(db: Path) -> dict:
             )}
             pending[table] = {k:v for k,v in items.items() if k not in TERMINAL}
         return {"database_quick_check": "ok", "schema": int(schema[0]), "nonterminal_tasks": pending,
-                "safe_to_restart": all(not v for v in pending.values())}
+                "db_task_rows_terminal": all(not v for v in pending.values()), "safe_to_restart": False, "release_authorized": False}
     finally:
         con.close()
 
@@ -59,9 +59,6 @@ def main() -> int:
         print(json.dumps({"preflight": "BLOCKED", "reason": str(exc)}, ensure_ascii=False))
         return 2
     # A terminal DB task row does not prove detached OCI operations are idle.
-    report["db_task_rows_terminal"] = report.pop("safe_to_restart")
-    report["safe_to_restart"] = False
-    report["release_authorized"] = False
     report["preflight"] = "DB_TASK_ROWS_TERMINAL" if report["db_task_rows_terminal"] else "BLOCKED_ACTIVE_TASKS"
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["db_task_rows_terminal"] else 3
