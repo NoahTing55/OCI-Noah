@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 
 from .config import settings
+from .oci_background_leases import run_with_lease
 from .account_check_service import execute_account_check, mark_account_check_error
 from .account_repository import get_account_public, list_accounts_public
 from .database import add_audit_log
@@ -48,7 +49,7 @@ _tasks: dict[int, asyncio.Task] = {}
 
 
 def _register_task(task_id: int, coroutine) -> None:
-    runtime_task = asyncio.create_task(coroutine)
+    runtime_task = asyncio.create_task(run_with_lease(settings.db_path, kind="manual", task_id=task_id, coroutine=coroutine))
     _tasks[int(task_id)] = runtime_task
     runtime_task.add_done_callback(lambda _: _tasks.pop(int(task_id), None))
 

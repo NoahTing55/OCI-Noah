@@ -5,6 +5,8 @@ import string
 import uuid
 from datetime import datetime, timedelta, timezone
 
+from .config import settings
+from .oci_background_leases import run_with_lease
 from .database import add_audit_log
 from .credential_crypto import decrypt_secret, encrypt_secret
 from .launch_repository import (
@@ -286,7 +288,9 @@ async def start_launch_task(
 
     job_id = int(job["id"])
     task = asyncio.create_task(
-        _run_launch_task(
+        run_with_lease(
+            settings.db_path, kind="launch", task_id=job_id,
+            coroutine=_run_launch_task(
             job_id=job_id,
             account_id=account_id,
             requested_by=requested_by,
@@ -296,6 +300,7 @@ async def start_launch_task(
             max_attempts=max_attempts,
             retry_interval_seconds=retry_interval_seconds,
             concurrency=concurrency,
+            ),
         )
     )
     _tasks[job_id] = task

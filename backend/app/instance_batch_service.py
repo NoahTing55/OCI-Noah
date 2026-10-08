@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from .config import settings
+from .oci_background_leases import run_with_lease
+
 import asyncio
 import time
 from datetime import datetime, timezone
@@ -56,7 +59,7 @@ _runtime_tasks: dict[int, asyncio.Task] = {}
 
 
 def _register(task_id: int, coroutine) -> None:
-    runtime = asyncio.create_task(coroutine)
+    runtime = asyncio.create_task(run_with_lease(settings.db_path, kind="instance_batch", task_id=task_id, coroutine=coroutine))
     _runtime_tasks[int(task_id)] = runtime
     runtime.add_done_callback(lambda _: _runtime_tasks.pop(int(task_id), None))
 
