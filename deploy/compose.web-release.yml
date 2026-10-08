@@ -1,0 +1,4 @@
+# Pin only the web service without changing API/monitor/guard tags.
+services:
+  web:
+    image: ${OCI_NT_RELEASE_WEB_IMAGE:?Set OCI_NT_RELEASE_WEB_IMAGE to an immutable GHCR sha tag}
