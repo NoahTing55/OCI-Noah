@@ -1242,9 +1242,9 @@ code,
   top: 54px !important;
   height: calc(100vh - 54px) !important;
   padding: 12px 9px 11px !important;
-  background: #fff !important;
+  background: #f0f4f9 !important;
   color: #344054 !important;
-  border-right: 1px solid var(--line) !important;
+  border-right: 1px solid #dae4f0 !important;
 }
 
 .nav-list {
@@ -1280,8 +1280,8 @@ code,
   height: 24px !important;
   padding: 4.5px !important;
   border-radius: 6px !important;
-  background: #f2f4f7 !important;
-  color: #667085 !important;
+  background: #e5ebf4 !important;
+  color: #64748b !important;
   stroke: currentColor !important;
   stroke-width: 1.8 !important;
   stroke-linecap: round !important;
@@ -1290,17 +1290,19 @@ code,
   box-sizing: border-box !important;
 }
 
-.nav:hover {
-  border-color: #e4eaf1 !important;
-  background: #f7f9fc !important;
+.nav:hover:not(.active) {
+  border-color: #dce6f2 !important;
+  background: #e7eef7 !important;
   color: #1d2939 !important;
 }
 
-.nav.active {
-  border-color: #cfe1ff !important;
-  background: #edf5ff !important;
-  color: #1769dd !important;
-  box-shadow: inset 3px 0 0 #1677ff !important;
+.nav.active,
+.nav.active:hover {
+  border-color: #a9ccfa !important;
+  background: #dceaff !important;
+  color: #115ac4 !important;
+  font-weight: 750 !important;
+  box-shadow: inset 3px 0 0 #1677ff, 0 1px 3px rgba(22, 119, 255, .08) !important;
 }
 
 .nav.active .nav-icon {
