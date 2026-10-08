@@ -141,6 +141,12 @@ jobs:
       - name: Test backend release safety boundaries
         run: python -m unittest discover -s tests -p 'test_backend_preflight_safety_boundary.py' -v
 
+      - name: Test isolated candidate schema safety
+        run: python -m unittest discover -s tests -p 'test_isolated_candidate_schema.py' -v
+
+      - name: Test disposable release snapshot restore
+        run: python -m unittest discover -s tests -p 'test_disposable_restore_drill.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
