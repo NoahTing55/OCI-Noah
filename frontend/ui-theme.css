@@ -2708,3 +2708,61 @@ body.tenant-mode .tenant-tabs button.active {
     flex-wrap: wrap !important;
   }
 }
+
+/* OCI-N&T UI Final R2: bounded data panes */
+/* Keep controls and metrics outside the scroll area; only long data bodies scroll. */
+#settings-page #backup-list {
+  max-height: min(320px, 45vh) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+}
+#settings-page #release-history {
+  max-height: min(300px, 42vh) !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  overscroll-behavior: contain;
+}
+#tasks-page #task-list {
+  max-height: min(560px, 65vh) !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  overscroll-behavior: contain;
+}
+#tasks-page #task-detail-items {
+  max-height: min(460px, 58vh) !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  overscroll-behavior: contain;
+}
+/* Avoid breaking the horizontal table layout while the body scrolls. */
+#settings-page #release-history table,
+#tasks-page #task-list table,
+#tasks-page #task-detail-items table {
+  width: 100%;
+}
+#settings-page #release-history thead th,
+#tasks-page #task-list thead th,
+#tasks-page #task-detail-items thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #f7f9fc !important;
+}
+#tasks-page #task-detail-items td,
+#tasks-page #task-detail-items .task-item-error {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+#tasks-page .task-detail-panel > .panel-head,
+#tasks-page #task-detail-summary {
+  position: relative;
+}
+@media (max-width: 900px) {
+  #settings-page #backup-list,
+  #settings-page #release-history,
+  #tasks-page #task-list,
+  #tasks-page #task-detail-items {
+    max-height: min(400px, 55vh) !important;
+  }
+}
