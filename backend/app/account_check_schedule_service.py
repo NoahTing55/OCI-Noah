@@ -346,6 +346,10 @@ async def _loop() -> None:
     await asyncio.sleep(15)
     while True:
         try:
+            from .maintenance_state import status as maintenance_status
+            if maintenance_status().get("active"):
+                await asyncio.sleep(15)
+                continue
             config = _read()
             if config["enabled"]:
                 due = _parse(config.get("next_run_at"))
