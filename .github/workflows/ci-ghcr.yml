@@ -129,6 +129,9 @@ jobs:
       - name: Test persisted OCI lease diagnostics
         run: python -m unittest discover -s tests -p 'test_oci_lease_diagnostics.py' -v
 
+      - name: Test OCI lease record validation
+        run: python -m unittest discover -s tests -p 'test_oci_lease_record_validation.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
