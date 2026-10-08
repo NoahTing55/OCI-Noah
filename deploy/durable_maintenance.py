@@ -131,6 +131,44 @@ def end(db: Path, *, operator: str) -> dict:
         old = json.loads(row[0])
         if not isinstance(old, dict) or old.get("active") is not True:
             raise RuntimeError("Maintenance is not active; refusing to clear marker")
+        # Reopening OCI admission must not race with unfinished requests.
+        # Check the persistent leases and task rows under the same write lock
+        # that clears the maintenance marker.
+        lease_row = con.execute(
+            "SELECT setting_value FROM system_settings WHERE setting_key=?",
+            ("oci_nt_http_operation_leases_v1",),
+        ).fetchone()
+        try:
+            leases = json.loads(lease_row[0]) if lease_row else {}
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError("OCI operation leases malformed") from exc
+        if not isinstance(leases, dict):
+            raise RuntimeError("OCI operation leases malformed")
+        for token, entry in leases.items():
+            if (not isinstance(token, str) or not token
+                or not isinstance(entry, dict)
+                or not isinstance(entry.get("started_at"), str)
+                or not entry["started_at"]
+                or not isinstance(entry.get("path"), str)
+                or not entry["path"]):
+                raise RuntimeError("OCI operation lease entry malformed")
+        if leases:
+            raise RuntimeError(f"Outstanding OCI leases prevent maintenance exit: {len(leases)}")
+        for table in ("manual_tasks", "launch_jobs"):
+            if not con.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+            ).fetchone():
+                raise RuntimeError(f"Required task table missing: {table}")
+            if "status" not in {row[1] for row in con.execute(f"PRAGMA table_info({table})")}:
+                raise RuntimeError(f"Task status missing: {table}")
+            count = con.execute(
+                f"""SELECT COUNT(*) FROM {table}
+                WHERE status IS NULL OR UPPER(status) NOT IN
+                ('COMPLETED','PARTIAL','FAILED','CANCELLED','INTERRUPTED',
+                 'SUCCESS','FINISHED','STOPPED')"""
+            ).fetchone()[0]
+            if count:
+                raise RuntimeError(f"Undrained {table} tasks prevent maintenance exit: {count}")
         state = {
             **old, "active": False, "ended_by": operator.strip(),
             "ended_at": datetime.now(timezone.utc).isoformat(),
