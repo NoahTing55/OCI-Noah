@@ -135,6 +135,7 @@ from .system_monitor_service import (
 )
 from .maintenance_state import status as maintenance_status
 from .maintenance_route_guard import maintenance_active, protected_oci_write
+from .oci_http_inflight import track_oci_http_write
 from .task_recovery_service import preview_safe_resume, resume_task_safely
 from .release_service import (
     current_release_info, list_release_history, record_application_start,
@@ -671,7 +672,11 @@ async def maintenance_request_guard(request: Request, call_next):
                 status_code=503,
                 content={"detail": "无法确认发布维护状态，已安全阻止 OCI 操作"},
             )
-    response = await call_next(request)
+    if protected_oci_write(request.method, request.url.path):
+        with track_oci_http_write(request.url.path):
+            response = await call_next(request)
+    else:
+        response = await call_next(request)
     if request.url.path.startswith(f"{settings.api_prefix}/auth/"):
         response.headers["Cache-Control"] = "no-store, max-age=0"
         response.headers["Pragma"] = "no-cache"
