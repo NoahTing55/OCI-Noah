@@ -134,6 +134,7 @@ from .system_monitor_service import (
     save_monitor_settings,
 )
 from .maintenance_state import status as maintenance_status
+from .maintenance_route_guard import maintenance_active, protected_oci_write
 from .task_recovery_service import preview_safe_resume, resume_task_safely
 from .release_service import (
     current_release_info, list_release_history, record_application_start,
@@ -658,6 +659,18 @@ async def maintenance_request_guard(request: Request, call_next):
                 "maintenance": state,
             },
         )
+    if protected_oci_write(request.method, request.url.path):
+        try:
+            if maintenance_active(settings.db_path):
+                return JSONResponse(
+                    status_code=503,
+                    content={"detail": "系统处于发布维护模式，暂停新的 OCI 操作"},
+                )
+        except (OSError, RuntimeError, sqlite3.Error) as exc:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "无法确认发布维护状态，已安全阻止 OCI 操作"},
+            )
     response = await call_next(request)
     if request.url.path.startswith(f"{settings.api_prefix}/auth/"):
         response.headers["Cache-Control"] = "no-store, max-age=0"
