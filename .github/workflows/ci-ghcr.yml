@@ -96,6 +96,9 @@ jobs:
       - name: Test authenticated release drain diagnostic
         run: python -m unittest discover -s tests -p 'test_runtime_drain_endpoint.py' -v
 
+      - name: Audit release maintenance route protection
+        run: python -m unittest discover -s tests -p 'test_release_guard_coverage.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
