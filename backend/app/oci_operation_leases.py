@@ -34,6 +34,21 @@ def _decode(value, *, default):
     return obj
 
 
+def validate_lease_records(leases: dict) -> dict:
+    """Reject damaged records rather than overwriting or ignoring them."""
+    if not isinstance(leases, dict):
+        raise OCIAdmissionBlocked("OCI operation lease registry malformed")
+    for token, entry in leases.items():
+        if (not isinstance(token, str) or not token
+            or not isinstance(entry, dict)
+            or not isinstance(entry.get("started_at"), str)
+            or not entry["started_at"]
+            or not isinstance(entry.get("path"), str)
+            or not entry["path"]):
+            raise OCIAdmissionBlocked("OCI operation lease entry malformed")
+    return leases
+
+
 def _state(con, key):
     row = con.execute(
         "SELECT setting_value FROM system_settings WHERE setting_key=?", (key,)
@@ -69,7 +84,7 @@ def acquire(db: Path, path: str) -> str:
             raise OCIAdmissionBlocked("维护状态无效")
         if marker.get("active") is True:
             raise OCIAdmissionBlocked("维护模式已开启，拒绝新的 OCI 操作")
-        leases = _state(con, LEASES)
+        leases = validate_lease_records(_state(con, LEASES))
         if len(leases) >= 10000:
             raise OCIAdmissionBlocked("未结束 OCI 操作记录超限")
         leases[token] = {
@@ -107,7 +122,7 @@ def release(db: Path, token: str) -> None:
 
 def active_lease_count_in_transaction(con: sqlite3.Connection) -> int:
     """Called by maintenance begin AFTER acquiring BEGIN IMMEDIATE."""
-    leases = _state(con, LEASES)
+    leases = validate_lease_records(_state(con, LEASES))
     return len(leases)
 
 
