@@ -6,7 +6,7 @@ const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
 
 const index = read("frontend/index.html");
 const baseCss = read("frontend/styles.css");
-const themeCss = read("frontend/ui-rbot.css");
+const themeCss = read("frontend/ui-theme.css");
 const appJs = read("frontend/app.js");
 const rcJs = read("frontend/rc.js");
 const ui2Js = read("frontend/ui2.js");
@@ -69,7 +69,7 @@ assert((index.match(/\sstyle\s*=/g) || []).length === 0, "inline style attribute
 assert(themeCss.includes("OCI-N&T UI FOUNDATION 2.0"), "consolidated UI foundation marker missing");
 assert(!themeCss.includes("BEGIN R-BOT PREVIEW"), "historical R2/R3/R4/R5/R6 patch chain must not return");
 assert(balanced(baseCss), "styles.css braces are unbalanced");
-assert(balanced(themeCss), "ui-rbot.css braces are unbalanced");
+assert(balanced(themeCss), "ui-theme.css braces are unbalanced");
 
 const baseGreens = collectGreenTokens(baseCss);
 const themeGreens = collectGreenTokens(themeCss);
@@ -77,7 +77,7 @@ const appGreens = collectGreenTokens(appJs);
 const rcGreens = collectGreenTokens(rcJs);
 const ui2Greens = collectGreenTokens(ui2Js);
 assert(baseGreens.length === 0, "green/teal literals remain in styles.css: " + baseGreens.join(", "));
-assert(themeGreens.length === 0, "green/teal literals remain in ui-rbot.css: " + themeGreens.join(", "));
+assert(themeGreens.length === 0, "green/teal literals remain in ui-theme.css: " + themeGreens.join(", "));
 assert(appGreens.length === 0, "green/teal literals remain in app.js: " + appGreens.join(", "));
 assert(rcGreens.length === 0, "green/teal literals remain in rc.js: " + rcGreens.join(", "));
 assert(ui2Greens.length === 0, "green/teal literals remain in ui2.js: " + ui2Greens.join(", "));
@@ -86,8 +86,8 @@ const fixedSettings = /#settings-page\s+\.settings-(?:login|session)-card[\s\S]{
 assert(!fixedSettings.test(baseCss + "\n" + themeCss), "fixed 310px settings-card height must not return");
 
 assert((themeCss.match(/BEGIN R-BOT PREVIEW/g) || []).length === 0, "legacy preview sections detected");
-assert((themeCss.match(/!important/g) || []).length < 1300, "theme override grew beyond the guardrail");
-assert(themeCss.length < 70000, "theme override grew beyond 70KB; consolidate before adding more patches");
+assert((themeCss.match(/!important/g) || []).length < 1300, "theme layer grew beyond the guardrail");
+assert(themeCss.length < 70000, "theme layer grew beyond 70KB; consolidate before adding more patches");
 
 if (!process.exitCode) {
   console.log("UI_LINT_OK");
