@@ -4097,6 +4097,7 @@ function releaseEventLabel(type) {
     UPGRADE_COMPLETED: "升级完成",
     UPGRADE_FAILED: "升级失败",
     APP_STARTED: "应用启动",
+    UI_DEPLOYED: "前端发布",
   };
   return labels[String(type || "").toUpperCase()] || String(type || "—");
 }
