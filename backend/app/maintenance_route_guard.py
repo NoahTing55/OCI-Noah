@@ -17,6 +17,9 @@ def protected_oci_write(method: str, path: str) -> bool:
     if method.upper() not in METHODS or not path.startswith("/api/v1/"):
         return False
     subpath = path[len("/api/v1/"):]
+    # Cancellation remains available to drain in-flight work safely.
+    if subpath.endswith("/cancel"):
+        return False
     # Protection intentionally errs on the side of blocking OCI mutations;
     # authentication, backups and observability remain available.
     return (
