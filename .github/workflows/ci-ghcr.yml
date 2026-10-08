@@ -138,6 +138,9 @@ jobs:
       - name: Test maintenance entry lease validation
         run: python -m unittest discover -s tests -p 'test_maintenance_entry_lease_validation.py' -v
 
+      - name: Test backend release safety boundaries
+        run: python -m unittest discover -s tests -p 'test_backend_preflight_safety_boundary.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
