@@ -57,6 +57,10 @@ jobs:
           node --check frontend/app.js
           node --check frontend/rc.js
           node --check frontend/ui2.js
+          node --check frontend/ui-lint.mjs
+
+      - name: Validate UI consistency
+        run: node frontend/ui-lint.mjs
 
       - name: Validate Docker Compose
         env:

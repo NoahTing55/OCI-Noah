@@ -1798,13 +1798,7 @@ async function loadLaunchProfilesRc() {
     state.rc.launchProfiles = await api(`/accounts/${rcAccount().id}/launch/profiles`);
 
     const sidePanel = $("tenant-launch-side");
-    if (sidePanel) {
-      sidePanel.classList.toggle(
-        "launch-side-empty",
-        state.rc.launchProfiles.length === 0 &&
-          (!Array.isArray(state.launchJobs) || state.launchJobs.length === 0),
-      );
-    }
+    if (sidePanel) sidePanel.classList.remove("launch-side-empty");
 
     const box = $("rc-profile-list");
     const count = $("tenant-launch-profile-count");

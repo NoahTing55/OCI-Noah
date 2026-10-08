@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="light">
   <title>OCI-N&amp;T</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=rednt-1">
   <link rel="alternate icon" href="/favicon.ico?v=rednt-1">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=rednt-1">
   <link rel="stylesheet" href="/styles.css?v=2.0.0-stable-ui-freeze">
+  <link rel="stylesheet" href="/ui-theme.css?v=2.0-ui-foundation-2">
 </head>
 <body>
   <main id="login-view" class="login-view">
@@ -22,7 +23,7 @@
       </form>
       <button id="google-login" class="button google wide" type="button" hidden>使用 Gmail 登录</button>
       <p id="login-error" class="form-error" hidden></p>
-      <small>N&amp;T 1.0</small>
+      <small>N&amp;T 2.0</small>
     </section>
   </main>
 
@@ -35,20 +36,20 @@
     <aside class="sidebar">
       <nav class="nav-list" aria-label="主导航">
         <div class="nav-group-title">管理中心</div>
-        <button class="nav active" data-page="dashboard" type="button"><span>▦</span>仪表盘</button>
-        <button class="nav" data-page="accounts" type="button"><span>◆</span>API 管理</button>
-        <button class="nav" data-page="proxies" type="button"><span>PX</span>代理管理</button>
-        <button class="nav" data-page="tasks" type="button"><span>JOB</span>任务中心</button>
-        <button class="nav" data-page="instances" type="button"><span>☁</span>OCI 实例管理</button>
-        <button class="nav" data-page="launch" type="button"><span>◉</span>OCI 开机管理</button>
+        <button class="nav active" data-page="dashboard" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>仪表盘</button>
+        <button class="nav" data-page="accounts" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 14.5 5 19v2h2l1-1 1 1 2-2-1-1 2-2"/><circle cx="15.5" cy="8.5" r="4.5"/></svg>API 管理</button>
+        <button class="nav" data-page="proxies" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="6" cy="7" r="2.5"/><circle cx="18" cy="7" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.2 8.4 10.8 15M15.8 8.4 13.2 15M8.5 7h7"/></svg>代理管理</button>
+        <button class="nav" data-page="tasks" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="m8 9 1.5 1.5L12 8M14 9h3M8 15l1.5 1.5L12 14M14 15h3"/></svg>任务中心</button>
+        <button class="nav" data-page="instances" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 18.5h10a4 4 0 0 0 .8-7.9A6 6 0 0 0 6.2 9.4 4.6 4.6 0 0 0 7 18.5Z"/></svg>OCI 实例管理</button>
+        <button class="nav" data-page="launch" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v8"/><path d="M7.1 5.8a8 8 0 1 0 9.8 0"/></svg>OCI 开机管理</button>
         <div class="nav-group-title">扩展功能</div>
-        <button class="nav" data-page="cloudflare" type="button"><span>CF</span>Cloudflare DNS</button>
+        <button class="nav" data-page="cloudflare" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.4 2.3 3.7 5.1 3.7 8.5S14.4 18.2 12 20.5M12 3.5C9.6 5.8 8.3 8.6 8.3 12s1.3 6.2 3.7 8.5"/></svg>Cloudflare DNS</button>
         <div class="nav-group-title">系统管理</div>
-        <button class="nav" data-page="audit" type="button"><span>LOG</span>操作记录</button>
-        <button class="nav" data-page="settings" type="button"><span>SET</span>系统设置</button>
+        <button class="nav" data-page="audit" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3.5h9l3 3v14H6z"/><path d="M15 3.5v4h4M9 11h6M9 15h6"/></svg>操作记录</button>
+        <button class="nav" data-page="settings" type="button"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M4 12h4M12 12h8"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/><circle cx="10" cy="12" r="2"/></svg>系统设置</button>
       </nav>
       <div class="sidebar-foot">
-        <span class="sidebar-version">N&amp;T 1.0</span>
+        <span class="sidebar-version">N&amp;T 2.0</span>
       </div>
     </aside>
 
@@ -86,7 +87,27 @@
           </article>
         </div>
 
-        <section class="panel dashboard-monitor-panel" aria-labelledby="dashboard-monitor-title">
+        <div class="dashboard-grid">
+          <section class="panel dashboard-panel dashboard-account-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>账户状态</h2><p>账户状态来自本地缓存，点击账户可进入租户工作区。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-account-list-count" class="dashboard-panel-count">0 个账户</span><button class="button" data-page="accounts" type="button">API 管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-account-columns" aria-hidden="true"><span>账户</span><span>区域 / 类型</span><span>状态</span></div>
+            <div id="dashboard-account-list" class="compact-list dashboard-compact-list"><div class="empty">正在读取……</div></div>
+          </section>
+
+          <section class="panel dashboard-panel dashboard-instance-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>最近实例</h2><p>仅显示已经同步到 SQLite 的实例缓存，不会后台请求 OCI。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-instance-list-count" class="dashboard-panel-count">0 个实例</span><button class="button" data-page="instances" type="button">实例管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-instance-columns" aria-hidden="true"><span>实例 / 账户</span><span>配置 / 区域</span><span>状态</span></div>
+            <div id="dashboard-instance-list" class="compact-list dashboard-compact-list"><div class="empty">暂无实例缓存</div></div>
+          </section>
+        </div>
+
+        <section class="panel dashboard-monitor-panel dashboard-monitor-compact" aria-labelledby="dashboard-monitor-title">
           <div class="panel-head dashboard-monitor-head">
             <div><h2 id="dashboard-monitor-title">服务器运行状态</h2><p>每 10 秒读取本机实时数据；历史指标每分钟写入本地 SQLite，不访问 OCI。</p></div>
             <div class="dashboard-monitor-actions"><span id="monitor-collected-at" class="muted">等待采样</span><button id="monitor-export" class="button" type="button">导出 CSV</button><button id="monitor-refresh" class="button primary" type="button">立即刷新</button></div>
@@ -118,26 +139,6 @@
           </div>
         </section>
 
-        <div class="dashboard-grid">
-          <section class="panel dashboard-panel dashboard-account-panel">
-            <div class="panel-head dashboard-panel-head">
-              <div><h2>账户状态</h2><p>账户状态来自本地缓存，点击账户可进入租户工作区。</p></div>
-              <div class="dashboard-panel-actions"><span id="dash-account-list-count" class="dashboard-panel-count">0 个账户</span><button class="button" data-page="accounts" type="button">API 管理</button></div>
-            </div>
-            <div class="dashboard-list-columns dashboard-account-columns" aria-hidden="true"><span>账户</span><span>区域 / 类型</span><span>状态</span></div>
-            <div id="dashboard-account-list" class="compact-list dashboard-compact-list"><div class="empty">正在读取……</div></div>
-          </section>
-
-          <section class="panel dashboard-panel dashboard-instance-panel">
-            <div class="panel-head dashboard-panel-head">
-              <div><h2>最近实例</h2><p>仅显示已经同步到 SQLite 的实例缓存，不会后台请求 OCI。</p></div>
-              <div class="dashboard-panel-actions"><span id="dash-instance-list-count" class="dashboard-panel-count">0 个实例</span><button class="button" data-page="instances" type="button">实例管理</button></div>
-            </div>
-            <div class="dashboard-list-columns dashboard-instance-columns" aria-hidden="true"><span>实例 / 账户</span><span>配置 / 区域</span><span>状态</span></div>
-            <div id="dashboard-instance-list" class="compact-list dashboard-compact-list"><div class="empty">暂无实例缓存</div></div>
-          </section>
-        </div>
-
         <section class="panel dashboard-system-panel dashboard-system-compact" aria-labelledby="dashboard-system-title">
           <div class="panel-head dashboard-system-head">
             <div>
@@ -157,7 +158,7 @@
           </div>
 
           <div class="dashboard-system-summary" aria-label="系统状态概览">
-            <article class="dashboard-system-stat"><span>API 运行时间</span><strong id="system-status-uptime">—</strong><small id="system-status-version">N&amp;T 1.0</small></article>
+            <article class="dashboard-system-stat"><span>API 运行时间</span><strong id="system-status-uptime">—</strong><small id="system-status-version">N&amp;T 2.0</small></article>
             <article class="dashboard-system-stat"><span>SQLite 数据库</span><strong id="system-status-database">检查中</strong><small id="system-status-database-copy">等待自检</small></article>
             <article class="dashboard-system-stat"><span>本地数据</span><strong id="system-status-data">—</strong><small id="system-status-data-copy">账户 / 缓存实例</small></article>
             <article class="dashboard-system-stat"><span>磁盘剩余</span><strong id="system-status-storage">—</strong><small id="system-status-storage-copy">数据目录所在磁盘</small></article>
@@ -453,7 +454,7 @@
 
       <section class="page" hidden="" id="settings-page">
 <div class="settings-page-layout">
-<div class="settings-card-grid settings-unified-grid"><div class="settings-section-heading settings-account-heading"><div><span>账户与通知</span><p>管理登录凭据、登录设备及外部通知方式。</p></div></div><div class="settings-account-columns"><div class="settings-stack settings-stack-left"><form class="panel form-panel settings-card settings-login-card" id="credential-form">
+<div class="settings-card-grid settings-unified-grid"><div class="settings-section-heading settings-account-heading"><div><span>账户与通知</span><p>管理登录凭据、登录设备及外部通知方式。</p></div></div><div class="settings-account-columns"><form class="panel form-panel settings-card settings-login-card" id="credential-form">
 <div class="panel-head settings-action-head"><div><h2>登录账户</h2><p>修改本地用户名或密码，保存后重新签发登录令牌。</p></div><button class="button primary" form="credential-form" type="submit">保存登录账户</button></div>
 <div class="settings-field-stack">
 <label><span>当前密码</span><input id="credential-current" required="" type="password"/></label>
@@ -475,7 +476,7 @@
 <label class="switch-row compact-switch"><div><strong>系统资源</strong><small>CPU、内存、磁盘、流量和服务告警</small></div><input checked="" id="telegram-system-resource" type="checkbox"/></label>
 </div>
 <div class="settings-card-footer"><button class="button primary" type="submit">保存 Telegram</button><button class="button" id="telegram-test" type="button">发送测试</button></div>
-</form></div><div class="settings-stack settings-stack-right"><section class="panel settings-card settings-session-card">
+</form><section class="panel settings-card settings-session-card">
 <div class="panel-head"><div><h2>登录会话</h2><p>查看当前设备和其他登录设备，支持一键注销其他会话。</p></div><div class="page-toolbar"><button class="button danger ghost" id="session-logout-others" type="button">注销其他设备</button><button class="button" id="session-refresh" type="button">刷新</button></div></div>
 <div class="table-wrap session-list" id="session-list"><div class="empty">正在读取登录会话……</div></div>
 <details class="login-attempts-details"><summary>最近登录记录</summary><div class="table-wrap" id="login-attempt-list"><div class="empty">展开后读取</div></div></details>
@@ -491,8 +492,8 @@
 <label><span>登录完成返回地址</span><input id="google-frontend-return-url" placeholder="https://你的域名/"/><small>授权成功后返回 OCI-N&amp;T 的地址。</small></label>
 </div>
 <div class="settings-card-footer"><button class="button primary" id="google-auth-save" type="submit">保存 Gmail 登录</button><button class="button" id="google-auth-test" type="button">测试配置</button></div>
-</form></div></div><section class="panel settings-card account-check-schedule-card" id="account-check-schedule-card">
-<div class="panel-head settings-toggle-head"><div><h2>API 定时检测</h2><p>按计划顺序检测全部 OCI API；任务统一进入任务中心，异常达到阈值后再通知。</p></div><div class="settings-head-actions account-check-schedule-head-actions"><label class="account-check-schedule-switch" for="account-check-schedule-enabled"><input id="account-check-schedule-enabled" type="checkbox"/><span class="account-check-schedule-switch-slider" aria-hidden="true"></span></label><button aria-pressed="false" class="button account-check-schedule-action" id="account-check-schedule-toggle" type="button">启用定时检测</button></div></div>
+</form></div><section class="panel settings-card account-check-schedule-card" id="account-check-schedule-card">
+<div class="panel-head settings-toggle-head"><div><h2>API 定时检测</h2><p>按计划顺序检测全部 OCI API；任务统一进入任务中心，异常达到阈值后再通知。</p></div><div class="settings-head-actions account-check-schedule-head-actions"><label class="account-check-schedule-master" for="account-check-schedule-enabled"><span class="account-check-schedule-master-label">定时检测</span><span class="account-check-schedule-switch"><input id="account-check-schedule-enabled" type="checkbox"/><span class="account-check-schedule-switch-slider" aria-hidden="true"></span></span></label><button aria-pressed="false" class="button account-check-schedule-action" id="account-check-schedule-toggle" type="button" hidden>启用定时检测</button></div></div>
 <form class="form-grid four-col account-check-schedule-grid" id="account-check-schedule-form">
 <label><span>执行方式</span><select id="account-check-schedule-mode"><option value="interval">每隔 N 小时</option><option value="daily">每天固定时间</option></select></label>
 <label id="account-check-schedule-hours-field"><span>检测周期</span><input id="account-check-schedule-hours" min="1" max="720" step="1" type="number" value="24" required/><small>1–720 小时</small></label>

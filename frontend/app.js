@@ -1561,12 +1561,31 @@ function renderLaunchWorkspace(tab, { automatic = true } = {}) {
     </form>
 
     <section id="tenant-launch-side" class="panel launch-side-panel">
+      <div class="launch-live-summary" aria-label="当前开机配置摘要">
+        <div class="launch-live-summary-head">
+          <div><strong>当前配置</strong><small>随左侧表单实时更新</small></div>
+          <span id="tenant-launch-summary-state" class="badge muted">准备中</span>
+        </div>
+        <dl class="launch-live-summary-grid">
+          <div><dt>规格</dt><dd id="tenant-launch-summary-shape">ARM · A1.Flex</dd></div>
+          <div><dt>数量</dt><dd id="tenant-launch-summary-count">1 台</dd></div>
+          <div><dt>计算</dt><dd id="tenant-launch-summary-compute">1 OCPU · 6 GB</dd></div>
+          <div><dt>引导卷</dt><dd id="tenant-launch-summary-boot">50 GB</dd></div>
+          <div><dt>区域</dt><dd id="tenant-launch-summary-region">${esc(account.home_region_key || account.region || "读取中")}</dd></div>
+          <div><dt>可用域</dt><dd id="tenant-launch-summary-ad">自动选择</dd></div>
+          <div><dt>登录</dt><dd id="tenant-launch-summary-login">SSH 密钥</dd></div>
+          <div><dt>策略</dt><dd id="tenant-launch-summary-strategy">${isRetry ? "每 120 秒 · 并发 1" : "单次创建"}</dd></div>
+        </dl>
+        <div class="launch-live-summary-network"><span>网络</span><strong id="tenant-launch-summary-network">正在读取自动环境</strong></div>
+      </div>
       <div class="launch-side-head"><div class="launch-side-tabs"><button class="active" data-launch-side-tab="profiles" type="button">保存配置 <span id="tenant-launch-profile-count">0</span></button><button data-launch-side-tab="jobs" type="button">任务 <span id="tenant-launch-job-count">0</span></button></div><button class="button small" data-refresh-launch-jobs type="button">刷新</button></div>
       <div id="tenant-launch-side-profiles" class="launch-side-body"><div id="tenant-launch-profile-host"><div class="empty compact">正在读取保存配置……</div></div></div>
       <div id="tenant-launch-side-jobs" class="launch-side-body" hidden><div id="tenant-launch-jobs"><div class="empty compact">正在读取任务……</div></div></div>
     </section>
   </div>`;
   $("tenant-launch-form").addEventListener("submit", submitLaunchJob);
+  $("tenant-launch-form").addEventListener("input", renderLaunchLiveSummary);
+  $("tenant-launch-form").addEventListener("change", renderLaunchLiveSummary);
 
   const syncLaunchLoginMode = () => {
     const rootMode = $("tenant-launch-login-mode")?.value === "ROOT_PASSWORD";
@@ -1583,7 +1602,10 @@ function renderLaunchWorkspace(tab, { automatic = true } = {}) {
 
   $("tenant-launch-login-mode")?.addEventListener(
     "change",
-    syncLaunchLoginMode,
+    () => {
+      syncLaunchLoginMode();
+      renderLaunchLiveSummary();
+    },
   );
 
   $("tenant-launch-password-generate")?.addEventListener("click", () => {
@@ -1618,10 +1640,12 @@ function renderLaunchWorkspace(tab, { automatic = true } = {}) {
     }
     $("tenant-launch-boot").value = "50";
     document.querySelectorAll("[data-launch-preset]").forEach((item) => item.classList.toggle("active", item === button));
+    renderLaunchLiveSummary();
   }));
   document.querySelectorAll("[data-launch-interval]").forEach((button) => button.addEventListener("click", () => {
     $("tenant-launch-interval").value = button.dataset.launchInterval;
     document.querySelectorAll("[data-launch-interval]").forEach((item) => item.classList.toggle("active", item === button));
+    renderLaunchLiveSummary();
   }));
 
   $("tenant-launch-catalog").addEventListener("click", loadLaunchCatalog);
@@ -1645,9 +1669,11 @@ function renderLaunchWorkspace(tab, { automatic = true } = {}) {
     $("tenant-launch-image").disabled = true;
     setLaunchEnvironmentState("loading", "读取中");
     renderLaunchEnvironmentChips(null, state.launchCatalog);
+    renderLaunchLiveSummary();
     if (state.launchCatalog) loadLaunchResources();
   });
   selectLaunchSideTab("profiles");
+  renderLaunchLiveSummary();
   if (window.rcEnhanceLaunchWorkspace) window.rcEnhanceLaunchWorkspace();
 
   $("tenant-launch-save-profile")?.addEventListener("click", () => {
@@ -1736,6 +1762,61 @@ async function loadLaunchCatalog({ automatic = false } = {}) {
   }
 }
 
+function renderLaunchLiveSummary() {
+  const form = $("tenant-launch-form");
+  if (!form) return;
+
+  const architecture = $("tenant-launch-architecture")?.value || "ARM";
+  const count = Math.max(1, Number($("tenant-launch-count")?.value || 1));
+  const ocpus = architecture === "ARM" ? Number($("tenant-launch-ocpus")?.value || 0) : null;
+  const memory = architecture === "ARM" ? Number($("tenant-launch-memory")?.value || 0) : 1;
+  const boot = Number($("tenant-launch-boot")?.value || 50);
+  const region = $("tenant-launch-region")?.value || selectedTenant()?.home_region_key || selectedTenant()?.region || "读取中";
+  const adSelect = $("tenant-launch-ad");
+  const ad = adSelect?.selectedOptions?.[0]?.textContent?.trim() || "自动选择";
+  const loginMode = $("tenant-launch-login-mode")?.value || "SSH_KEY";
+  const interval = Number($("tenant-launch-interval")?.value || 120);
+  const concurrency = Math.max(1, Number($("tenant-launch-concurrency")?.value || 1));
+  const retryMode = state.tenantTab === "launch";
+  const subnet = state.launchResources?.recommended_subnet || null;
+  const imageReady = Boolean($("tenant-launch-image")?.value);
+  const ready = Boolean(state.launchResources?.shape && $("tenant-launch-subnet")?.value && imageReady);
+
+  const setText = (id, value) => {
+    const node = $(id);
+    if (node) node.textContent = value;
+  };
+
+  setText("tenant-launch-summary-shape", architecture === "ARM" ? "ARM · A1.Flex" : "AMD · E2.1.Micro");
+  setText("tenant-launch-summary-count", `${count} 台`);
+  setText(
+    "tenant-launch-summary-compute",
+    architecture === "ARM"
+      ? `${ocpus || "—"} OCPU · ${memory || "—"} GB`
+      : "固定规格 · 1 GB",
+  );
+  setText("tenant-launch-summary-boot", `${boot || "—"} GB`);
+  setText("tenant-launch-summary-region", region);
+  setText("tenant-launch-summary-ad", ad);
+  setText("tenant-launch-summary-login", loginMode === "ROOT_PASSWORD" ? "Root 密码" : "SSH 密钥");
+  setText(
+    "tenant-launch-summary-strategy",
+    retryMode ? `每 ${interval} 秒 · 并发 ${concurrency}` : "单次创建",
+  );
+  setText(
+    "tenant-launch-summary-network",
+    subnet
+      ? `${subnet.display_name || "已选择子网"} · ${subnet.cidr_block || "网络已就绪"}`
+      : state.launchCatalog ? "等待可用网络" : "正在读取自动环境",
+  );
+
+  const stateBadge = $("tenant-launch-summary-state");
+  if (stateBadge) {
+    stateBadge.className = `badge ${ready ? "good" : state.launchCatalog ? "warn" : "muted"}`;
+    stateBadge.textContent = ready ? "已就绪" : state.launchCatalog ? "待完善" : "准备中";
+  }
+}
+
 function updateLaunchSubmitState() {
   const resources = state.launchResources;
   const ready = Boolean(resources?.shape && $("tenant-launch-subnet")?.value && $("tenant-launch-image")?.value);
@@ -1745,6 +1826,7 @@ function updateLaunchSubmitState() {
   if (title) title.textContent = ready
     ? (state.tenantTab === "launch" ? "配置就绪，可启动抢机" : "配置就绪，可创建实例")
     : (state.tenantTab === "launch" ? "等待抢机配置就绪" : "等待创建配置就绪");
+  renderLaunchLiveSummary();
 }
 
 function renderAutoNetwork(resources, catalog) {
@@ -2012,8 +2094,7 @@ function renderLaunchJobs() {
   const activeJobs = state.launchJobs.filter((job) => job.is_active).length;
   if (side) {
     side.classList.toggle("has-active-jobs", activeJobs > 0);
-    const profileCount = Number($("tenant-launch-profile-count")?.textContent || 0);
-    side.classList.toggle("launch-side-empty", state.launchJobs.length === 0 && profileCount === 0);
+    side.classList.remove("launch-side-empty");
   }
   if (activeJobs > 0 && side && !side.dataset.jobsAutoOpened) {
     side.dataset.jobsAutoOpened = "1";
@@ -2890,7 +2971,7 @@ function renderTaskDetail(task) {
 function taskExportPayload(task) {
   return {
     exported_at: new Date().toISOString(),
-    system_version: "N&T 1.0",
+    system_version: "N&T 2.0",
     task: {
       id: task.id,
       task_type: task.task_type,
@@ -3425,7 +3506,7 @@ function renderSystemDiagnostics(data) {
   overallBox.className = `system-overall system-overall-${overall}`;
   $("system-status-checked").textContent = `检查于 ${fmtDate(data?.checked_at).replace(",", "")}`;
   $("system-status-uptime").textContent = formatSystemDuration(data?.uptime_seconds);
-  $("system-status-version").textContent = `${data?.display_version || "N&T 1.0"}`;
+  $("system-status-version").textContent = `${data?.display_version || "N&T 2.0"}`;
   $("system-status-database").textContent = systemStatusText(database.status || "error");
   $("system-status-database").className = `system-stat-value system-stat-${database.status || "error"}`;
   $("system-status-database-copy").textContent = database.summary || "数据库未完成检查";
@@ -4033,7 +4114,7 @@ function renderReleaseInfo(info, history = []) {
       current.innerHTML = `
         <article class="release-metric release-product"><small>产品版本</small><strong>${esc(info.display_version || "N&T 2.0")}</strong><span>正式稳定版</span></article>
         <article class="release-metric"><small>后端构建</small><strong title="${esc(info.build_id || "—")}">${esc(info.build_id || "—")}</strong><span>API 运行版本</span></article>
-        <article class="release-metric"><small>前端界面</small><strong>release-center18</strong><span>实例与 UI 整合版</span></article>
+        <article class="release-metric"><small>前端界面</small><strong>v2.0.0-ui-final</strong><span>实例与 UI 整合版</span></article>
         <article class="release-metric"><small>数据库结构</small><strong>schema ${Number(info.schema_version || 0)}</strong><span>SQLite 迁移版本</span></article>
         <article class="release-metric release-fingerprint"><small>源码校验</small><strong title="${esc(fingerprint)}">${esc(fingerprint === "unknown" ? "unknown" : `${fingerprint.slice(0, 16)}…`)}</strong><span>SHA-256</span></article>
         <article class="release-metric"><small>运行状态</small><strong>${esc(event ? `${releaseEventLabel(event.event_type)} · ${releaseStatusLabel(event.status)}` : "暂无记录")}</strong><span>${event?.created_at ? esc(fmtDate(event.created_at)) : "等待启动记录"}</span></article>`;
@@ -5983,7 +6064,7 @@ function ntAnalyticsCompactControlsA3(mode, card) {
     const input = $s(ID + "enabled");
     const button = $s(ID + "toggle");
     if (!input || !button) return;
-    button.textContent = input.checked ? "已启用" : "启用定时检测";
+    button.textContent = input.checked ? "停用定时检测" : "启用定时检测";
     button.setAttribute("aria-pressed", input.checked ? "true" : "false");
     button.classList.toggle("active", input.checked);
   }
