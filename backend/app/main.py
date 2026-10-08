@@ -134,6 +134,7 @@ from .system_monitor_service import (
     save_monitor_settings,
 )
 from .maintenance_state import status as maintenance_status
+from .runtime_drain_snapshot import snapshot as runtime_drain_snapshot
 from .maintenance_route_guard import maintenance_active, protected_oci_write
 from .oci_http_inflight import track_oci_http_write
 from .task_recovery_service import preview_safe_resume, resume_task_safely
@@ -3365,3 +3366,12 @@ def launch_scheduler_status(
 ) -> dict:
     return adaptive_scheduler.scheduler_status()
 # END OCI-N&T V1.0.4 1.0.4-adaptive-launch-c2
+
+@app.get(f"{settings.api_prefix}/system/release/runtime-drain")
+def get_release_runtime_drain(
+    _: dict = Depends(get_current_user),
+) -> dict:
+    """Authenticated, read-only current-process runtime diagnostic."""
+    return runtime_drain_snapshot()
+
+
