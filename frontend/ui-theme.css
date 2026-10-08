@@ -2188,8 +2188,47 @@ body.tenant-mode .tenant-tabs button.active {
 }
 
 #settings-page .settings-account-columns {
-  align-items: start !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.38fr) !important;
+  grid-template-areas:
+    "login session"
+    "telegram gmail" !important;
+  align-items: stretch !important;
   gap: 14px !important;
+}
+
+#settings-page .settings-account-columns > .settings-login-card {
+  grid-area: login !important;
+}
+
+#settings-page .settings-account-columns > .settings-session-card {
+  grid-area: session !important;
+}
+
+#settings-page .settings-account-columns > .settings-telegram-card {
+  grid-area: telegram !important;
+}
+
+#settings-page .settings-account-columns > .settings-google-card {
+  grid-area: gmail !important;
+}
+
+#settings-page .settings-account-columns > .settings-card {
+  align-self: stretch !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 900px) {
+  #settings-page .settings-account-columns {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "login"
+      "session"
+      "telegram"
+      "gmail" !important;
+  }
 }
 
 #settings-page .settings-stack {
@@ -2199,7 +2238,6 @@ body.tenant-mode .tenant-tabs button.active {
 #settings-page .settings-card,
 #settings-page .settings-login-card,
 #settings-page .settings-session-card {
-  height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
   overflow: visible !important;
@@ -2230,8 +2268,9 @@ body.tenant-mode .tenant-tabs button.active {
   position: relative !important;
   width: 100% !important;
   max-width: 100% !important;
-  min-height: 150px !important;
-  max-height: 260px !important;
+  min-height: 0 !important;
+  height: 150px !important;
+  max-height: 150px !important;
   overflow: auto !important;
   border: 1px solid var(--line) !important;
   border-radius: 7px !important;

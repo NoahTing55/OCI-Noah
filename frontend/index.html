@@ -87,7 +87,27 @@
           </article>
         </div>
 
-        <section class="panel dashboard-monitor-panel" aria-labelledby="dashboard-monitor-title">
+        <div class="dashboard-grid">
+          <section class="panel dashboard-panel dashboard-account-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>账户状态</h2><p>账户状态来自本地缓存，点击账户可进入租户工作区。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-account-list-count" class="dashboard-panel-count">0 个账户</span><button class="button" data-page="accounts" type="button">API 管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-account-columns" aria-hidden="true"><span>账户</span><span>区域 / 类型</span><span>状态</span></div>
+            <div id="dashboard-account-list" class="compact-list dashboard-compact-list"><div class="empty">正在读取……</div></div>
+          </section>
+
+          <section class="panel dashboard-panel dashboard-instance-panel">
+            <div class="panel-head dashboard-panel-head">
+              <div><h2>最近实例</h2><p>仅显示已经同步到 SQLite 的实例缓存，不会后台请求 OCI。</p></div>
+              <div class="dashboard-panel-actions"><span id="dash-instance-list-count" class="dashboard-panel-count">0 个实例</span><button class="button" data-page="instances" type="button">实例管理</button></div>
+            </div>
+            <div class="dashboard-list-columns dashboard-instance-columns" aria-hidden="true"><span>实例 / 账户</span><span>配置 / 区域</span><span>状态</span></div>
+            <div id="dashboard-instance-list" class="compact-list dashboard-compact-list"><div class="empty">暂无实例缓存</div></div>
+          </section>
+        </div>
+
+        <section class="panel dashboard-monitor-panel dashboard-monitor-compact" aria-labelledby="dashboard-monitor-title">
           <div class="panel-head dashboard-monitor-head">
             <div><h2 id="dashboard-monitor-title">服务器运行状态</h2><p>每 10 秒读取本机实时数据；历史指标每分钟写入本地 SQLite，不访问 OCI。</p></div>
             <div class="dashboard-monitor-actions"><span id="monitor-collected-at" class="muted">等待采样</span><button id="monitor-export" class="button" type="button">导出 CSV</button><button id="monitor-refresh" class="button primary" type="button">立即刷新</button></div>
@@ -118,26 +138,6 @@
             <section class="monitor-detail-card"><div class="monitor-detail-head"><div><h3>资源告警</h3><p>只在状态变化时发送 Telegram</p></div><span id="monitor-alert-count" class="muted">0 项</span></div><div id="monitor-alert-list" class="monitor-alert-list"><div class="empty">暂无告警</div></div></section>
           </div>
         </section>
-
-        <div class="dashboard-grid">
-          <section class="panel dashboard-panel dashboard-account-panel">
-            <div class="panel-head dashboard-panel-head">
-              <div><h2>账户状态</h2><p>账户状态来自本地缓存，点击账户可进入租户工作区。</p></div>
-              <div class="dashboard-panel-actions"><span id="dash-account-list-count" class="dashboard-panel-count">0 个账户</span><button class="button" data-page="accounts" type="button">API 管理</button></div>
-            </div>
-            <div class="dashboard-list-columns dashboard-account-columns" aria-hidden="true"><span>账户</span><span>区域 / 类型</span><span>状态</span></div>
-            <div id="dashboard-account-list" class="compact-list dashboard-compact-list"><div class="empty">正在读取……</div></div>
-          </section>
-
-          <section class="panel dashboard-panel dashboard-instance-panel">
-            <div class="panel-head dashboard-panel-head">
-              <div><h2>最近实例</h2><p>仅显示已经同步到 SQLite 的实例缓存，不会后台请求 OCI。</p></div>
-              <div class="dashboard-panel-actions"><span id="dash-instance-list-count" class="dashboard-panel-count">0 个实例</span><button class="button" data-page="instances" type="button">实例管理</button></div>
-            </div>
-            <div class="dashboard-list-columns dashboard-instance-columns" aria-hidden="true"><span>实例 / 账户</span><span>配置 / 区域</span><span>状态</span></div>
-            <div id="dashboard-instance-list" class="compact-list dashboard-compact-list"><div class="empty">暂无实例缓存</div></div>
-          </section>
-        </div>
 
         <section class="panel dashboard-system-panel dashboard-system-compact" aria-labelledby="dashboard-system-title">
           <div class="panel-head dashboard-system-head">
@@ -454,7 +454,7 @@
 
       <section class="page" hidden="" id="settings-page">
 <div class="settings-page-layout">
-<div class="settings-card-grid settings-unified-grid"><div class="settings-section-heading settings-account-heading"><div><span>账户与通知</span><p>管理登录凭据、登录设备及外部通知方式。</p></div></div><div class="settings-account-columns"><div class="settings-stack settings-stack-left"><form class="panel form-panel settings-card settings-login-card" id="credential-form">
+<div class="settings-card-grid settings-unified-grid"><div class="settings-section-heading settings-account-heading"><div><span>账户与通知</span><p>管理登录凭据、登录设备及外部通知方式。</p></div></div><div class="settings-account-columns"><form class="panel form-panel settings-card settings-login-card" id="credential-form">
 <div class="panel-head settings-action-head"><div><h2>登录账户</h2><p>修改本地用户名或密码，保存后重新签发登录令牌。</p></div><button class="button primary" form="credential-form" type="submit">保存登录账户</button></div>
 <div class="settings-field-stack">
 <label><span>当前密码</span><input id="credential-current" required="" type="password"/></label>
@@ -476,7 +476,7 @@
 <label class="switch-row compact-switch"><div><strong>系统资源</strong><small>CPU、内存、磁盘、流量和服务告警</small></div><input checked="" id="telegram-system-resource" type="checkbox"/></label>
 </div>
 <div class="settings-card-footer"><button class="button primary" type="submit">保存 Telegram</button><button class="button" id="telegram-test" type="button">发送测试</button></div>
-</form></div><div class="settings-stack settings-stack-right"><section class="panel settings-card settings-session-card">
+</form><section class="panel settings-card settings-session-card">
 <div class="panel-head"><div><h2>登录会话</h2><p>查看当前设备和其他登录设备，支持一键注销其他会话。</p></div><div class="page-toolbar"><button class="button danger ghost" id="session-logout-others" type="button">注销其他设备</button><button class="button" id="session-refresh" type="button">刷新</button></div></div>
 <div class="table-wrap session-list" id="session-list"><div class="empty">正在读取登录会话……</div></div>
 <details class="login-attempts-details"><summary>最近登录记录</summary><div class="table-wrap" id="login-attempt-list"><div class="empty">展开后读取</div></div></details>
@@ -492,7 +492,7 @@
 <label><span>登录完成返回地址</span><input id="google-frontend-return-url" placeholder="https://你的域名/"/><small>授权成功后返回 OCI-N&amp;T 的地址。</small></label>
 </div>
 <div class="settings-card-footer"><button class="button primary" id="google-auth-save" type="submit">保存 Gmail 登录</button><button class="button" id="google-auth-test" type="button">测试配置</button></div>
-</form></div></div><section class="panel settings-card account-check-schedule-card" id="account-check-schedule-card">
+</form></div><section class="panel settings-card account-check-schedule-card" id="account-check-schedule-card">
 <div class="panel-head settings-toggle-head"><div><h2>API 定时检测</h2><p>按计划顺序检测全部 OCI API；任务统一进入任务中心，异常达到阈值后再通知。</p></div><div class="settings-head-actions account-check-schedule-head-actions"><label class="account-check-schedule-master" for="account-check-schedule-enabled"><span class="account-check-schedule-master-label">定时检测</span><span class="account-check-schedule-switch"><input id="account-check-schedule-enabled" type="checkbox"/><span class="account-check-schedule-switch-slider" aria-hidden="true"></span></span></label><button aria-pressed="false" class="button account-check-schedule-action" id="account-check-schedule-toggle" type="button" hidden>启用定时检测</button></div></div>
 <form class="form-grid four-col account-check-schedule-grid" id="account-check-schedule-form">
 <label><span>执行方式</span><select id="account-check-schedule-mode"><option value="interval">每隔 N 小时</option><option value="daily">每天固定时间</option></select></label>

@@ -13111,3 +13111,924 @@ html,body{max-width:100%;overflow-x:hidden}
   }
 }
 /* END OCI-N&T 2.0 stable UI freeze */
+
+
+/* BEGIN OCI-N&T 2.0 UI POLISH R1 */
+/*
+ * Targeted refinement of the existing production visual language.
+ * No global theme replacement: only dashboard density, instance empty states,
+ * and the tenant launch-side summary are adjusted here.
+ */
+
+/* Dashboard: OCI account/instance overview now appears before host monitoring.
+   Keep monitoring intact, but reduce its visual dominance. */
+#dashboard-page .dashboard-monitor-compact {
+  padding: 16px;
+}
+#dashboard-page .dashboard-monitor-compact .dashboard-monitor-head {
+  margin-bottom: 11px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-grid {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-card {
+  min-height: 92px;
+  padding: 10px 12px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-card strong {
+  margin: 8px 0 4px;
+  font-size: 20px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-card small {
+  font-size: 10px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-progress {
+  right: 12px;
+  bottom: 8px;
+  left: 12px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-toolbar {
+  margin: 0 0 8px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-chart-grid {
+  gap: 8px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-chart-card {
+  padding: 10px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-chart {
+  height: 124px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-detail-grid {
+  gap: 8px;
+  margin-top: 8px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-detail-card {
+  padding: 11px;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-detail-head {
+  margin-bottom: 7px;
+}
+
+/* Instance management: turn the empty list into an actionable state without
+   changing the dense table used when cached instances exist. */
+#instances-page .instance-empty-state {
+  min-height: 220px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border: 1px dashed #cfd8de;
+  border-radius: 9px;
+  background: #f8fafc;
+  text-align: center;
+}
+#instances-page .instance-empty-state.compact {
+  min-height: 170px;
+}
+#instances-page .instance-empty-mark {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid #c7d8ee;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+#instances-page .instance-empty-state > strong {
+  margin-top: 3px;
+  color: #33414c;
+  font-size: 14px;
+}
+#instances-page .instance-empty-state > span {
+  max-width: 520px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+#instances-page .instance-empty-state > small {
+  max-width: 520px;
+  color: #8a96a1;
+  font-size: 10px;
+  line-height: 1.45;
+}
+#instances-page .instance-empty-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+/* Tenant launch workspace: the right column remains useful even before any
+   saved profile or job exists. It now acts as a live configuration summary. */
+#tenant-launch-side.launch-side-panel {
+  display: block !important;
+}
+#tenant-launch-side.launch-side-panel.launch-side-empty {
+  display: block !important;
+}
+#tenant-launch-layout.launch-workspace-v2:has(.launch-side-empty) {
+  grid-template-columns: minmax(0, 1fr) 300px !important;
+}
+.launch-live-summary {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.launch-live-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.launch-live-summary-head strong,
+.launch-live-summary-head small {
+  display: block;
+}
+.launch-live-summary-head strong {
+  font-size: 13px;
+}
+.launch-live-summary-head small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9.5px;
+}
+.launch-live-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+.launch-live-summary-grid > div {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafb;
+}
+.launch-live-summary-grid dt {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.2;
+}
+.launch-live-summary-grid dd {
+  margin: 3px 0 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.launch-live-summary-network {
+  margin-top: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: var(--primary-soft);
+}
+.launch-live-summary-network span,
+.launch-live-summary-network strong {
+  display: block;
+}
+.launch-live-summary-network span {
+  color: var(--primary);
+  font-size: 9px;
+}
+.launch-live-summary-network strong {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #245ba8;
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#tenant-launch-side .launch-side-body {
+  min-height: 110px !important;
+  max-height: min(360px, calc(100vh - 500px));
+}
+@media (max-width: 1280px) {
+  #tenant-launch-layout.launch-workspace-v2:has(.launch-side-empty) {
+    grid-template-columns: minmax(0, 1fr) 280px !important;
+  }
+}
+@media (max-width: 1120px) {
+  #tenant-launch-layout.launch-workspace-v2:has(.launch-side-empty) {
+    grid-template-columns: 1fr !important;
+  }
+  #tenant-launch-side .launch-side-body {
+    max-height: 420px;
+  }
+}
+@media (max-width: 520px) {
+  .launch-live-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* END OCI-N&T 2.0 UI POLISH R1 */
+
+/* BEGIN OCI-N&T 2.0 UI POLISH R2 */
+/* Make the refinement visible without replacing the established N&T theme. */
+
+/* Dashboard: OCI information is the primary workspace; host monitoring is
+   visually secondary while remaining fully available. */
+#dashboard-page .dashboard-grid {
+  grid-template-columns: minmax(0, 1.12fr) minmax(340px, .88fr);
+  gap: 12px;
+}
+#dashboard-page .dashboard-panel {
+  border-top: 3px solid #3478d4;
+  box-shadow: 0 5px 18px rgba(31, 41, 51, .045);
+}
+#dashboard-page .dashboard-instance-panel {
+  border-top-color: #6c63e6;
+}
+#dashboard-page .dashboard-panel-head {
+  padding-bottom: 10px;
+}
+#dashboard-page .dashboard-compact-list {
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+#dashboard-page .dashboard-list-row {
+  min-height: 48px;
+  padding-block: 7px;
+}
+#dashboard-page .dashboard-monitor-compact {
+  background: #fbfcfd;
+  border-color: #d9e1e6;
+  box-shadow: none;
+}
+#dashboard-page .dashboard-monitor-compact .monitor-resource-card,
+#dashboard-page .dashboard-monitor-compact .monitor-chart-card,
+#dashboard-page .dashboard-monitor-compact .monitor-detail-card {
+  background: #fff;
+}
+@media (max-width: 1050px) {
+  #dashboard-page .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Instance page: quick tenant access makes an empty cache useful instead of
+   leaving a large blank canvas. */
+#instances-page .instance-empty-rich {
+  min-height: 300px;
+}
+.instance-empty-tenants {
+  width: min(760px, 100%);
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.empty-section-label {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+}
+.empty-tenant-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+.empty-tenant-chip {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #dce4e8;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.empty-tenant-chip:hover {
+  border-color: #bdd6f5;
+  background: #f1f7ff;
+  transform: translateY(-1px);
+}
+.empty-tenant-chip strong,
+.empty-tenant-chip small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empty-tenant-chip strong {
+  font-size: 10.5px;
+}
+.empty-tenant-chip small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+}
+@media (max-width: 900px) {
+  .empty-tenant-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .empty-tenant-grid { grid-template-columns: 1fr; }
+}
+
+/* Global launch page: when no saved profile exists, expose the real next
+   action and available tenants instead of a single empty sentence. */
+.launch-empty-start {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  min-height: 330px;
+  padding: 30px 26px;
+  border: 1px dashed #cad7dd;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(234,243,255,.7), rgba(255,255,255,.86) 42%),
+    #fff;
+  text-align: center;
+}
+.launch-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 1px solid #c7d9ef;
+  border-radius: 15px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  box-shadow: 0 8px 22px rgba(46,112,196,.08);
+}
+.launch-empty-copy {
+  max-width: 720px;
+}
+.launch-empty-copy strong,
+.launch-empty-copy span {
+  display: block;
+}
+.launch-empty-copy strong {
+  color: #21313b;
+  font-size: 16px;
+}
+.launch-empty-copy span {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.launch-empty-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.launch-empty-steps span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid #dce6e9;
+  border-radius: 999px;
+  background: rgba(255,255,255,.88);
+  color: #52616c;
+  font-size: 10px;
+}
+.launch-empty-steps b {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 9px;
+}
+.launch-quick-grid {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.launch-quick-tenant {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #dbe4e8;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.launch-quick-tenant:hover {
+  border-color: #b4d0f1;
+  background: #f1f7ff;
+  transform: translateY(-1px);
+}
+.launch-quick-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 850;
+}
+.launch-quick-tenant > span:nth-child(2) {
+  min-width: 0;
+}
+.launch-quick-tenant strong,
+.launch-quick-tenant small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.launch-quick-tenant strong { font-size: 10.5px; }
+.launch-quick-tenant small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 8.5px;
+}
+.launch-quick-tenant > b {
+  color: var(--primary);
+  font-size: 9px;
+  white-space: nowrap;
+}
+@media (max-width: 1280px) {
+  .launch-quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+  .launch-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .launch-quick-grid { grid-template-columns: 1fr; }
+}
+
+/* Task center: keep the action column reachable on wide task histories. */
+@media (min-width: 921px) {
+  #tasks-page .task-table th:last-child,
+  #tasks-page .task-table td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 5;
+    width: 188px;
+    min-width: 188px;
+    background: var(--panel);
+    box-shadow: -1px 0 0 var(--line), -12px 0 18px -20px rgba(31,41,51,.75);
+  }
+  #tasks-page .task-table thead th:last-child {
+    z-index: 8;
+    background: #f3f6f8;
+  }
+  #tasks-page .task-table tbody tr:hover td:last-child {
+    background: #f4f8ff;
+  }
+  #tasks-page .task-table td:last-child .row-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+/* END OCI-N&T 2.0 UI POLISH R2 */
+
+/* BEGIN OCI-N&T 2.0 UI POLISH R3 */
+/* Launch page refinement based on the real preview screenshot:
+   fewer nested boxes, clearer hierarchy, less vertical whitespace. */
+
+#launch-page {
+  --launch-border: #dbe4e8;
+  --launch-soft: #f7fafb;
+  --launch-soft-green: #f2f7ff;
+}
+
+/* Scheduler becomes a compact two-column control plane instead of a tall stack. */
+#launch-page .nt-scheduler-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(360px, .98fr);
+  gap: 10px 14px;
+  padding: 14px 16px 12px;
+  border-color: var(--launch-border);
+  box-shadow: 0 4px 16px rgba(31, 41, 51, .035);
+}
+
+#launch-page .nt-scheduler-head-compact {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #e6ecef;
+}
+
+#launch-page .nt-scheduler-head-compact h2 {
+  font-size: 15px;
+}
+
+#launch-page .nt-scheduler-head-compact p {
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-actions-top .button {
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-toggle-chip {
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-overview-strip {
+  grid-column: 1 / -1;
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid #dce8f6;
+  border-radius: 8px;
+  background: #f3f8ff;
+}
+
+#launch-page .nt-scheduler-overview-strip strong,
+#launch-page .nt-scheduler-overview-strip span {
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-overview-strip small {
+  font-size: 9px;
+}
+
+#launch-page .nt-scheduler-stat-grid {
+  grid-column: 1;
+  grid-row: 3;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  margin: 0;
+}
+
+#launch-page .nt-scheduler-stat-card {
+  min-height: 76px;
+  padding: 10px 11px 9px;
+  border-color: var(--launch-border);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: none;
+}
+
+#launch-page .nt-scheduler-stat-card > div > span {
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-stat-card > strong {
+  margin: 6px 0 1px;
+  font-size: 22px;
+}
+
+#launch-page .nt-scheduler-stat-card > small {
+  font-size: 9px;
+}
+
+#launch-page .nt-stat-badge {
+  padding: 2px 6px;
+  font-size: 8px;
+}
+
+#launch-page .nt-scheduler-form-compact {
+  grid-column: 2;
+  grid-row: 3;
+  margin: 0;
+  padding: 10px 0 0 14px;
+  border-top: 0;
+  border-left: 1px solid #e6ecef;
+}
+
+#launch-page .nt-scheduler-basic-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 10px;
+}
+
+#launch-page .nt-scheduler-basic-grid label > span {
+  margin-bottom: 4px;
+  font-size: 9.5px;
+}
+
+#launch-page .nt-scheduler-basic-grid input,
+#launch-page .nt-scheduler-advanced-grid input {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+#launch-page .nt-scheduler-range > div {
+  gap: 5px;
+}
+
+#launch-page .nt-scheduler-advanced {
+  margin-top: 9px;
+  padding-top: 8px;
+}
+
+#launch-page .nt-scheduler-advanced > summary,
+#launch-page .nt-scheduler-runtime-compact > summary {
+  color: #315f9c;
+  font-size: 10px;
+}
+
+#launch-page .nt-scheduler-advanced-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#launch-page .nt-scheduler-form-footer-compact {
+  margin-top: 8px;
+  padding-top: 7px;
+}
+
+#launch-page .nt-scheduler-form-footer-compact span {
+  font-size: 9px;
+}
+
+#launch-page .nt-scheduler-runtime-compact {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  margin: 0;
+  padding-top: 8px;
+}
+
+#launch-page .nt-scheduler-runtime-compact[open] {
+  padding-top: 9px;
+}
+
+#launch-page .nt-scheduler-runtime-compact .table-wrap {
+  max-height: 260px;
+}
+
+/* Main launch workspace: fewer stacked borders, tighter vertical rhythm. */
+#launch-page .launch-filter-panel {
+  padding: 12px 14px;
+  border-color: var(--launch-border);
+  box-shadow: none;
+}
+
+#launch-page .launch-filter-head {
+  margin-bottom: 9px;
+}
+
+#launch-page .launch-cache-note {
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+#launch-page .launch-summary-grid {
+  gap: 9px;
+}
+
+#launch-page .launch-summary-card {
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+#launch-page .launch-summary-card > strong {
+  font-size: 23px;
+}
+
+#launch-page .launch-summary-card > div span {
+  font-size: 11px;
+}
+
+#launch-page .launch-summary-card > div small {
+  font-size: 9px;
+}
+
+#launch-page .launch-list-panel {
+  padding: 12px 14px;
+  border-color: var(--launch-border);
+  box-shadow: none;
+}
+
+#launch-page .launch-list-head {
+  margin-bottom: 9px;
+}
+
+/* Zero state is a balanced split console, not a tall decorative hero. */
+#launch-page .launch-empty-console {
+  grid-template-columns: minmax(250px, .72fr) minmax(0, 1.28fr);
+  align-items: stretch;
+  justify-items: stretch;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--launch-border);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+}
+
+#launch-page .launch-empty-primary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 22px 22px;
+  background:
+    linear-gradient(145deg, rgba(234,243,255,.8), rgba(247,250,255,.96));
+  border-right: 1px solid #e0e8eb;
+}
+
+#launch-page .launch-empty-primary .launch-empty-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 0 12px;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+#launch-page .launch-empty-kicker {
+  margin-bottom: 5px;
+  color: #286fbd !important;
+  font-size: 8.5px !important;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+#launch-page .launch-empty-copy {
+  max-width: none;
+}
+
+#launch-page .launch-empty-copy strong {
+  font-size: 17px;
+  letter-spacing: -.01em;
+}
+
+#launch-page .launch-empty-copy > span:last-child {
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+#launch-page .launch-empty-steps {
+  justify-content: flex-start;
+  margin-top: 13px;
+  gap: 5px;
+}
+
+#launch-page .launch-empty-steps span {
+  min-height: 26px;
+  padding: 4px 7px;
+  font-size: 8.5px;
+}
+
+#launch-page .launch-empty-steps b {
+  width: 16px;
+  height: 16px;
+  font-size: 8px;
+}
+
+#launch-page .launch-empty-tenants-panel {
+  min-width: 0;
+  padding: 17px 18px 15px;
+  background: #fff;
+}
+
+#launch-page .launch-empty-tenants-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+#launch-page .launch-empty-tenants-head strong,
+#launch-page .launch-empty-tenants-head small {
+  display: block;
+}
+
+#launch-page .launch-empty-tenants-head strong {
+  font-size: 11px;
+}
+
+#launch-page .launch-empty-tenants-head small,
+#launch-page .launch-empty-tenants-head > span,
+#launch-page .launch-empty-more-hint {
+  color: var(--muted);
+  font-size: 8.5px;
+}
+
+#launch-page .launch-quick-grid {
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+#launch-page .launch-quick-tenant {
+  min-height: 50px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+#launch-page .launch-quick-tenant:hover {
+  transform: none;
+}
+
+#launch-page .launch-quick-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+}
+
+#launch-page .launch-quick-tenant strong {
+  font-size: 9.5px;
+}
+
+#launch-page .launch-quick-tenant small {
+  font-size: 8px;
+}
+
+#launch-page .launch-quick-tenant > b {
+  font-size: 8px;
+}
+
+#launch-page .launch-empty-more-hint {
+  display: block;
+  margin-top: 9px;
+}
+
+/* The empty task section should acknowledge the state without consuming a large box. */
+#launch-page .launch-jobs-panel.is-empty {
+  padding-bottom: 10px;
+}
+
+#launch-page .launch-jobs-panel.is-empty #global-launch-jobs .launch-empty {
+  min-height: 58px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #d8e0e5;
+  border-radius: 8px;
+  background: #fafcfd;
+  color: #7b8790;
+  font-size: 9.5px;
+}
+
+#launch-page.is-zero-state .launch-profiles-panel {
+  padding-bottom: 12px;
+}
+
+@media (max-width: 1180px) {
+  #launch-page .nt-scheduler-panel {
+    grid-template-columns: 1fr;
+  }
+  #launch-page .nt-scheduler-stat-grid,
+  #launch-page .nt-scheduler-form-compact,
+  #launch-page .nt-scheduler-runtime-compact {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  #launch-page .nt-scheduler-form-compact {
+    padding: 10px 0 0;
+    border-left: 0;
+    border-top: 1px solid #e6ecef;
+  }
+}
+
+@media (max-width: 900px) {
+  #launch-page .launch-empty-console {
+    grid-template-columns: 1fr;
+  }
+  #launch-page .launch-empty-primary {
+    border-right: 0;
+    border-bottom: 1px solid #e0e8eb;
+  }
+}
+
+@media (max-width: 620px) {
+  #launch-page .nt-scheduler-basic-grid,
+  #launch-page .nt-scheduler-stat-grid,
+  #launch-page .launch-quick-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* END OCI-N&T 2.0 UI POLISH R3 */
