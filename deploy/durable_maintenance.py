@@ -72,6 +72,14 @@ def begin(db: Path, *, operator: str, reason: str) -> dict:
                 raise RuntimeError("OCI operation leases malformed") from exc
             if not isinstance(leases, dict):
                 raise RuntimeError("OCI operation leases malformed")
+            for token, entry in leases.items():
+                if (not isinstance(token, str) or not token
+                    or not isinstance(entry, dict)
+                    or not isinstance(entry.get("started_at"), str)
+                    or not entry["started_at"]
+                    or not isinstance(entry.get("path"), str)
+                    or not entry["path"]):
+                    raise RuntimeError("OCI operation lease entry malformed")
             if leases:
                 raise RuntimeError(f"OCI HTTP operations still active: {len(leases)}")
         # The same BEGIN IMMEDIATE transaction serializes this drain check

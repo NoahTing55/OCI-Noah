@@ -135,6 +135,9 @@ jobs:
       - name: Test maintenance exit drain barrier
         run: python -m unittest discover -s tests -p 'test_maintenance_exit_guard.py' -v
 
+      - name: Test maintenance entry lease validation
+        run: python -m unittest discover -s tests -p 'test_maintenance_entry_lease_validation.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
