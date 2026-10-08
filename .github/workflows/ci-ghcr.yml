@@ -102,6 +102,9 @@ jobs:
       - name: Test backend release evidence report
         run: python -m unittest discover -s tests -p 'test_backend_release_evidence.py' -v
 
+      - name: Test staged backend candidate image inspection
+        run: python -m unittest discover -s tests -p 'test_backend_candidate_check.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
