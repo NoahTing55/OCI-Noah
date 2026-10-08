@@ -25,3 +25,16 @@ OCI requests and background work across all processes, verify the gate
 remains active, create a verified SQLite backup after draining, verify
 candidate image compatibility, and require explicit deployment approval.
 Do not treat `DB_TASKS_DRAINED` as permission to restart.
+
+
+## Durable OCI operation leases (PR #31)
+
+The read-only drain report now reads OCI HTTP **and** background task leases
+from the same SQLite snapshot as the maintenance marker and task tables.
+An outstanding lease prevents `db_task_drain_ready`, even when task rows are
+terminal. Missing lease records mean zero **recorded** leases; malformed
+records fail closed. Lease identifiers are not included in the output.
+
+A successful result still **does not authorize backend restart**: legacy
+processes, detached OCI SDK work, and other uninstrumented workers remain
+outside the persistent lease registry. `release_authorized` stays false.
