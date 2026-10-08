@@ -106,7 +106,7 @@ def release(db: Path, token: str) -> None:
     con = _open(db)
     try:
         con.execute("BEGIN IMMEDIATE")
-        leases = _state(con, LEASES)
+        leases = validate_lease_records(_state(con, LEASES))
         if token not in leases:
             raise RuntimeError("OCI operation lease missing; manual investigation required")
         leases.pop(token)
