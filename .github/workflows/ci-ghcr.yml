@@ -123,6 +123,9 @@ jobs:
           python -m unittest discover -s tests -p 'test_durable_maintenance.py' -v
           python -m unittest discover -s tests -p 'test_oci_operation_leases.py' -v
 
+      - name: Test durable OCI background task leases
+        run: python -m unittest discover -s tests -p 'test_oci_background_leases.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
