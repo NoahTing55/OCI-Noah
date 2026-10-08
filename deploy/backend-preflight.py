@@ -58,9 +58,13 @@ def main() -> int:
     except (sqlite3.Error, OSError, RuntimeError, ValueError) as exc:
         print(json.dumps({"preflight": "BLOCKED", "reason": str(exc)}, ensure_ascii=False))
         return 2
-    report["preflight"] = "PASS" if report["safe_to_restart"] else "BLOCKED_ACTIVE_TASKS"
+    # A terminal DB task row does not prove detached OCI operations are idle.
+    report["db_task_rows_terminal"] = report.pop("safe_to_restart")
+    report["safe_to_restart"] = False
+    report["release_authorized"] = False
+    report["preflight"] = "DB_TASK_ROWS_TERMINAL" if report["db_task_rows_terminal"] else "BLOCKED_ACTIVE_TASKS"
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if report["safe_to_restart"] else 3
+    return 0 if report["db_task_rows_terminal"] else 3
 
 if __name__ == "__main__":
     sys.exit(main())
