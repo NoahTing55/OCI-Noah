@@ -78,6 +78,9 @@ jobs:
       - name: Test repository durable maintenance admission
         run: python -m unittest discover -s tests -p 'test_repository_durable_admission.py' -v
 
+      - name: Test HTTP OCI maintenance route guard
+        run: python -m unittest discover -s tests -p 'test_maintenance_route_guard.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
