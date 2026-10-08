@@ -136,6 +136,9 @@ def create_launch_job(
 ) -> dict:
     now = utc_now()
     with database() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        from .durable_admission import assert_admission_in_transaction
+        assert_admission_in_transaction(connection)
         active = connection.execute(
             """
             SELECT id FROM launch_jobs
