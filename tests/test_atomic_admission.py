@@ -25,10 +25,17 @@ class AtomicAdmissionTests(unittest.TestCase):
         with sqlite3.connect(self.db) as con:
             con.execute("CREATE TABLE system_settings(setting_key TEXT PRIMARY KEY, setting_value TEXT, is_secret INTEGER DEFAULT 0, updated_at TEXT)")
             con.execute("CREATE TABLE manual_tasks(id INTEGER PRIMARY KEY, status TEXT)")
+            con.execute("CREATE TABLE launch_jobs(id INTEGER PRIMARY KEY, status TEXT)")
 
     def test_admitted_task_and_blocked_after_gate(self):
         with atomic.admitted_transaction(self.db) as con:
             con.execute("INSERT INTO manual_tasks VALUES(1,'RUNNING')")
+        # Task insertion is admitted, but release maintenance must wait
+        # until the task reaches a terminal state.
+        with self.assertRaisesRegex(RuntimeError, "Undrained manual_tasks"):
+            marker.begin(self.db, operator="operator", reason="release")
+        with sqlite3.connect(self.db) as con:
+            con.execute("UPDATE manual_tasks SET status='COMPLETED' WHERE id=1")
         marker.begin(self.db, operator="operator", reason="release")
         with self.assertRaises(atomic.MaintenanceBlocked):
             with atomic.admitted_transaction(self.db) as con:
@@ -79,10 +86,15 @@ class AtomicAdmissionTests(unittest.TestCase):
         gate_thread.join(8)
         self.assertFalse(worker_thread.is_alive())
         self.assertFalse(gate_thread.is_alive())
-        self.assertFalse(errors, errors)
-        self.assertTrue(marker.read_state(self.db)["active"])
+        # Maintenance first waits for the admission transaction, then
+        # rejects its RUNNING task instead of incorrectly entering the gate.
+        self.assertEqual(errors, ["Undrained manual_tasks tasks: 1"])
+        self.assertFalse(marker.read_state(self.db)["active"])
         with sqlite3.connect(self.db) as con:
             self.assertEqual(con.execute("SELECT count(*) FROM manual_tasks").fetchone()[0], 1)
+            con.execute("UPDATE manual_tasks SET status='COMPLETED' WHERE id=4")
+        marker.begin(self.db, operator="operator", reason="release")
+        self.assertTrue(marker.read_state(self.db)["active"])
 
 
 if __name__ == "__main__":

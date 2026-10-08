@@ -74,6 +74,26 @@ def begin(db: Path, *, operator: str, reason: str) -> dict:
                 raise RuntimeError("OCI operation leases malformed")
             if leases:
                 raise RuntimeError(f"OCI HTTP operations still active: {len(leases)}")
+        # The same BEGIN IMMEDIATE transaction serializes this drain check
+        # against repository task creation (also BEGIN IMMEDIATE).
+        for table in ("manual_tasks", "launch_jobs"):
+            exists = con.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                (table,),
+            ).fetchone()
+            if not exists:
+                raise RuntimeError(f"Required task table missing: {table}")
+            columns = {row[1] for row in con.execute(f"PRAGMA table_info({table})")}
+            if "status" not in columns:
+                raise RuntimeError(f"Task status missing: {table}")
+            active = con.execute(
+                f"""SELECT COUNT(*) FROM {table}
+                WHERE status IS NULL OR UPPER(status) NOT IN
+                ('COMPLETED','PARTIAL','FAILED','CANCELLED','INTERRUPTED',
+                 'SUCCESS','FINISHED','STOPPED')"""
+            ).fetchone()[0]
+            if active:
+                raise RuntimeError(f"Undrained {table} tasks: {active}")
         state = {
             "active": True,
             "operator": operator.strip(),
