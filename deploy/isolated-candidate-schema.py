@@ -78,6 +78,8 @@ def run(db: Path, sha: str, *, runner=subprocess.run):
         if proc.returncode != 0 or "CANDIDATE_SCHEMA_INIT_OK" not in proc.stdout:
             raise RuntimeError("Candidate schema initialization failed on disposable copy")
         upgraded_schema = schema(copy)
+        if upgraded_schema < original_schema:
+            raise RuntimeError('Candidate schema downgrade is not permitted')
     if digest(db) != source_hash:
         raise RuntimeError("Source DB bytes changed during test; abort")
     return {
