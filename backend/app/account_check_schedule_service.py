@@ -350,6 +350,14 @@ async def _loop() -> None:
             if maintenance_status().get("active"):
                 await asyncio.sleep(15)
                 continue
+            # A durable release gate persists across restarts and is shared
+            # between scheduler and HTTP admission. Do not advance the slot
+            # while it is active: release maintenance must not consume a run.
+            from .maintenance_route_guard import maintenance_active
+            from .config import settings
+            if maintenance_active(settings.db_path):
+                await asyncio.sleep(15)
+                continue
             config = _read()
             if config["enabled"]:
                 due = _parse(config.get("next_run_at"))
