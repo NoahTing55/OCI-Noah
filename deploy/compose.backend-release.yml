@@ -1,0 +1,8 @@
+# Independent API/Guard/Monitor image pin; never alters the Web service.
+services:
+  api:
+    image: ${OCI_NT_RELEASE_BACKEND_IMAGE:?Pin immutable backend SHA}
+  docker-guard:
+    image: ${OCI_NT_RELEASE_BACKEND_IMAGE:?Pin immutable backend SHA}
+  monitor:
+    image: ${OCI_NT_RELEASE_BACKEND_IMAGE:?Pin immutable backend SHA}
