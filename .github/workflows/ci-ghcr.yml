@@ -150,6 +150,9 @@ jobs:
       - name: Test fail-closed backend release planning
         run: python -m unittest discover -s tests -p 'test_backend_controlled_release.py' -v
 
+      - name: Test standard Compose image separation
+        run: python -m unittest discover -s tests -p 'test_compose_standard_update.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
@@ -159,7 +162,8 @@ jobs:
 
       - name: Validate safe Web release procedure
         env:
-          OCI_NOAH_IMAGE_TAG: ci
+          OCI_NOAH_BACKEND_TAG: ci
+          OCI_NOAH_WEB_TAG: ci-web
           OCI_NT_RELEASE_WEB_IMAGE: ghcr.io/noahting55/oci-noah-web:sha-0000000000000000000000000000000000000000
         run: |
           bash -n deploy/release-web.sh
