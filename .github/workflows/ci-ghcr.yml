@@ -153,6 +153,11 @@ jobs:
       - name: Test standard Compose image separation
         run: python -m unittest discover -s tests -p 'test_compose_standard_update.py' -v
 
+      - name: Validate guarded one-shot backend release
+        run: |
+          bash -n deploy/release-one-shot.sh
+          python -m unittest discover -s tests -p 'test_release_one_shot.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
