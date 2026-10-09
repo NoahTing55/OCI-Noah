@@ -162,7 +162,8 @@ jobs:
 
       - name: Validate safe Web release procedure
         env:
-          OCI_NOAH_IMAGE_TAG: ci
+          OCI_NOAH_BACKEND_TAG: ci
+          OCI_NOAH_WEB_TAG: ci-web
           OCI_NT_RELEASE_WEB_IMAGE: ghcr.io/noahting55/oci-noah-web:sha-0000000000000000000000000000000000000000
         run: |
           bash -n deploy/release-web.sh
