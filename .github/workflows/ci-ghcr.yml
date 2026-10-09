@@ -147,6 +147,9 @@ jobs:
       - name: Test disposable release snapshot restore
         run: python -m unittest discover -s tests -p 'test_disposable_restore_drill.py' -v
 
+      - name: Test fail-closed backend release planning
+        run: python -m unittest discover -s tests -p 'test_backend_controlled_release.py' -v
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
