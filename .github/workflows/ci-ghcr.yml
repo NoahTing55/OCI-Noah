@@ -207,6 +207,9 @@ jobs:
       - name: Validate pinned four-service rollback Compose contract
         run: python -m unittest discover -s tests -p 'test_single_validate_four_rollback.py' -v
 
+      - name: Verify production cutover sequence stays unarmed
+        run: python -m unittest discover -s tests -p 'test_single_cutover_sequence.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
