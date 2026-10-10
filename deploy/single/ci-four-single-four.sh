@@ -41,9 +41,9 @@ wait_port http://127.0.0.1:9859/
 wait_port http://127.0.0.1:9859/api/v1/health
 wait_port http://127.0.0.1:9860/health
 wait_port http://127.0.0.1:9861/health
-python3 - <<'PY'
+docker exec -i -u 10001 oci-nt-api python - <<'PY'
 import sqlite3
-with sqlite3.connect("data/oci-nt.db") as c:
+with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"
   assert c.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]==7
   c.execute("CREATE TABLE ci_switch_marker (message TEXT NOT NULL)")
@@ -66,9 +66,9 @@ docker run -d --name oci-nt-single-ci-switch --network host --restart no \
 wait_port http://127.0.0.1:9859/api/v1/health
 wait_port http://127.0.0.1:9860/health
 docker exec oci-nt-single-ci-switch python /app/health.py
-python3 - <<'PY'
+docker exec -i -u 10001 oci-nt-single-ci-switch python - <<'PY'
 import sqlite3
-with sqlite3.connect("data/oci-nt.db") as c:
+with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"
   assert c.execute("SELECT message FROM ci_switch_marker").fetchone()[0]=="four-before-single"
   c.execute("INSERT INTO ci_switch_marker VALUES ('single-before-rollback')")
@@ -80,9 +80,9 @@ docker compose -p oci-nt -f docker-compose.yml up -d --no-build
 wait_port http://127.0.0.1:9859/api/v1/health
 wait_port http://127.0.0.1:9860/health
 wait_port http://127.0.0.1:9861/health
-python3 - <<'PY'
+docker exec -i -u 10001 oci-nt-api python - <<'PY'
 import sqlite3
-with sqlite3.connect("data/oci-nt.db") as c:
+with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"
   assert c.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]==7
   assert c.execute("SELECT message FROM ci_switch_marker ORDER BY rowid").fetchall()==[("four-before-single",),("single-before-rollback",)]
