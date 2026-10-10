@@ -9,7 +9,7 @@ def test_launch_network_is_automatic_and_tenant_scoped():
     frontend = (ROOT.parent / "frontend/app.js").read_text()
     assert "ensure_launch_network" in service
     assert "/launch/network/ensure" in router
-    assert "一键创建 N&T 网络" in frontend
+    # New UX: network provisioning happens only on explicit launch submit.\n    submit = frontend.split("async function submitLaunchJob(event) {", 1)[1].split("async function loadLaunchJobs(", 1)[0]\n    assert "launch/network/ensure" in submit\n    assert "preferredSubnet: ensuredSubnet, forceRefresh: true" in submit\n    assert "提交开机任务时将自动准备" in frontend
     assert "recommended_subnet_id" in service
     assert 'tenant-launch-subnet" type="hidden' in frontend
 
