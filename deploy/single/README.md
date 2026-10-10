@@ -68,3 +68,20 @@ Docker Socket remain production security concerns; a true rollback after an
 incompatible schema migration requires a tested data restore as well as old
 images. The separate `readiness-audit.py` remains advisory and never
 authorizes production release.
+
+## Production inventory evidence (no cutover)
+
+After the GitHub branch is reviewed and merged, a production operator may use
+`python3 deploy/single/rollback-evidence.py --sha <40-hex-commit> --out /root/oci-nt-backups/single-release-evidence.json`
+to produce an exclusive, mode-0600, **secret-free** inventory of the four
+original immutable image tags. The output directory must already exist;
+the command refuses to overwrite files and does not interact with other
+stacks (especially `/opt/oci--nt`). It does **not** back up data or env files,
+stop processes, assert detached OCI quiescence, or authorize a switch.
+
+`release-controller.py --apply` remains deliberately unavailable. A later
+production cutover would require proven admission across background and HTTP
+OCI work, a pause/stop that cannot race detached processes, an isolated
+DB+encrypted-credential restore test, Docker socket threat approval, and a
+known-good four-service rollback using pinned images. Never treat an empty
+lease registry as proof of all OCI activity being gone.

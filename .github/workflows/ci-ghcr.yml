@@ -189,6 +189,27 @@ jobs:
       - name: Verify integrated switch test isolation contracts
         run: python -m unittest discover -s tests -p 'test_single_integrated_acceptance.py' -v
 
+      - name: Test fail-closed production single-container cutover controller
+        run: python -m unittest discover -s tests -p 'test_single_release_controller.py' -v
+
+      - name: Test rollback evidence
+        run: python -m unittest discover -s tests -p 'test_single_rollback_evidence.py' -v
+
+      - name: Audit background OCI admission coverage
+        run: python -m unittest discover -s tests -p 'test_single_admission_audit.py' -v
+
+      - name: Verify immutable rollback image gate contracts
+        run: python -m unittest discover -s tests -p 'test_single_rollback_image_gate.py' -v
+
+      - name: Test pinned rollback Compose override renderer
+        run: python -m unittest discover -s tests -p 'test_single_rollback_override.py' -v
+
+      - name: Validate pinned four-service rollback Compose contract
+        run: python -m unittest discover -s tests -p 'test_single_validate_four_rollback.py' -v
+
+      - name: Verify production cutover sequence stays unarmed
+        run: python -m unittest discover -s tests -p 'test_single_cutover_sequence.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
