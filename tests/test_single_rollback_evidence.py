@@ -18,6 +18,7 @@ def report():
                 "oci-nt-web":"ghcr.io/noahting55/oci-noah-web:sha-"+SHA,
                 "oci-nt-monitor-agent":"ghcr.io/noahting55/oci-noah-api:sha-"+SHA,
                 "oci-nt-docker-guard":"ghcr.io/noahting55/oci-noah-api:sha-"+SHA},
+            "original_image_ids":{name:"sha256:"+"b"*64 for name in ("oci-nt-api","oci-nt-web","oci-nt-monitor-agent","oci-nt-docker-guard")},
             "single_image":"ghcr.io/noahting55/oci-noah-single:sha-"+SHA,
             "single_image_id":"sha256:synthetic",
             "schema":7,"docker_socket_gid":997}
