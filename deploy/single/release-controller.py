@@ -65,6 +65,7 @@ def inspect(sha: str, *, runner=call, root=ROOT) -> dict:
     if info.get("Architecture") != "amd64":
         raise RuntimeError("single image architecture mismatch")
     original = {}
+    original_ids = {}
     for name in SERVICE_NAMES:
         state = json.loads(runner(["docker","inspect",name]))[0]
         if state.get("Config",{}).get("Labels",{}).get("com.docker.compose.project") != "oci-nt":
@@ -72,6 +73,7 @@ def inspect(sha: str, *, runner=call, root=ROOT) -> dict:
         if state.get("State",{}).get("Health",{}).get("Status") != "healthy":
             raise RuntimeError("service not healthy: " + name)
         original[name] = state["Config"]["Image"]
+        original_ids[name] = state["Image"]
     socket = Path("/var/run/docker.sock")
     if not socket.is_socket():
         raise RuntimeError("Docker socket missing")
@@ -83,6 +85,7 @@ def inspect(sha: str, *, runner=call, root=ROOT) -> dict:
         "single_image": target,
         "single_image_id": info["Id"],
         "original_images": original,
+        "original_image_ids": original_ids,
         "schema": int(v[0]),
         "recorded_oci_leases": len(leases),
         "nonterminal_task_counts": pending,
