@@ -15,6 +15,10 @@ docker run -d --name "$ID" --network host --restart no \
   -v "$dir/data:/app/data" -v "$dir/logs:/app/logs" \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   -e DOCKER_GID="$(stat -c %g /var/run/docker.sock)" \
+  -e DOCKER_GUARD_HOST=127.0.0.1 \
+  -e DOCKER_GUARD_PORT=9861 \
+  -e MONITOR_AGENT_HOST=127.0.0.1 \
+  -e MONITOR_AGENT_PORT=9860 \
   -e SECRET_KEY=ci-only-not-a-secret \
   -e CREDENTIAL_ENCRYPTION_KEY="$KEY" \
   -e ADMIN_USERNAME=ci-admin -e ADMIN_PASSWORD=ci-test-password \
