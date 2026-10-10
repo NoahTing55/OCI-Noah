@@ -11,6 +11,7 @@ sha="a"*40
 imageid="sha256:"+"b"*64
 def manifest():
     return {"manifest_version":1,"release_authorized":False,
+        "original_four_image_ids":{name:imageid for name in ("oci-nt-api","oci-nt-web","oci-nt-monitor-agent","oci-nt-docker-guard")},
         "original_four_images":{
           "oci-nt-api":"ghcr.io/noahting55/oci-noah-api:sha-"+sha,
           "oci-nt-web":"ghcr.io/noahting55/oci-noah-web:sha-"+sha,
