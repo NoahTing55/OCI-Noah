@@ -1,0 +1,41 @@
+# EXPERIMENTAL standalone Compose project. Do not overlay docker-compose.yml.
+# Never run on the same host/ports as the active four-container deployment.
+name: oci-nt-single-lab
+services:
+  all-in-one:
+    build:
+      context: ..
+      dockerfile: deploy/single/Dockerfile
+    image: ghcr.io/noahting55/oci-noah-single:${OCI_NOAH_SINGLE_TAG:-experimental}
+    container_name: oci-nt-single-lab
+    restart: unless-stopped
+    network_mode: host
+    stop_grace_period: 35s
+    env_file:
+      - ../.env
+    environment:
+      APP_NAME: OCI-N&T
+      DATA_DIR: /app/data
+      DB_PATH: /app/data/oci-nt.db
+      BACKUP_DIR: /app/data/backups
+      TZ: Asia/Taipei
+      HOST_PROC_PATH: /host/proc
+      HOST_SYS_PATH: /host/sys
+      HOST_ETC_PATH: /host/etc
+      DOCKER_SOCKET_PATH: /var/run/docker.sock
+      DOCKER_GUARD_HOST: 127.0.0.1
+      DOCKER_GUARD_PORT: "9861"
+      MONITOR_AGENT_HOST: 127.0.0.1
+      MONITOR_AGENT_PORT: "9860"
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/hostname:/host/etc/hostname:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    group_add:
+      - "${DOCKER_GID:-0}"
+    security_opt:
+      - no-new-privileges:true
