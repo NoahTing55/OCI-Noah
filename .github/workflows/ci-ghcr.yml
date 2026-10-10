@@ -189,6 +189,9 @@ jobs:
       - name: Verify integrated switch test isolation contracts
         run: python -m unittest discover -s tests -p 'test_single_integrated_acceptance.py' -v
 
+      - name: Test fail-closed production single-container cutover controller
+        run: python -m unittest discover -s tests -p 'test_single_release_controller.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
