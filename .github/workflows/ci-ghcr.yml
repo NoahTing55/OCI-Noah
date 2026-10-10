@@ -162,6 +162,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_single_container_contract.py' -v
           python -m compileall -q deploy/single
+          cp .env.example .env
           docker compose -f deploy/compose.single.yml config --quiet
 
       - name: Build experimental single-container image (no push)
