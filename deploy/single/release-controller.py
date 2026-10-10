@@ -89,6 +89,8 @@ def inspect(sha: str, *, runner=call, root=ROOT) -> dict:
         "maintenance_active": maintenance["active"],
         "docker_socket_gid": socket_gid,
         "checks_passed": True,
+        "recorded_work_drained": (not any(pending.values()) and not leases),
+        "recorded_work_gate": "RECORDED_IDLE" if not any(pending.values()) and not leases else "BLOCKED_ACTIVE_RECORDED_WORK",
         "execution_supported": False,
         "release_authorized": False,
         "blockers": [
