@@ -224,9 +224,11 @@ jobs:
         include:
           - name: api
             context: ./backend
+            dockerfile: ./backend/Dockerfile
             image: ghcr.io/noahting55/oci-noah-api
           - name: web
             context: ./frontend
+            dockerfile: ./frontend/Dockerfile
             image: ghcr.io/noahting55/oci-noah-web
           - name: single
             context: .
@@ -261,7 +263,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile || 'Dockerfile' }}
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
