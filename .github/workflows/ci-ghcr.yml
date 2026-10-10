@@ -168,6 +168,9 @@ jobs:
       - name: Build experimental single-container image (no push)
         run: docker build -f deploy/single/Dockerfile -t oci-nt-single:ci .
 
+      - name: Disposable single-container runtime smoke and fail-fast test
+        run: bash deploy/single/ci-smoke.sh
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
