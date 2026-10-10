@@ -49,3 +49,22 @@ these gates are satisfied and a separately reviewed cutover procedure exists.
 ## Experimental socket group isolation
 
 The guard now runs under UID 10002, with the explicit host Docker socket GID; API and monitor run under UID 10001 with no supplemental groups. Supply the non-root `DOCKER_GID` in an isolated lab. This is only a **partial risk reduction**, not a Docker Socket sandbox: the Nginx/supervisor root process and shared namespaces remain powerful and prevent declaring single-container production security parity with the four-container topology. Avoid use on the production host.
+
+## Integrated acceptance (CI only)
+
+`deploy/single/ci-four-single-four.sh` is an **ephemeral GitHub-hosted runner
+only** integration exercise. It compiles the four-container API/Web images,
+boots the existing four-container Compose stack using synthetic credentials and
+a new SQLite database, gracefully removes that stack, boots the single
+candidate using the same disposable database, and finally stops the candidate
+and reboots all four existing services. It checks real HTTP health and database
+markers across both directions.
+
+This does **not** constitute a production cutover rehearsal with live OCI
+operations, genuine encrypted credentials, or an externally provided scrubbed
+production snapshot. The existing production deployment and data are never
+accessed. No production cutover mechanism is added. The root supervisor and
+Docker Socket remain production security concerns; a true rollback after an
+incompatible schema migration requires a tested data restore as well as old
+images. The separate `readiness-audit.py` remains advisory and never
+authorizes production release.
