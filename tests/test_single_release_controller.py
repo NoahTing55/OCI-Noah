@@ -64,6 +64,7 @@ class CutoverControllerSafetyTests(unittest.TestCase):
         out=self.run_check()
         self.assertEqual(out["nonterminal_task_counts"]["launch_jobs"],1)
         self.assertFalse(out["recorded_work_drained"])
+        self.assertFalse(out["checks_passed"])
         self.assertEqual(out["recorded_work_gate"],"BLOCKED_ACTIVE_RECORDED_WORK")
         self.assertFalse(out["release_authorized"])
 
