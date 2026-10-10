@@ -21,6 +21,9 @@ def verify(manifest: dict, runner):
     images = manifest.get("original_four_images")
     if not isinstance(images,dict) or set(images) != EXPECTED:
         raise ValueError("missing original services")
+    evidence_ids = manifest.get("original_four_image_ids")
+    if not isinstance(evidence_ids,dict) or set(evidence_ids) != EXPECTED:
+        raise ValueError("missing original running image IDs")
     ids = {}
     for name in sorted(EXPECTED):
         tag = images[name]
@@ -35,6 +38,8 @@ def verify(manifest: dict, runner):
         image_id=item.get("Id")
         if not isinstance(image_id,str) or not re.fullmatch("sha256:[0-9a-f]{64}",image_id):
             raise ValueError("invalid Docker image ID")
+        if image_id != evidence_ids[name]:
+            raise ValueError("rollback image no longer matches running baseline")
         if item.get("Architecture")!="amd64":
             raise ValueError("rollback architecture mismatch")
         ids[name]=image_id
