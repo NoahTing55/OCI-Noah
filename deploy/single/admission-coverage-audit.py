@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 TRACKED = {
     "task_service.py": ("run_with_lease(settings.db_path", "asyncio.create_task("),
     "instance_batch_service.py": ("run_with_lease(settings.db_path", "asyncio.create_task("),
-    "launch_task_service.py": ("run_with_lease(settings.db_path", "asyncio.create_task("),
+    "launch_task_service.py": ("run_with_lease(\n            settings.db_path", "asyncio.create_task("),
 }
 BASE = ROOT / "backend/app"
 
