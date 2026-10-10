@@ -8,6 +8,7 @@ RUN python -m pip install --no-cache-dir -r /app/requirements.txt
 COPY backend/app /app/app
 COPY frontend/ /usr/share/nginx/html/
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+RUN rm -f /etc/nginx/sites-enabled/default
 COPY deploy/single/supervise.py /app/supervise.py
 COPY deploy/single/health.py /app/health.py
 RUN mkdir -p /app/data /app/logs /app/data/backups /run/nginx /var/lib/nginx/body \
