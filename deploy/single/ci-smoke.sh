@@ -11,6 +11,7 @@ chmod 777 "$dir/data" "$dir/logs"
 # No OCI credentials, no copied production SQLite, no prod bind mount.
 KEY="$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
 docker run -d --name "$ID" --network host --restart no \
+  --group-add "$(stat -c %g /var/run/docker.sock)" \
   -v "$dir/data:/app/data" -v "$dir/logs:/app/logs" \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   -e SECRET_KEY=ci-only-not-a-secret \
@@ -32,7 +33,7 @@ curl --fail --silent --show-error http://127.0.0.1:9859/ui-theme.css >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:9859/api/v1/health >/dev/null
 echo "SINGLE_CONTAINER_RUNTIME_HEALTHY"
 # Crash one critical child; supervisor must stop the whole container, not leave partial service alive.
-docker exec "$ID" python -c 'import os,signal,subprocess; p=subprocess.check_output(["pgrep","-f","uvicorn app.main:app"]).decode().splitlines(); os.kill(int(p[-1]),signal.SIGKILL)'
+docker exec "$ID" python -c 'import os,signal; found=[]; [(found.append(int(p))) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(found)==1,found; os.kill(found[0],signal.SIGKILL)'
 status=running
 for i in $(seq 1 20); do
   status="$(docker inspect "$ID" -f '{{.State.Status}}')"
