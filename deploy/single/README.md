@@ -45,3 +45,7 @@ Outstanding production gates (not covered by this PR):
 
 The normal four-container production Compose remains authoritative until
 these gates are satisfied and a separately reviewed cutover procedure exists.
+
+## Experimental socket group isolation
+
+The guard now runs under UID 10002, with the explicit host Docker socket GID; API and monitor run under UID 10001 with no supplemental groups. Supply the non-root `DOCKER_GID` in an isolated lab. This is only a **partial risk reduction**, not a Docker Socket sandbox: the Nginx/supervisor root process and shared namespaces remain powerful and prevent declaring single-container production security parity with the four-container topology. Avoid use on the production host.

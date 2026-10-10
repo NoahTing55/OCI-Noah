@@ -23,6 +23,7 @@ services:
       HOST_SYS_PATH: /host/sys
       HOST_ETC_PATH: /host/etc
       DOCKER_SOCKET_PATH: /var/run/docker.sock
+      DOCKER_GID: "${DOCKER_GID:-0}"
       DOCKER_GUARD_HOST: 127.0.0.1
       DOCKER_GUARD_PORT: "9861"
       MONITOR_AGENT_HOST: 127.0.0.1

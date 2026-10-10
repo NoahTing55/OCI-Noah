@@ -177,6 +177,9 @@ jobs:
       - name: Test offline single-container cutover and rollback data copies
         run: python -m unittest discover -s tests -p 'test_single_offline_cutover.py' -v
 
+      - name: Verify dedicated experimental Docker guard process identity
+        run: python -m unittest discover -s tests -p 'test_single_socket_identity.py' -v
+
       - name: Disposable single-container runtime smoke and fail-fast test
         run: bash deploy/single/ci-smoke.sh
 
