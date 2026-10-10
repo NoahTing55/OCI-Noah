@@ -22,7 +22,7 @@ def stop(_signum, _frame):
 def app_identity():
     identity = pwd.getpwnam("app")
     def drop():
-        os.setgroups([])
+        os.setgroups(os.getgroups())
         os.setgid(identity.pw_gid)
         os.setuid(identity.pw_uid)
     return drop
