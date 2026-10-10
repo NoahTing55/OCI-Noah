@@ -2766,3 +2766,15 @@ body.tenant-mode .tenant-tabs button.active {
     max-height: min(400px, 55vh) !important;
   }
 }
+
+
+/* OCI-N&T readable typography: reserve bold weights for hierarchy, not data. */
+body, input, select, textarea, button { font-weight: 400; }
+:is(.api-table,.dense-table,.launch-table-all-tenants) :is(td,td strong,td b) { font-weight: 400 !important; }
+:is(.api-table,.dense-table,.launch-table-all-tenants) th { font-weight: 500 !important; }
+:is(.panel,.card,.form-panel) :is(label > span,dt,small,p) { font-weight: 400 !important; }
+:is(.panel,.card,.form-panel) :is(dd,.row-title-button) { font-weight: 500 !important; }
+.button, .text-button, .launch-interval-presets button { font-weight: 500 !important; }
+:is(.launch-section-title,.panel-head,.launch-editor-head) strong,
+:is(.launch-section-title,.panel-head,.launch-editor-head) h2 { font-weight: 600 !important; }
+.launch-presets button strong, .launch-job-card strong { font-weight: 500 !important; }

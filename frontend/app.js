@@ -1819,7 +1819,7 @@ function renderLaunchLiveSummary() {
 
 function updateLaunchSubmitState() {
   const resources = state.launchResources;
-  const ready = Boolean(resources?.shape && $("tenant-launch-subnet")?.value && $("tenant-launch-image")?.value);
+  const ready = Boolean(resources?.shape && $("tenant-launch-image")?.value && state.launchCatalog && $("tenant-launch-compartment")?.value && $("tenant-launch-ad")?.value);
   const button = $("tenant-launch-submit");
   const title = $("tenant-launch-submit-title");
   if (button) button.disabled = !ready;
@@ -1850,15 +1850,15 @@ function renderAutoNetwork(resources, catalog) {
     !ipv6Help
   ) return;
   if (!subnet) {
-    summary.textContent = "当前区域没有可用子网。确认后可自动创建 N&T-VCN、Internet Gateway、默认路由和区域子网。";
-    create.hidden = false;
+    summary.textContent = "当前没有可用公网子网。提交开机任务时将自动准备 N&T 网络，无需单独操作。";
+    create.hidden = true;
     subnetInput.value = "";
     publicToggle.checked = true;
     publicToggle.disabled = false;
-    publicHelp.textContent = "创建 N&T 网络后可分配";
+    publicHelp.textContent = "提交开机任务时自动准备网络";
     ipv6Toggle.checked = false;
     ipv6Toggle.disabled = true;
-    ipv6Help.textContent = "创建网络后自动判断";
+    ipv6Help.textContent = "提交时自动判断";
     renderLaunchEnvironmentChips(resources, catalog);
     setLaunchEnvironmentState("warning", "缺少网络");
     return;
@@ -1948,10 +1948,10 @@ async function loadLaunchResources(options = {}) {
     renderLaunchEnvironmentChips(resources, catalog);
     updateLaunchSubmitState();
     const notes = [];
-    if (!resources.recommended_subnet) notes.push("没有网络，请使用一键创建 N&T 网络");
+    if (!resources.recommended_subnet) notes.push("提交任务时自动准备网络");
     if (resources.shape_error) notes.push(resources.shape_error);
     if (resources.image_error && resources.image_error !== resources.shape_error) notes.push(resources.image_error);
-    launchStatus.textContent = `自动配置完成：${resources.recommended_subnet ? "网络已选" : "等待创建网络"}，Ubuntu 镜像 ${resources.images.length} 个${resources.shape ? `，配置 ${resources.architecture} · ${resources.shape}` : ""}${notes.length ? `。${notes.join("；")}` : ""}`;
+    launchStatus.textContent = `自动配置完成：${resources.recommended_subnet ? "网络已选" : "将自动准备网络"}，Ubuntu 镜像 ${resources.images.length} 个${resources.shape ? `，配置 ${resources.architecture} · ${resources.shape}` : ""}${notes.length ? `。${notes.join("；")}` : ""}`;
     setLaunchEnvironmentState(resources.recommended_subnet && resources.images.length && resources.shape ? "ready" : "warning", resources.recommended_subnet ? "已就绪" : "缺少网络");
     return resources;
   } catch (error) {
@@ -2024,8 +2024,24 @@ async function submitLaunchJob(event) {
       preferredSubnet: previousSubnet,
     });
     if (!state.launchResources?.recommended_subnet || !$("tenant-launch-subnet")?.value) {
-      throw new Error("网络目录尚未同步，请重新准备网络后再试");
+      // An explicit Create/Launch submission authorizes network preparation;
+      // simply viewing the page never creates cloud resources.
+      const result = await api(`/accounts/${account.id}/launch/network/ensure`, {
+        method: "POST",
+        body: {
+          catalog_token: catalog.catalog_token,
+          compartment_id: $("tenant-launch-compartment").value,
+          availability_domain: $("tenant-launch-ad").value,
+        },
+      });
+      const ensuredSubnet = result?.subnet?.id ? result.subnet : null;
+      if (!ensuredSubnet) throw new Error("自动准备网络未返回可用子网，请检查 OCI 网络权限");
+      await loadLaunchResources({ preferredSubnet: ensuredSubnet, forceRefresh: true });
+      if (!state.launchResources?.recommended_subnet || !$("tenant-launch-subnet")?.value) {
+        throw new Error("网络已准备，但资源目录未同步。请刷新后重试");
+      }
     }
+    setBusy(button, true, state.tenantTab === "launch" ? "启动中……" : "提交中……");
     const payload = {
       mode: state.tenantTab === "launch" ? "CAPACITY_RETRY" : "CREATE",
       catalog_token: catalog.catalog_token,
