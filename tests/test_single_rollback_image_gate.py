@@ -32,6 +32,9 @@ class RollbackImageGateTests(unittest.TestCase):
         item["original_four_images"]["oci-nt-api"]="ghcr.io/attacker/image:latest"
         with self.assertRaises(ValueError):
             m.verify(item,lambda cmd:json.dumps([{"Id":imageid,"Architecture":"amd64"}]))
+    def test_same_tag_different_image_id_rejected(self):
+        with self.assertRaisesRegex(ValueError,"no longer matches"):
+            m.verify(manifest(),lambda cmd:json.dumps([{"Id":"sha256:"+"c"*64,"Architecture":"amd64"}]))
     def test_missing_service_fails(self):
         item=manifest()
         del item["original_four_images"]["oci-nt-web"]
