@@ -41,9 +41,15 @@ class CutoverControllerSafetyTests(unittest.TestCase):
                 "Config":{"Labels":{"com.docker.compose.project":"oci-nt"},"Image":"pinned:test"},
                 "State":{"Health":{"Status":"healthy"}}
             }])
-        with patch.object(mod.Path,"is_socket",return_value=True), patch.object(mod.Path,"stat") as stat:
-            stat.return_value.st_gid=997
-            return mod.inspect(SHA,runner=runner,root=self.root)
+        with patch.object(mod.Path,"is_socket",return_value=True):
+            original_stat = mod.Path.stat
+            def stat_only_socket(p, *args, **kwargs):
+                if str(p) == "/var/run/docker.sock":
+                    from types import SimpleNamespace
+                    return SimpleNamespace(st_gid=997)
+                return original_stat(p, *args, **kwargs)
+            with patch.object(mod.Path,"stat",stat_only_socket):
+                return mod.inspect(SHA,runner=runner,root=self.root)
 
     def test_healthy_idle_is_still_plan_only(self):
         out=self.run_check()
