@@ -228,6 +228,10 @@ jobs:
           - name: web
             context: ./frontend
             image: ghcr.io/noahting55/oci-noah-web
+          - name: single
+            context: .
+            dockerfile: ./deploy/single/Dockerfile
+            image: ghcr.io/noahting55/oci-noah-single
 
     steps:
       - name: Checkout
@@ -257,6 +261,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile || 'Dockerfile' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
