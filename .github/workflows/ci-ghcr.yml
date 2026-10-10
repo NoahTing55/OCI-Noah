@@ -186,6 +186,9 @@ jobs:
       - name: Disposable single-container runtime smoke and fail-fast test
         run: bash deploy/single/ci-smoke.sh
 
+      - name: Disposable four-to-single-to-four container and SQLite drill
+        run: bash deploy/single/ci-four-single-four.sh
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
