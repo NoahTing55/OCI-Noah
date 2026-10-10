@@ -88,7 +88,7 @@ def inspect(sha: str, *, runner=call, root=ROOT) -> dict:
         "nonterminal_task_counts": pending,
         "maintenance_active": maintenance["active"],
         "docker_socket_gid": socket_gid,
-        "checks_passed": True,
+        "checks_passed": (not any(pending.values()) and not leases),
         "recorded_work_drained": (not any(pending.values()) and not leases),
         "recorded_work_gate": "RECORDED_IDLE" if not any(pending.values()) and not leases else "BLOCKED_ACTIVE_RECORDED_WORK",
         "execution_supported": False,
@@ -117,7 +117,7 @@ def main():
         print(json.dumps({"status":"BLOCKED","release_authorized":False,"reason":type(exc).__name__}))
         return 3
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0
+    return 0 if report["checks_passed"] else 3
 
 
 if __name__ == "__main__":
