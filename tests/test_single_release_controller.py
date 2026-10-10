@@ -39,7 +39,7 @@ class CutoverControllerSafetyTests(unittest.TestCase):
                 return json.dumps([{"Architecture":"amd64","Id":"sha256:sample"}])
             return json.dumps([{
                 "Config":{"Labels":{"com.docker.compose.project":"oci-nt"},"Image":"pinned:test"},
-                "State":{"Health":{"Status":"healthy"}}
+                "State":{"Health":{"Status":"healthy"}},"Image":"sha256:"+"b"*64
             }])
         with patch.object(mod.Path,"is_socket",return_value=True):
             original_stat = mod.Path.stat
