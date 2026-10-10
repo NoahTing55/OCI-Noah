@@ -36,6 +36,9 @@ def safe_manifest(report: dict) -> dict:
         raise ValueError("incomplete original image inventory")
     if not all(isinstance(v, str) and re.fullmatch(r"ghcr\.io/noahting55/oci-noah-(?:api|web):sha-[0-9a-f]{40}", v) for v in images.values()):
         raise ValueError("refusing non-pinned/foreign original image")
+    running_ids = report.get("original_image_ids")
+    if not isinstance(running_ids, dict) or set(running_ids) != names or not all(isinstance(v, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", v) for v in running_ids.values()):
+        raise ValueError("missing running image identity evidence")
     image = report.get("single_image")
     if not isinstance(image, str) or not re.fullmatch(r"ghcr\.io/noahting55/oci-noah-single:sha-[0-9a-f]{40}", image):
         raise ValueError("invalid single candidate")
@@ -48,6 +51,7 @@ def safe_manifest(report: dict) -> dict:
         "candidate_image": image,
         "candidate_image_id": report["single_image_id"],
         "original_four_images": {name:images[name] for name in sorted(names)},
+        "original_four_image_ids": {name:running_ids[name] for name in sorted(names)},
         "database_schema": 7,
         "docker_socket_gid": report["docker_socket_gid"],
         "separate_project_excluded": "/opt/oci--nt",
