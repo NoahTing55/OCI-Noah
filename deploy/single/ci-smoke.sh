@@ -32,8 +32,8 @@ done
 [[ "$alive" == 1 ]] || {
   echo "HEALTH_DIAGNOSTICS_BEGIN"
   docker exec "$ID" python -c 'import os,stat; p="/var/run/docker.sock"; s=os.stat(p); print("socket permissions:",s.st_uid,s.st_gid,oct(stat.S_IMODE(s.st_mode)))' || true
-  docker exec "$ID" python -c 'import urllib.request,urllib.error; u="http://127.0.0.1:9860/health"; r=urllib.request.urlopen(u,timeout=3); print(r.read())' || true
-  docker exec "$ID" python -c 'import urllib.request,urllib.error; u="http://127.0.0.1:9861/version"; r=urllib.request.urlopen(u,timeout=3); print(r.read()[:600])' || true
+  docker exec "$ID" python -c 'import urllib.request,urllib.error; u="http://127.0.0.1:9860/health"; x=urllib.request.build_opener(); print(x.open(u,timeout=3).read())' || true
+  docker exec "$ID" python -c 'import urllib.request,urllib.error; u="http://127.0.0.1:9861/version"; print(urllib.request.urlopen(u,timeout=3).read()[:600])' || true
   docker logs "$ID"
   echo "HEALTH_TIMEOUT"
   exit 1
