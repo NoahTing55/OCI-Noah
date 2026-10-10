@@ -27,6 +27,8 @@ class SocketIdentityTests(unittest.TestCase):
     def test_ci_exercises_dedicated_uid(self):
         smoke=(ROOT/"deploy/single/ci-smoke.sh").read_text()
         self.assertIn('DOCKER_GID=',smoke)
+        self.assertIn('-e DOCKER_GUARD_HOST=127.0.0.1',smoke)
+        self.assertIn('-e DOCKER_GUARD_PORT=9861',smoke)
         self.assertIn('10002 if n=="app.docker_socket_guard"',smoke)
 if __name__=="__main__":
     unittest.main()
