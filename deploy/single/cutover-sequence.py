@@ -7,7 +7,6 @@ for later implementation, CI and operator review. No database or Docker I/O.
 """
 from __future__ import annotations
 import json
-from dataclasses import dataclass
 
 PHASES = (
     "operator_approval",
@@ -29,11 +28,6 @@ ROLLBACK = (
     "verify_four_endpoints_and_sqlite_credentials",
     "reopen_admission_only_after_successful_recovery",
 )
-
-@dataclass(frozen=True)
-class Gate:
-    name: str
-    evidence: bool
 
 def evaluate(evidence: dict) -> dict:
     # No API or tool in this repository currently proves the complete
