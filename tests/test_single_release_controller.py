@@ -54,6 +54,7 @@ class CutoverControllerSafetyTests(unittest.TestCase):
     def test_healthy_idle_is_still_plan_only(self):
         out=self.run_check()
         self.assertFalse(out["release_authorized"])
+        self.assertTrue(out["recorded_work_drained"])
         self.assertFalse(out["execution_supported"])
         self.assertEqual(out["docker_socket_gid"],997)
 
@@ -62,6 +63,8 @@ class CutoverControllerSafetyTests(unittest.TestCase):
             conn.execute("INSERT INTO launch_jobs VALUES ('RUNNING')")
         out=self.run_check()
         self.assertEqual(out["nonterminal_task_counts"]["launch_jobs"],1)
+        self.assertFalse(out["recorded_work_drained"])
+        self.assertEqual(out["recorded_work_gate"],"BLOCKED_ACTIVE_RECORDED_WORK")
         self.assertFalse(out["release_authorized"])
 
     def test_bad_schema_rejected(self):
