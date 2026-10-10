@@ -19,10 +19,17 @@ def stop(_signum, _frame):
     RUNNING = False
 
 
-def app_identity():
-    identity = pwd.getpwnam("app")
+def app_identity(socket_access=False):
+    # The guard alone receives the host Docker socket's supplemental group.
+    identity = pwd.getpwnam("guard" if socket_access else "app")
     def drop():
-        os.setgroups(os.getgroups())
+        if socket_access:
+            gid = int(os.environ.get("DOCKER_GID", "0"))
+            if gid <= 0:
+                raise RuntimeError("DOCKER_GID must be the non-root host socket group")
+            os.setgroups([gid])
+        else:
+            os.setgroups([])
         os.setgid(identity.pw_gid)
         os.setuid(identity.pw_uid)
     return drop
@@ -32,7 +39,7 @@ def main():
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     specs = [
-        ("docker-guard", [sys.executable, "-m", "app.docker_socket_guard"], app_identity()),
+        ("docker-guard", [sys.executable, "-m", "app.docker_socket_guard"], app_identity(socket_access=True)),
         ("monitor", [sys.executable, "-m", "app.monitor_agent"], app_identity()),
         ("api", [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "9858", "--proxy-headers", "--forwarded-allow-ips=*"], app_identity()),
         ("web", ["nginx", "-g", "daemon off;"], None),
