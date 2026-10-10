@@ -28,7 +28,10 @@ def verify(manifest: dict, runner):
         if not isinstance(tag,str) or not re.fullmatch(
             re.escape(PREFIX+kind)+r":sha-[0-9a-f]{40}",tag):
             raise ValueError("original images must be immutable and first-party")
-        item=json.loads(runner(["docker","image","inspect",tag]))[0]
+        inspected=json.loads(runner(["docker","image","inspect",tag]))
+        if not isinstance(inspected,list) or len(inspected)!=1 or not isinstance(inspected[0],dict):
+            raise ValueError("rollback image is absent or inspection invalid")
+        item=inspected[0]
         image_id=item.get("Id")
         if not isinstance(image_id,str) or not re.fullmatch("sha256:[0-9a-f]{64}",image_id):
             raise ValueError("invalid Docker image ID")
