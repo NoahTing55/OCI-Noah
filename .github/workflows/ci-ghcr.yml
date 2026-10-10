@@ -180,6 +180,9 @@ jobs:
       - name: Verify dedicated experimental Docker guard process identity
         run: python -m unittest discover -s tests -p 'test_single_socket_identity.py' -v
 
+      - name: Audit single-container cross-process release evidence gates
+        run: python -m unittest discover -s tests -p 'test_single_readiness_audit.py' -v
+
       - name: Disposable single-container runtime smoke and fail-fast test
         run: bash deploy/single/ci-smoke.sh
 
