@@ -2778,3 +2778,31 @@ body, input, select, textarea, button { font-weight: 400; }
 :is(.launch-section-title,.panel-head,.launch-editor-head) strong,
 :is(.launch-section-title,.panel-head,.launch-editor-head) h2 { font-weight: 600 !important; }
 .launch-presets button strong, .launch-job-card strong { font-weight: 500 !important; }
+
+/* 2026-10 accessibility: readable desktop text scale, with restrained weight. */
+@media (min-width: 761px) {
+  body { font-size: 14px !important; line-height: 1.55; }
+  .sidebar .nav { font-size: 14px !important; font-weight: 500 !important; }
+  .nav-group-title, .sidebar-foot { font-size: 12px !important; font-weight: 400 !important; }
+  .app-header, .app-header :is(span,small,button) { font-size: 13px !important; }
+}
+.main-column :is(p,small,dt,label > span,.muted,.help-text,.hint,.field-hint),
+.main-column .launch-section-title small,
+.main-column .launch-presets button small,
+.main-column .launch-env-chips small,
+.main-column .launch-live-summary small,
+.main-column .dashboard-system-head small,
+.main-column .panel-head small { font-size: 13px !important; line-height: 1.55 !important; font-weight: 400 !important; }
+.main-column :is(input,select,textarea,.button,button:not(.nav)),
+.main-column :is(td,dd,.account-cell,.launch-job-card,.launch-env-chips strong) { font-size: 14px !important; line-height: 1.5 !important; }
+.main-column :is(th,.api-table th,.dense-table th,.launch-table-all-tenants th) { font-size: 13px !important; font-weight: 500 !important; }
+.main-column :is(td strong,.account-cell strong,.launch-job-card strong,.launch-presets strong) { font-weight: 500 !important; }
+.main-column :is(.panel-head h2,.launch-section-title strong,.launch-editor-head h2) { font-weight: 600 !important; }
+.main-column :is(.dashboard-metric small,.stat-card small,.metric-card small) { font-size: 13px !important; font-weight: 400 !important; }
+.main-column :is(.dashboard-metric strong,.stat-card strong,.metric-card strong) { font-weight: 600 !important; }
+.main-column :is(.chart,canvas,svg) text { font-size: 12px; font-weight: 400; }
+.main-column .badge { font-size: 12px !important; font-weight: 500 !important; }
+@media (max-width: 760px) {
+  .sidebar .nav { font-size: 12px !important; font-weight: 500 !important; }
+  .main-column :is(input,select,textarea,.button,td) { font-size: 14px !important; }
+}
