@@ -14,6 +14,7 @@ docker run -d --name "$ID" --network host --restart no \
   --group-add "$(stat -c %g /var/run/docker.sock)" \
   -v "$dir/data:/app/data" -v "$dir/logs:/app/logs" \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  -e DOCKER_GID="$(stat -c %g /var/run/docker.sock)" \
   -e SECRET_KEY=ci-only-not-a-secret \
   -e CREDENTIAL_ENCRYPTION_KEY="$KEY" \
   -e ADMIN_USERNAME=ci-admin -e ADMIN_PASSWORD=ci-test-password \
@@ -46,8 +47,8 @@ done
 [[ "$restored" == 1 ]] || { echo "RESTART_HEALTH_FAILED"; docker logs "$ID"; exit 1; }
 docker exec "$ID" python -c 'import sqlite3; c=sqlite3.connect("/app/data/ci-persistence.db"); assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"; assert c.execute("SELECT COUNT(*) FROM markers WHERE value=?",("ci-persisted",)).fetchone()[0]==1; c.close()'
 echo "SINGLE_CONTAINER_PERSISTENCE_RESTART_OK"
-# API/monitor/guard run as application UID; Nginx master only is privileged.
-docker exec "$ID" python -c 'import os; names=("app.main:app","app.monitor_agent","app.docker_socket_guard"); ps=[(p,open("/proc/"+p+"/cmdline","rb").read(),os.stat("/proc/"+p).st_uid) for p in os.listdir("/proc") if p.isdigit()]; assert all(any(n.encode() in cmd and uid==10001 for _,cmd,uid in ps) for n in names),[(p,cmd[:120],uid) for p,cmd,uid in ps]'
+# API/monitor run as app UID, Docker Guard runs as a separate UID with socket group only.
+docker exec "$ID" python -c 'import os; names=("app.main:app","app.monitor_agent","app.docker_socket_guard"); ps=[(p,open("/proc/"+p+"/cmdline","rb").read(),os.stat("/proc/"+p).st_uid) for p in os.listdir("/proc") if p.isdigit()]; assert all(any(n.encode() in cmd and uid==(10002 if n=="app.docker_socket_guard" else 10001) for _,cmd,uid in ps) for n in names),[(p,cmd[:120],uid) for p,cmd,uid in ps]'
 echo "SINGLE_CONTAINER_SERVICE_UID_OK"
 # Crash one critical child; supervisor must stop the whole container, not leave partial service alive.
 docker exec "$ID" python -c 'import os,signal; found=[]; [(found.append(int(p))) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(found)==1,found; os.kill(found[0],signal.SIGKILL)'
