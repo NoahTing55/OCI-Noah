@@ -18,3 +18,30 @@ This is a **lab candidate only** and is NOT a production upgrade procedure.
   unsuitable.
 - No automatic migration, no replacement Compose file, no production switch
   commands are provided. Verify a disposable deployment before planning cutover.
+
+## Release safety boundary
+
+The `offline-cutover-drill.py` utility is **only a source-preserving,
+disposable data copy rehearsal**. It checks both candidate and rollback
+SQLite copies against a verified input snapshot. Its success explicitly does
+not establish that the current four-container images can read any database
+that a new API has subsequently migrated, or that containers can actually be
+rolled back. Do not invoke it on live files or treat it as permission to cut
+over.
+
+Outstanding production gates (not covered by this PR):
+- Capture real OCI operation leases / in-flight HTTP calls and enforce
+  maintenance admission with an atomic stop-and-drain protocol.
+- Validate a sanitized snapshot from the actual environment in an isolated
+  sandbox with no OCI egress, no production credentials and no live bind mounts.
+- Test image-level switch and reversal, including DB schema forward/backward
+  compatibility; an image rollback alone cannot undo migrations.
+- Review the all-in-one threat model. The Docker socket is a privileged host
+  control interface even mounted `:ro`; a process sharing the same container
+  may be able to reach it. The current all-in-one design retains elevated
+  security risk versus isolated services.
+- Prove resource use, filesystem ownership and security of Nginx master,
+  workers and the API's credential handling.
+
+The normal four-container production Compose remains authoritative until
+these gates are satisfied and a separately reviewed cutover procedure exists.
