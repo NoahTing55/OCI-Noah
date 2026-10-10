@@ -168,6 +168,9 @@ jobs:
       - name: Build experimental single-container image (no push)
         run: docker build -f deploy/single/Dockerfile -t oci-nt-single:ci .
 
+      - name: Verify disposable lifecycle test boundaries
+        run: python -m pytest -q tests/test_single_lifecycle_contract.py
+
       - name: Disposable single-container runtime smoke and fail-fast test
         run: bash deploy/single/ci-smoke.sh
 
