@@ -22,6 +22,14 @@ class ScheduledMaintenanceRaceContracts(unittest.TestCase):
         self.assertIn("async def stop_account_check_scheduler()",scheduler)
         self.assertIn("task.cancel()",scheduler)
         self.assertIn("await task",scheduler)
+    def test_shutdown_does_not_cancel_oci_worker_threads(self):
+        source=(ROOT/"backend/app/oci_background_leases.py").read_text(encoding="utf-8")
+        main=(ROOT/"backend/app/main.py").read_text(encoding="utf-8")
+        body=source.split("async def await_registered_workers(",1)[1]
+        self.assertIn("asyncio.wait(pending",body)
+        self.assertNotIn("task.cancel()",body.split("return {",1)[0])
+        self.assertIn("await await_registered_workers(timeout_seconds=20.0)",main)
+        self.assertIn("NOT a safe release drain",main)
 
 if __name__=="__main__":
     unittest.main()
