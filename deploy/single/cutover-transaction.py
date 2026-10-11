@@ -37,10 +37,13 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
     completed=[]
     old_stopped=False
     candidate_attempted=False
+    maintenance_entered=False
     try:
         for step in STEPS:
             # Track possible side effects BEFORE calling operations. Even an
             # operation raising mid-start must trigger rollback.
+            if step=="enter_maintenance":
+                maintenance_entered=True
             if step=="stop_four":
                 old_stopped=True
             if step=="start_single":
@@ -53,7 +56,11 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
         if not old_stopped:
             # Leave maintenance active if it was already entered. An operator
             # must separately assess any incomplete OCI drain and recover.
-            raise CutoverBlocked("cutover stopped before old-container shutdown") from primary
+            raise CutoverBlocked(
+                "cutover stopped before old-container shutdown; "
+                + ("maintenance might be active; operator review required" if maintenance_entered
+                   else "no container stop attempted")
+            ) from primary
         errors=[]
         # Never silently restore a database: candidate may have written data.
         # First preserve failure state and require explicit data compatibility
