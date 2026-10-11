@@ -16,6 +16,8 @@ def snapshot() -> dict:
     launch = sorted(int(k) for k, task in launch_task_service._tasks.items() if not task.done())
     notifications = sum(not task.done() for task in launch_task_service._notification_tasks)
     http = http_snapshot()
+    from .oci_background_leases import detached_worker_snapshot
+    workers = detached_worker_snapshot()
     return {
         "scope": "current_api_process_only",
         "manual_tasks": manual,
@@ -23,7 +25,10 @@ def snapshot() -> dict:
         "launch_tasks": launch,
         "launch_notification_tasks": notifications,
         "oci_http_writes": http["inflight_count"],
-        "observed_inflight": len(manual) + len(batches) + len(launch) + notifications + http["inflight_count"],
+        "detached_oci_workers": workers["active"],
+        "detached_workers_awaiting_cleanup": workers["done_pending_callback"],
+        "observed_inflight": len(manual) + len(batches) + len(launch) + notifications + http["inflight_count"] + workers["active"],
+        "may_double_count_workers": True,
         "release_authorized": False,
         "note": "Other processes, untracked threads and OCI calls may still be active.",
     }
