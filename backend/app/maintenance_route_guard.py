@@ -47,3 +47,25 @@ def maintenance_active(db: Path) -> bool:
     if not isinstance(payload, dict) or type(payload.get("active")) is not bool:
         raise RuntimeError("Maintenance marker malformed")
     return payload["active"]
+
+
+def protected_oci_request(method: str, path: str) -> bool:
+    """Conservatively lease OCI-facing reads as well as existing mutations.
+
+    Some GET endpoints can perform live OCI SDK calls. A read can therefore
+    outlive release maintenance just like a write. Do not block health, login,
+    cancellation or local backup/release observability endpoints.
+    """
+    if protected_oci_write(method, path):
+        return True
+    if method.upper() != "GET" or not path.startswith("/api/v1/"):
+        return False
+    subpath = path[len("/api/v1/"):]
+    if subpath == "instances" or subpath.startswith("instances/"):
+        return True
+    if subpath.startswith("accounts/") and (
+        subpath.endswith("/instances")
+        or "/instances/" in subpath
+    ):
+        return True
+    return subpath.startswith(("resources/", "launch/resources/", "oci/"))
