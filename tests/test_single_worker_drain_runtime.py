@@ -3,11 +3,15 @@
 These tests exercise asyncio tasks rather than matching source text.
 """
 import asyncio
+import os
 import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
+for key in ("ACCESS_TOKEN_MINUTES", "BULK_CHECK_INTERVAL_SECONDS"):
+    if not os.environ.get(key, "").strip():
+        os.environ[key] = "30"
 sys.path.insert(0,str(ROOT/"backend"))
 from app.oci_background_leases import await_registered_workers
 from app import task_service,instance_batch_service,launch_task_service
