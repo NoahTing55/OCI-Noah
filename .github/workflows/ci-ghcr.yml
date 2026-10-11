@@ -231,6 +231,9 @@ jobs:
       - name: Verify Docker container ownership and independent-project isolation
         run: python -m unittest discover -s tests -p 'test_single_docker_scope_adapter.py' -v
 
+      - name: Verify consolidated production preflight stays read-only
+        run: python -m unittest discover -s tests -p 'test_single_production_preflight.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
