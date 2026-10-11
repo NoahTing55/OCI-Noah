@@ -33,18 +33,27 @@ async def run_with_lease(db, *, kind: str, task_id: int, coroutine):
 
     def finish(done: asyncio.Task) -> None:
         _detached_workers.discard(done)
-        # Release is deliberately owned by the actual worker, not the outer
-        # task: an outer cancellation must not shorten the lease lifetime.
+        # A cancelled inner coroutine may still have a running thread spawned
+        # by asyncio.to_thread(). A Task reporting done/cancelled is NOT proof
+        # that the underlying synchronous OCI SDK call returned. Keep its
+        # durable lease for explicit operator investigation instead of
+        # falsely attesting that all OCI traffic has drained.
+        if done.cancelled():
+            log.error(
+                "OCI worker cancelled before verified completion; "
+                "durable lease retained for investigation: %s", token
+            )
+            return
+        # Non-cancelled completion means the awaited coroutine ran to
+        # completion (including its awaited to_thread() calls).
         try:
             release(db, token)
         except BaseException:
             log.exception("OCI durable worker lease release failed; retained fail-closed")
-        # Consume exception if outer task was cancelled before observing it.
-        if not done.cancelled():
-            try:
-                done.exception()
-            except BaseException:
-                log.exception("Unable to inspect completed OCI worker")
+        try:
+            done.exception()
+        except BaseException:
+            log.exception("Unable to inspect completed OCI worker")
 
     _detached_workers.add(worker)
     worker.add_done_callback(finish)
