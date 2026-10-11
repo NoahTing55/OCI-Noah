@@ -9,7 +9,6 @@ source/target credential equivalence and an approved outage before using it.
 from __future__ import annotations
 import argparse
 import json
-from dataclasses import dataclass
 
 class CutoverBlocked(RuntimeError):
     pass
