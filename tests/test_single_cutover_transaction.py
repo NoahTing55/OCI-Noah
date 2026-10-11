@@ -54,6 +54,27 @@ class Transactions(unittest.TestCase):
         with self.assertRaises(m.RecoveryFailed):
             m.coordinate(ops,trusted_test_context=True)
         self.assertNotIn("restore_four_pinned",ops.calls)
+    def test_failed_state_preservation_blocks_restarting_four(self):
+        class CannotPreserve(MockOps):
+            def __getattr__(self,name):
+                def perform():
+                    self.calls.append(name)
+                    if name in ("verify_single","preserve_failed_candidate_database"):
+                        raise RuntimeError("fault")
+                return perform
+        ops=CannotPreserve()
+        with self.assertRaises(m.RecoveryFailed):
+            m.coordinate(ops,trusted_test_context=True)
+        self.assertIn("stop_candidate",ops.calls)
+        self.assertNotIn("verify_database_for_old_release",ops.calls)
+        self.assertNotIn("restore_four_pinned",ops.calls)
+
+    def test_failure_before_stop_keeps_old_stack_untouched(self):
+        ops=MockOps("enter_maintenance")
+        with self.assertRaises(m.CutoverBlocked):
+            m.coordinate(ops,trusted_test_context=True)
+        self.assertNotIn("stop_four",ops.calls)
+
     def test_db_incompatibility_blocks_old_start(self):
         class Incompatible(MockOps):
             def __getattr__(self,name):
