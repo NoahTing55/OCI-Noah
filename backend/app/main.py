@@ -623,6 +623,14 @@ async def lifespan(_: FastAPI):
     finally:
         # Await scheduler cancellation before draining/shutting down API work.
         await stop_account_check_scheduler()
+        from .oci_background_leases import await_registered_workers
+        drain = await await_registered_workers(timeout_seconds=20.0)
+        if not drain["complete"]:
+            import logging
+            logging.getLogger(__name__).error(
+                "OCI worker shutdown incomplete: %s tracked tasks remain; this is NOT a safe release drain",
+                drain["remaining"],
+            )
         backup_stop_event.set()
         monitor_stop_event.set()
         for background_task in background_tasks:
