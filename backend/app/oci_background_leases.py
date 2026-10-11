@@ -1,49 +1,74 @@
-"""Durable OCI background-task lease for async workers.
+"""Durable OCI worker leases with cancellation-safe ownership.
 
-The task's database row MUST be created atomically before it can be spawned.
-Until then maintenance entry must reject nonterminal rows. A background task
-claims its lease before executing OCI work and releases only on termination.
+An asyncio cancellation must not release a durable OCI lease while a shielded
+worker (including an asyncio.to_thread OCI SDK request) is still running.
 """
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from .oci_operation_leases import acquire, release
+
+log = logging.getLogger(__name__)
+# Strong references: cancellation of the request-facing task must never
+# garbage-collect the underlying in-flight OCI coroutine.
+_detached_workers: set[asyncio.Task] = set()
 
 
 async def run_with_lease(db, *, kind: str, task_id: int, coroutine):
-    token = None
     try:
-        # Acquire synchronously before first await: there is no scheduling gap
-        # between task startup and lease registration.
+        # Lease acquisition precedes scheduling the worker's first instruction.
         token = acquire(db, f"background:{kind}:{int(task_id)}")
-        return await coroutine
-    finally:
-        if token is None:
-            # A rejected task cannot be left as an unawaited coroutine.
-            coroutine.close()
-        else:
-            # Fail closed: a release failure preserves the durable lease.
+    except BaseException:
+        coroutine.close()
+        raise
+
+    try:
+        worker = asyncio.create_task(coroutine)
+    except BaseException:
+        release(db, token)
+        coroutine.close()
+        raise
+
+    def finish(done: asyncio.Task) -> None:
+        _detached_workers.discard(done)
+        # Release is deliberately owned by the actual worker, not the outer
+        # task: an outer cancellation must not shorten the lease lifetime.
+        try:
             release(db, token)
+        except BaseException:
+            log.exception("OCI durable worker lease release failed; retained fail-closed")
+        # Consume exception if outer task was cancelled before observing it.
+        if not done.cancelled():
+            try:
+                done.exception()
+            except BaseException:
+                log.exception("Unable to inspect completed OCI worker")
+
+    _detached_workers.add(worker)
+    worker.add_done_callback(finish)
+    # Shield prevents cancellation of the outer task from propagating into
+    # the coroutine and releasing its durable lease before to_thread ends.
+    return await asyncio.shield(worker)
 
 
 async def await_registered_workers(*, timeout_seconds: float = 20.0) -> dict:
-    """Best-effort graceful shutdown; never cancel an in-flight OCI call.
+    """Wait for all known workers without cancelling OCI SDK operations.
 
-    Timeout is NOT evidence that workers have stopped. Persistent lease state
-    remains authoritative for release maintenance admission.
+    Timeout is NOT proof of drain; unresolved SQLite leases remain authoritative.
     """
-    import asyncio
     from . import task_service, instance_batch_service, launch_task_service
     pools = (
         tuple(task_service._tasks.values()),
         tuple(instance_batch_service._runtime_tasks.values()),
         tuple(launch_task_service._tasks.values()),
         tuple(launch_task_service._notification_tasks),
+        tuple(_detached_workers),
     )
     pending = {task for pool in pools for task in pool if not task.done()}
     if not pending:
         return {"observed": 0, "remaining": 0, "complete": True}
-    done, still_running = await asyncio.wait(pending, timeout=timeout_seconds)
-    # Critically do not call cancel(): asyncio.to_thread OCI requests may outlive
-    # their coroutine and premature finally would clear its durable lease.
+    _done, still_running = await asyncio.wait(pending, timeout=timeout_seconds)
     return {"observed": len(pending), "remaining": len(still_running),
             "complete": not still_running}
