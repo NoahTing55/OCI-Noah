@@ -222,6 +222,9 @@ jobs:
       - name: Test OCI schedule preservation on release maintenance race
         run: python -m unittest discover -s tests -p 'test_single_scheduler_maintenance_race.py' -v
 
+      - name: Exercise OCI shutdown drain with live asyncio tasks
+        run: python -m unittest discover -s tests -p 'test_single_worker_drain_runtime.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
