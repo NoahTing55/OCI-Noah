@@ -243,6 +243,9 @@ jobs:
       - name: Test fail-closed cutover rollback fault matrix
         run: python -m unittest discover -s tests -p 'test_single_cutover_recovery_matrix.py' -v
 
+      - name: Verify candidate mode disables scheduled OCI checks
+        run: python -m unittest discover -s tests -p 'test_single_candidate_scheduler_disabled.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
