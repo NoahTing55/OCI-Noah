@@ -366,8 +366,8 @@ async def _loop() -> None:
                     config = _write(config)
                     due = _parse(config["next_run_at"])
                 if due is not None and due <= _now():
-                    config["next_run_at"] = _iso(_next(config))
-                    config = _write(config)
+                    # Do not consume the schedule slot before OCI task admission:
+                    # maintenance can become active after the early gate check.
                     try:
                         await _launch(
                             config,
@@ -375,8 +375,21 @@ async def _loop() -> None:
                             ip_address=None,
                             scheduled=True,
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        from .durable_admission import DurableMaintenanceBlocked
+                        from .oci_operation_leases import OCIAdmissionBlocked
+                        from .maintenance_state import MaintenanceAdmissionBlocked
+                        if isinstance(exc, (DurableMaintenanceBlocked, OCIAdmissionBlocked,
+                                            MaintenanceAdmissionBlocked)):
+                            # Preserve overdue slot; run after maintenance ends.
+                            pass
+                        else:
+                            # Existing busy/error behavior: avoid 15s retry loops.
+                            config["next_run_at"] = _iso(_next(config))
+                            _write(config)
+                    else:
+                        config["next_run_at"] = _iso(_next(config))
+                        _write(config)
         except asyncio.CancelledError:
             raise
         except Exception as exc:
