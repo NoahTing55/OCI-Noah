@@ -68,7 +68,6 @@ class CutoverMatrix(unittest.TestCase):
                         if name=="verify_single" or name==action:
                             raise RuntimeError("synthetic failure")
                     return run
-                ops.__getattr__=None
                 class RollbackFault:
                     calls=ops.calls
                     def __getattr__(self,name):
