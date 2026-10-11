@@ -8,6 +8,8 @@ bridges the coordinator and Docker identity-safe operations with fault injection
 import importlib.util
 import json
 import os
+import sqlite3
+import tempfile
 from pathlib import Path
 import sys
 import uuid
@@ -28,6 +30,12 @@ class DisposableOps:
         self.name=docker_scope.PREFIX+uuid.uuid4().hex[:16]
         self.identity=None
         self.calls=[]
+        self.tmp=tempfile.TemporaryDirectory(prefix='oci-nt-disposable-cutover-')
+        self.db=Path(self.tmp.name)/'synthetic.db'
+        self.backup=Path(self.tmp.name)/'final-snapshot.db'
+        with sqlite3.connect(self.db) as con:
+            con.execute('CREATE TABLE marker (value TEXT NOT NULL)')
+            con.execute("INSERT INTO marker VALUES ('original-four')")
     def _record(self,step):
         self.calls.append(step)
         if self.fail==step:
@@ -46,7 +54,15 @@ class DisposableOps:
         self._record("attest_complete_oci_quiescence")
     def stop_four(self): self._record("stop_four")
     def verify_four_stopped(self): self._record("verify_four_stopped")
-    def backup_stopped_database(self): self._record("backup_stopped_database")
+    def backup_stopped_database(self):
+        self._record("backup_stopped_database")
+        with sqlite3.connect(self.db) as src, sqlite3.connect(self.backup) as dst:
+            src.backup(dst)
+        with sqlite3.connect(self.backup) as con:
+            if con.execute("PRAGMA quick_check").fetchone()[0]!="ok":
+                raise RuntimeError("backup corrupted")
+            if con.execute("SELECT value FROM marker").fetchone()[0]!="original-four":
+                raise RuntimeError("snapshot not consistent")
     def start_single(self):
         self._record("start_single")
         self.identity=docker_scope.docker(
@@ -63,14 +79,31 @@ class DisposableOps:
         self._record("stop_candidate")
         docker_scope.verify(self.name,self.identity)
         docker_scope.docker("stop","--time","5",self.name)
-    def preserve_failed_candidate_database(self): self._record("preserve_failed_candidate_database")
-    def verify_database_for_old_release(self): self._record("verify_database_for_old_release")
+    def preserve_failed_candidate_database(self):
+        self._record("preserve_failed_candidate_database")
+        # Preserve failed candidate state; never overwrite with backup silently.
+        if not self.backup.exists():
+            raise RuntimeError("final snapshot absent")
+        with sqlite3.connect(self.db) as con:
+            con.execute("INSERT INTO marker VALUES ('failed-candidate')")
+    def verify_database_for_old_release(self):
+        self._record("verify_database_for_old_release")
+        with sqlite3.connect(self.db) as con:
+            if con.execute("PRAGMA quick_check").fetchone()[0]!="ok":
+                raise RuntimeError("synthetic data incompatible")
     def restore_four_pinned(self): self._record("restore_four_pinned")
-    def verify_four_healthy(self): self._record("verify_four_healthy")
+    def verify_four_healthy(self):
+        self._record("verify_four_healthy")
+        with sqlite3.connect(self.db) as con:
+            count=con.execute("SELECT COUNT(*) FROM marker").fetchone()[0]
+            if count!=2: raise RuntimeError("failed candidate data was discarded")
     def cleanup(self):
-        if self.identity:
-            docker_scope.verify(self.name,self.identity)
-            docker_scope.docker("rm","-f",self.name)
+        try:
+            if self.identity:
+                docker_scope.verify(self.name,self.identity)
+                docker_scope.docker("rm","-f",self.name)
+        finally:
+            self.tmp.cleanup()
 
 def scenario(injected_failure):
     op=DisposableOps(fail=injected_failure)
