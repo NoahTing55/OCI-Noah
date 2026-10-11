@@ -216,6 +216,9 @@ jobs:
       - name: Test atomic maintenance and task admission
         run: python -m unittest discover -s tests -p 'test_single_atomic_admission.py' -v
 
+      - name: Integrate durable OCI leases with release maintenance
+        run: python -m unittest discover -s tests -p 'test_single_lease_maintenance_integration.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
