@@ -62,6 +62,17 @@ async def run_with_lease(db, *, kind: str, task_id: int, coroutine):
     return await asyncio.shield(worker)
 
 
+def detached_worker_snapshot() -> dict:
+    """Diagnostic-only snapshot, not an OCI shutdown or admission attestation."""
+    workers = tuple(_detached_workers)
+    return {
+        "active": sum(not task.done() for task in workers),
+        "done_pending_callback": sum(task.done() for task in workers),
+        "scope": "current_api_process_only",
+        "release_authorized": False,
+    }
+
+
 async def await_registered_workers(*, timeout_seconds: float = 20.0) -> dict:
     """Wait for all known workers without cancelling OCI SDK operations.
 
