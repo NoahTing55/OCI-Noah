@@ -210,6 +210,9 @@ jobs:
       - name: Verify production cutover sequence stays unarmed
         run: python -m unittest discover -s tests -p 'test_single_cutover_sequence.py' -v
 
+      - name: Test explicit atomic maintenance operator
+        run: python -m unittest discover -s tests -p 'test_single_maintenance_operator.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
