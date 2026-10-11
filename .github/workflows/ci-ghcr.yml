@@ -237,6 +237,9 @@ jobs:
       - name: Test OCI read and write release admission
         run: python -m unittest discover -s tests -p 'test_single_oci_read_admission.py' -v
 
+      - name: Test durable OCI lease during task cancellation
+        run: python -m unittest discover -s tests -p 'test_single_worker_cancel_lease.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
