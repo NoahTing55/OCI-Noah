@@ -48,6 +48,24 @@ class DurableWorkerCancellation(unittest.IsolatedAsyncioTestCase):
         await asyncio.sleep(0)
         self.assertEqual(self.events[-1],("release","lease-1"))
 
+    async def test_inner_cancellation_retains_lease_fail_closed(self):
+        async def cancellable_oci_work():
+            self.started.set()
+            await self.finish.wait()
+        outer=asyncio.create_task(
+            leases.run_with_lease(None,kind="launch",task_id=8,
+                                  coroutine=cancellable_oci_work()))
+        await self.started.wait()
+        inner=next(iter(leases._detached_workers))
+        # Unlike cancellation of the wrapper, cancellation of the inner
+        # coroutine cannot prove that asyncio.to_thread work has stopped.
+        inner.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await outer
+        await asyncio.sleep(0)
+        self.assertEqual(self.events,[("acquire","background:launch:8")])
+        self.assertFalse(leases._detached_workers)
+
     async def test_success_releases_lease(self):
         async def work(): return 42
         result=await leases.run_with_lease(None,kind="manual",task_id=2,coroutine=work())
