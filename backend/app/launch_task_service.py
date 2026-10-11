@@ -157,13 +157,20 @@ def _spawn_launch_success_notification(
     request_payload: dict,
     result: dict,
 ) -> None:
+    # Notification resolution may perform OCI network calls. Keep it in the
+    # same durable release-admission registry as launch and batch workers.
+    # If maintenance won the SQLite admission lock, the notification is
+    # safely rejected rather than running untracked across a release.
     task = asyncio.create_task(
-        _notify_launch_instance_success(
-            job_id=job_id,
-            account_id=account_id,
-            sequence_no=sequence_no,
-            request_payload=request_payload,
-            result=result,
+        run_with_lease(
+            settings.db_path, kind="launch_notification", task_id=job_id,
+            coroutine=_notify_launch_instance_success(
+                job_id=job_id,
+                account_id=account_id,
+                sequence_no=sequence_no,
+                request_payload=request_payload,
+                result=result,
+            ),
         )
     )
     _notification_tasks.add(task)
