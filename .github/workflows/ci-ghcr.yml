@@ -219,6 +219,9 @@ jobs:
       - name: Integrate durable OCI leases with release maintenance
         run: python -m unittest discover -s tests -p 'test_single_lease_maintenance_integration.py' -v
 
+      - name: Test OCI schedule preservation on release maintenance race
+        run: python -m unittest discover -s tests -p 'test_single_scheduler_maintenance_race.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
