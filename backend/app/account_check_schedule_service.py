@@ -414,3 +414,17 @@ def start_account_check_scheduler() -> None:
         _loop(),
         name="oci-nt-account-check-scheduler",
     )
+
+
+async def stop_account_check_scheduler() -> None:
+    """Stop the scheduler before API shutdown; do not orphan a new OCI task."""
+    global _scheduler_task
+    task = _scheduler_task
+    _scheduler_task = None
+    if task is None:
+        return
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
