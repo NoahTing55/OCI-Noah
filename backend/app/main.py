@@ -618,7 +618,9 @@ async def lifespan(_: FastAPI):
     # backup and local host metrics; every OCI request remains user-triggered.
     try:
         cleanup_auth_history()
-        start_account_check_scheduler()
+        # A disposable candidate must never start the scheduled OCI checker.
+        if not settings.candidate_mode:
+            start_account_check_scheduler()
         yield
     finally:
         # Await scheduler cancellation before draining/shutting down API work.
