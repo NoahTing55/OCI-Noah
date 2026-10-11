@@ -70,10 +70,10 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
                 getattr(ops,name)()
             except BaseException as err:
                 errors.append((name,type(err).__name__))
-                # Do not restore four if the candidate cannot be stopped,
-                # nor if the DB is not proven backward-compatible.
-                if name in ("stop_candidate","verify_database_for_old_release"):
-                    break
+                # Every preceding rollback phase is a mandatory prerequisite.
+                # In particular, never boot the old stack if failure-state
+                # preservation or database compatibility verification failed.
+                break
         if errors:
             raise RecoveryFailed("recovery incomplete; maintenance stays active: "+str(errors)) from primary
         return {"status":"FOUR_RESTORED_MAINTENANCE_HELD",
