@@ -6,7 +6,7 @@ cd "$(dirname "$0")/../.."
 [[ ! -e data/oci-nt.db ]] || { echo "REFUSE_EXISTING_DATABASE"; exit 3; }
 DIR="$(mktemp -d)"
 cleanup() {
-  docker rm -f oci-nt-single-ci-switch >/dev/null 2>&1 || true
+  docker rm -f oci-nt-single-ci-switch oci-nt-single-ci-failed >/dev/null 2>&1 || true
   docker compose -p oci-nt -f docker-compose.yml down --remove-orphans >/dev/null 2>&1 || true
   rm -rf "$DIR"
 }
@@ -52,6 +52,30 @@ PY
 echo FOUR_CONTAINER_BASELINE_OK
 docker compose -p oci-nt -f docker-compose.yml down
 [[ -f data/oci-nt.db ]] || { echo DB_LOST_AFTER_FOUR_DOWN; exit 1; }
+# Failure-injection rollback: candidate with invalid socket group must fail closed.
+# Never try this on production; CI guard at script entry is mandatory.
+docker run -d --name oci-nt-single-ci-failed --network host --restart no \
+  -e DOCKER_GID=0 -e SECRET_KEY=ci-only-not-a-secret \
+  -e CREDENTIAL_ENCRYPTION_KEY="$KEY" \
+  oci-nt-single:ci >/dev/null
+for i in $(seq 1 20); do
+  [[ "$(docker inspect -f '{{.State.Running}}' oci-nt-single-ci-failed)" == "false" ]] && break
+  sleep 1
+done
+[[ "$(docker inspect -f '{{.State.Running}}' oci-nt-single-ci-failed)" == "false" ]] || { echo FAILURE_INJECTION_NOT_REJECTED; exit 1; }
+docker rm -f oci-nt-single-ci-failed >/dev/null
+docker compose -p oci-nt -f docker-compose.yml up -d --no-build
+wait_port http://127.0.0.1:9859/api/v1/health
+wait_port http://127.0.0.1:9860/health
+wait_port http://127.0.0.1:9861/health
+docker exec -i -u 10001 oci-nt-api python - <<'PY'
+import sqlite3
+with sqlite3.connect("/app/data/oci-nt.db") as c:
+  assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"
+  assert c.execute("SELECT message FROM ci_switch_marker").fetchone()[0]=="four-before-single"
+PY
+echo FAILED_SINGLE_TO_FOUR_RECOVERY_OK
+docker compose -p oci-nt -f docker-compose.yml down
 # Same disposable SQLite database; never connect to a production host.
 docker run -d --name oci-nt-single-ci-switch --network host --restart no \
   --group-add "$(stat -c %g /var/run/docker.sock)" \

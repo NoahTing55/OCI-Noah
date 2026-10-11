@@ -13,11 +13,11 @@ class IntegratedSwitchContract(unittest.TestCase):
         self.assertIn('trap cleanup EXIT',s)
     def test_real_four_single_four_switch(self):
         s=SCRIPT.read_text()
-        self.assertEqual(s.count('docker compose -p oci-nt -f docker-compose.yml up -d --no-build'),2)
+        self.assertEqual(s.count('docker compose -p oci-nt -f docker-compose.yml up -d --no-build'),3)
         self.assertIn('docker compose -p oci-nt -f docker-compose.yml down',s)
         self.assertIn('docker run -d --name oci-nt-single-ci-switch',s)
         self.assertIn('docker stop --time 35 oci-nt-single-ci-switch',s)
-        for marker in ("FOUR_CONTAINER_BASELINE_OK","FOUR_TO_SINGLE_OK","SINGLE_TO_FOUR_ROLLBACK_OK","PRAGMA quick_check", "ci_switch_marker"):
+        for marker in ("FOUR_CONTAINER_BASELINE_OK","FOUR_TO_SINGLE_OK","SINGLE_TO_FOUR_ROLLBACK_OK","FAILED_SINGLE_TO_FOUR_RECOVERY_OK","PRAGMA quick_check", "ci_switch_marker"):
             self.assertIn(marker,s)
     def test_no_real_credentials_or_oci_actions(self):
         s=SCRIPT.read_text()

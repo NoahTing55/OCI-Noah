@@ -23,3 +23,27 @@ async def run_with_lease(db, *, kind: str, task_id: int, coroutine):
         else:
             # Fail closed: a release failure preserves the durable lease.
             release(db, token)
+
+
+async def await_registered_workers(*, timeout_seconds: float = 20.0) -> dict:
+    """Best-effort graceful shutdown; never cancel an in-flight OCI call.
+
+    Timeout is NOT evidence that workers have stopped. Persistent lease state
+    remains authoritative for release maintenance admission.
+    """
+    import asyncio
+    from . import task_service, instance_batch_service, launch_task_service
+    pools = (
+        tuple(task_service._tasks.values()),
+        tuple(instance_batch_service._runtime_tasks.values()),
+        tuple(launch_task_service._tasks.values()),
+        tuple(launch_task_service._notification_tasks),
+    )
+    pending = {task for pool in pools for task in pool if not task.done()}
+    if not pending:
+        return {"observed": 0, "remaining": 0, "complete": True}
+    done, still_running = await asyncio.wait(pending, timeout=timeout_seconds)
+    # Critically do not call cancel(): asyncio.to_thread OCI requests may outlive
+    # their coroutine and premature finally would clear its durable lease.
+    return {"observed": len(pending), "remaining": len(still_running),
+            "complete": not still_running}

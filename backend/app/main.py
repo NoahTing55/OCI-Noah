@@ -29,6 +29,7 @@ from .account_check_schedule_service import (
     run_account_check_schedule_now,
     save_account_check_schedule,
     start_account_check_scheduler,
+    stop_account_check_scheduler,
 )
 from .audit_presenter import present_audit_log
 from .backup_service import (
@@ -620,6 +621,16 @@ async def lifespan(_: FastAPI):
         start_account_check_scheduler()
         yield
     finally:
+        # Await scheduler cancellation before draining/shutting down API work.
+        await stop_account_check_scheduler()
+        from .oci_background_leases import await_registered_workers
+        drain = await await_registered_workers(timeout_seconds=20.0)
+        if not drain["complete"]:
+            import logging
+            logging.getLogger(__name__).error(
+                "OCI worker shutdown incomplete: %s tracked tasks remain; this is NOT a safe release drain",
+                drain["remaining"],
+            )
         backup_stop_event.set()
         monitor_stop_event.set()
         for background_task in background_tasks:
