@@ -228,6 +228,9 @@ jobs:
       - name: Simulate transactional cutover and fail-closed recovery
         run: python -m unittest discover -s tests -p 'test_single_cutover_transaction.py' -v
 
+      - name: Verify Docker container ownership and independent-project isolation
+        run: python -m unittest discover -s tests -p 'test_single_docker_scope_adapter.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
