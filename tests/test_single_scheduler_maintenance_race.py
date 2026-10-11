@@ -15,5 +15,13 @@ class ScheduledMaintenanceRaceContracts(unittest.TestCase):
         self.assertIn("MaintenanceAdmissionBlocked",block)
         self.assertIn("Preserve overdue slot",block)
 
+    def test_scheduler_is_awaited_during_api_shutdown(self):
+        main=(ROOT/"backend/app/main.py").read_text(encoding="utf-8")
+        scheduler=SOURCE.read_text(encoding="utf-8")
+        self.assertIn("await stop_account_check_scheduler()",main)
+        self.assertIn("async def stop_account_check_scheduler()",scheduler)
+        self.assertIn("task.cancel()",scheduler)
+        self.assertIn("await task",scheduler)
+
 if __name__=="__main__":
     unittest.main()
