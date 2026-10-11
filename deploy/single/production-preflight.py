@@ -25,8 +25,23 @@ def report(*, sha: str, root: Path, runner):
     inspection=controller.inspect(sha,runner=runner,root=root)
     manifest=evidence.safe_manifest(inspection)
     images=gate.verify(manifest,runner)
+    recorded_idle = inspection.get("recorded_work_drained") is True
+    maintenance_active = inspection.get("maintenance_active") is True
+    # A read-only inventory can never prove the absence of untracked OCI calls.
+    # Preserve failure evidence even if the recorded-work gate has not passed.
+    blockers = [
+        "No attestation covering all OCI SDK calls and detached threads",
+        "No approved production Docker lifecycle executor",
+        "No proven old-image boot with the current database and credentials",
+        "No explicit operator-approved maintenance window",
+    ]
+    if not recorded_idle:
+        blockers.insert(0, "Recorded OCI leases or nonterminal jobs may still be active")
+    if not maintenance_active:
+        blockers.insert(0, "Durable maintenance admission is not active")
     return {
-        "status":"PRODUCTION_PREFLIGHT_OBSERVED",
+        "status":"BLOCKED_RECORDED_WORK" if not recorded_idle else "OBSERVATION_ONLY",
+        "blockers":blockers,
         "four_containers":sorted(manifest["original_four_images"]),
         "candidate_image":manifest["candidate_image"],
         "candidate_image_id":manifest["candidate_image_id"],
@@ -59,7 +74,7 @@ def main():
                           "release_authorized":False}))
         return 3
     print(json.dumps(out,indent=2))
-    return 0
+    return 3 if out["status"]=="BLOCKED_RECORDED_WORK" else 0
 
 if __name__=="__main__":
     raise SystemExit(main())
