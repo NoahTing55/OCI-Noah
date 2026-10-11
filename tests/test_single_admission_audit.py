@@ -14,6 +14,9 @@ class AdmissionCoverageTests(unittest.TestCase):
         self.assertEqual(result["status"],"STATIC_CONTRACT_OK")
         self.assertFalse(result["production_cutover_allowed"])
         self.assertGreater(len(result["unverified_runtime_paths"]),0)
+        notification = (mod.BASE/"launch_task_service.py").read_text()
+        self.assertIn('kind="launch_notification"',notification)
+        self.assertIn("run_with_lease(",notification)
 
     def test_missing_guard_fails_closed(self):
         with tempfile.TemporaryDirectory() as d:
