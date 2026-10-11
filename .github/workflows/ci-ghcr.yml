@@ -237,6 +237,11 @@ jobs:
       - name: Verify isolated real Docker lifecycle and container identity
         run: python deploy/single/ci-docker-lifecycle.py
 
+      - name: Exercise cutover coordinator with disposable Docker and fault injection
+        env:
+          OCI_NT_CI_COORDINATOR: disposable-only
+        run: python deploy/single/ci-cutover-coordinator.py
+
       - name: Validate Docker Compose
         env:
           OCI_NOAH_IMAGE_TAG: ci
