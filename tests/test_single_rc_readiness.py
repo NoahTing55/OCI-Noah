@@ -18,6 +18,16 @@ class Readiness(unittest.TestCase):
         self.assertFalse(result["cutover_apply_allowed"])
         self.assertFalse(result["single_container_production_authorized"])
         self.assertFalse(result["production_executor_integrated"])
+    def test_all_true_still_discloses_unverified_live_evidence(self):
+        result=mod.assess(good())
+        self.assertEqual(result["evidence_trust"],"self_reported_unverified")
+        self.assertFalse(result["ci_success_is_production_authorization"])
+        self.assertIn("live_oci_leases_drained",
+                      result["live_or_operator_proofs_not_verified_by_ci"])
+        self.assertIn("docker_socket_threat_review_approved",
+                      result["live_or_operator_proofs_not_verified_by_ci"])
+        self.assertFalse(result["cutover_apply_allowed"])
+
     def test_every_missing_proof_blocks(self):
         for key in mod.REQUIRED:
             with self.subTest(proof=key):
