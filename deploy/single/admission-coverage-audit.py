@@ -39,10 +39,10 @@ def audit(base: Path = BASE) -> dict:
     # Each call site is reported for human review. A static occurrence of
     # run_with_lease is NOT proof that every spawned task is protected.
     patterns = {
-        "asyncio_create_task": re.compile(r"\\b(?:asyncio\\.)?create_task\\s*\\("),
-        "asyncio_to_thread": re.compile(r"\\basyncio\\.to_thread\\s*\\("),
-        "run_in_executor": re.compile(r"\\brun_in_executor\\s*\\("),
-        "threading_thread": re.compile(r"\\bthreading\\.Thread\\s*\\("),
+        "asyncio_create_task": re.compile(r"\b(?:asyncio\.)?create_task\s*\("),
+        "asyncio_to_thread": re.compile(r"\basyncio\.to_thread\s*\("),
+        "run_in_executor": re.compile(r"\brun_in_executor\s*\("),
+        "threading_thread": re.compile(r"\bthreading\.Thread\s*\("),
     }
     spawn_inventory = []
     for source in sorted(base.rglob("*.py")):
