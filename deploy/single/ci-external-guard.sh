@@ -28,6 +28,8 @@ services:
       CREDENTIAL_ENCRYPTION_KEY: "$key"
       ADMIN_USERNAME: ci-admin
       ADMIN_PASSWORD: ci-password
+      ACCESS_TOKEN_MINUTES: "60"
+      BULK_CHECK_INTERVAL_SECONDS: "120"
 YAML
 # The base compose path also references ../data and ../logs. Verify the rendered
 # effective mounts replace those destinations with disposable paths, never prod.
