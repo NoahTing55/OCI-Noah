@@ -25,6 +25,8 @@ STEPS = (
     "stop_four",
     "verify_four_stopped",
     "backup_stopped_database",
+    "verify_stopped_backup_integrity",
+    "verify_backup_old_release_readability",
     "start_single",
     "verify_single",
 )
@@ -38,6 +40,7 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
     old_stopped=False
     candidate_attempted=False
     maintenance_entered=False
+    verified_stopped_backup=False
     try:
         for step in STEPS:
             # Track possible side effects BEFORE calling operations. Even an
@@ -49,6 +52,8 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
             if step=="start_single":
                 candidate_attempted=True
             getattr(ops,step)()
+            if step=="verify_backup_old_release_readability":
+                verified_stopped_backup=True
             completed.append(step)
         return {"status":"SINGLE_HEALTHY_MAINTENANCE_HELD",
                 "completed":completed,"admission_reopened":False}
@@ -62,6 +67,9 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
                    else "no container stop attempted")
             ) from primary
         errors=[]
+        # Stopping old containers may occur before a verified backup exists.
+        # Never attempt restoring them on a potentially altered DB until
+        # explicit compatibility verification has succeeded.
         # Never silently restore a database: candidate may have written data.
         # First preserve failure state and require explicit data compatibility
         # decision by the separate recovery executor.
@@ -85,6 +93,7 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
             raise RecoveryFailed("recovery incomplete; maintenance stays active: "+str(errors)) from primary
         return {"status":"FOUR_RESTORED_MAINTENANCE_HELD",
                 "completed":completed,"failure_type":type(primary).__name__,
+                "stopped_backup_verified":verified_stopped_backup,
                 "admission_reopened":False}
 
 def main():

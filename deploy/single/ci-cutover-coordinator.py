@@ -63,6 +63,28 @@ class DisposableOps:
                 raise RuntimeError("backup corrupted")
             if con.execute("SELECT value FROM marker").fetchone()[0]!="original-four":
                 raise RuntimeError("snapshot not consistent")
+    def verify_stopped_backup_integrity(self):
+        self._record("verify_stopped_backup_integrity")
+        if not self.backup.is_file():
+            raise RuntimeError("stopped backup missing")
+        with sqlite3.connect(self.backup) as con:
+            if con.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                raise RuntimeError("stopped backup integrity failed")
+            if con.execute("SELECT value FROM marker").fetchall() != [("original-four",)]:
+                raise RuntimeError("stopped backup content mismatch")
+        # SQLite backup API provides a consistent logical snapshot; its DB
+        # header/page layout may differ from the source byte-for-byte.
+        with sqlite3.connect(self.db) as source, sqlite3.connect(self.backup) as target:
+            if source.execute("SELECT value FROM marker ORDER BY rowid").fetchall() != target.execute("SELECT value FROM marker ORDER BY rowid").fetchall():
+                raise RuntimeError("stopped backup logical records differ")
+
+    def verify_backup_old_release_readability(self):
+        self._record("verify_backup_old_release_readability")
+        with sqlite3.connect(f"{self.backup.resolve().as_uri()}?mode=ro", uri=True) as con:
+            con.execute("PRAGMA query_only=ON")
+            if con.execute("SELECT value FROM marker").fetchone() != ("original-four",):
+                raise RuntimeError("old release cannot read synthetic backup marker")
+
     def start_single(self):
         self._record("start_single")
         self.identity=docker_scope.docker(
@@ -112,10 +134,17 @@ def scenario(injected_failure):
         expected=("FOUR_RESTORED_MAINTENANCE_HELD" if injected_failure
                   else "SINGLE_HEALTHY_MAINTENANCE_HELD")
         if report["status"]!=expected or report["admission_reopened"] is not False:
-            raise AssertionError("unexpected coordinator outcome")
+            raise AssertionError(f"unexpected coordinator outcome: {report['status']} {op.calls[-6:]}")
         if injected_failure and "restore_four_pinned" not in op.calls:
-            raise AssertionError("rollback did not execute")
+            raise AssertionError(f"rollback did not execute; last stages={op.calls[-6:]}")
         return report["status"]
+    except Exception as exc:
+        print(json.dumps({"status":"CI_SCENARIO_STAGE_FAILED",
+                          "fault_injection":injected_failure or "none",
+                          "last_stages":op.calls[-8:],
+                          "reason":type(exc).__name__,
+                          "release_authorized":False}))
+        raise
     finally:
         op.cleanup()
 
