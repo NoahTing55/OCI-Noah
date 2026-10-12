@@ -74,7 +74,7 @@ assert monitor_agent.docker_get("/version").get("Version")
 print("WORKLOAD_NO_RAW_SOCKET_AND_MONITOR_OK")
 PY
 docker exec --user 10001:10001 "$workload" python -c 'import http.client;from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("POST","/version");r=c.getresponse();assert r.status==405,r.status;r.read();c.close()'
-docker exec "$workload" python -c 'from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("GET","/containers/create");r=c.getresponse();assert r.status==403,r.status;r.read();c.close()'
+docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("GET","/containers/create");r=c.getresponse();assert r.status==403,r.status;r.read();c.close()'
 echo "GUARD_MUTATIONS_DENIED"
 docker stop "$guard" >/dev/null
 docker exec "$workload" python -c 'from app.monitor_agent import docker_get;import sys
