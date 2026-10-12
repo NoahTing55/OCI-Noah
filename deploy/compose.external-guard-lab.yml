@@ -77,6 +77,7 @@ services:
     cap_add:
       - SETUID
       - SETGID
+      - KILL
     depends_on:
       - docker-guard
 volumes:
