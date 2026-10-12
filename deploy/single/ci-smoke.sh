@@ -106,3 +106,20 @@ for i in $(seq 1 20); do
 done
 [[ "$status" == exited ]] || { echo "FAIL_FAST_NOT_WORKING: $status"; docker logs "$ID"; exit 1; }
 echo "SINGLE_CONTAINER_FAIL_FAST_OK"
+# CI-only restart-policy recovery: the same ephemeral container and SQLite
+# volume must recover after a supervisor-triggered crash. Never restart prod.
+docker update --restart on-failure:3 "$ID" >/dev/null
+docker start "$ID" >/dev/null
+recovered=0
+for i in $(seq 1 45); do
+  if docker exec "$ID" python /app/health.py >/dev/null 2>&1; then
+    recovered=1
+    break
+  fi
+  sleep 2
+done
+[[ "$recovered" == 1 ]] || { echo "CRASH_RECOVERY_HEALTH_FAILED"; docker logs "$ID"; exit 1; }
+docker exec "$ID" python -c 'import sqlite3; c=sqlite3.connect("/app/data/ci-persistence.db"); assert c.execute("PRAGMA integrity_check").fetchone()[0]=="ok"; assert c.execute("SELECT COUNT(*) FROM markers WHERE value=?",("ci-persisted",)).fetchone()[0]==1; c.close()'
+echo "SINGLE_CONTAINER_CRASH_RECOVERY_PERSISTENCE_OK"
+docker update --restart no "$ID" >/dev/null
+
