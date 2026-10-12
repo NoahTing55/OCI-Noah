@@ -74,6 +74,28 @@ echo SYNTHETIC_ENCRYPTED_CREDENTIAL_CREATED_OK
 echo FOUR_CONTAINER_BASELINE_OK
 docker compose -p oci-nt -f docker-compose.yml down
 [[ -f data/oci-nt.db ]] || { echo DB_LOST_AFTER_FOUR_DOWN; exit 1; }
+# A stopped, immutable point-in-time rollback snapshot is captured before any
+# candidate boots. Use SQLite backup API; verify both full integrity and
+# synthetic credential marker in a separately opened read-only connection.
+python3 - "$PWD/data/oci-nt.db" "$DIR/stopped-four-backup.db" <<'PY'
+import sqlite3,sys
+from pathlib import Path
+source=Path(sys.argv[1]); backup=Path(sys.argv[2])
+assert source.is_file() and not source.is_symlink()
+assert not backup.exists()
+with sqlite3.connect(f"{source.resolve().as_uri()}?mode=ro",uri=True) as src:
+    assert src.execute("PRAGMA quick_check").fetchone()[0]=="ok"
+    assert src.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]==7
+    with sqlite3.connect(backup) as dst:
+        src.backup(dst)
+with sqlite3.connect(f"{backup.resolve().as_uri()}?mode=ro",uri=True) as dst:
+    assert dst.execute("PRAGMA integrity_check").fetchone()[0]=="ok"
+    assert dst.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]==7
+    assert dst.execute("SELECT message FROM ci_switch_marker").fetchone()[0]=="four-before-single"
+    assert dst.execute("SELECT COUNT(*) FROM ci_encrypted_marker").fetchone()[0]==1
+PY
+chmod 0400 "$DIR/stopped-four-backup.db"
+echo STOPPED_FOUR_SQLITE_BACKUP_VERIFIED_OK
 # Failure-injection rollback: candidate with invalid socket group must fail closed.
 # Never try this on production; CI guard at script entry is mandatory.
 docker run -d --name oci-nt-single-ci-failed --network host --restart no \
@@ -169,5 +191,17 @@ diff -u "$DIR/four-api.json" "$DIR/restored-api.json"
 echo FOUR_CONTAINER_API_ROLLBACK_PARITY_OK
 diff -u "$DIR/four-ui.sha256" "$DIR/restored-ui.sha256"
 echo FOUR_CONTAINER_UI_ROLLBACK_PARITY_OK
+# Original backup stays readable and unchanged even after candidate writes.
+python3 - "$DIR/stopped-four-backup.db" <<'PY'
+import sqlite3,sys
+from pathlib import Path
+db=Path(sys.argv[1])
+assert db.stat().st_mode & 0o777 == 0o400
+with sqlite3.connect(f"{db.resolve().as_uri()}?mode=ro",uri=True) as con:
+    assert con.execute("PRAGMA integrity_check").fetchone()[0]=="ok"
+    assert con.execute("SELECT message FROM ci_switch_marker ORDER BY rowid").fetchall()==[("four-before-single",)]
+    assert con.execute("SELECT COUNT(*) FROM ci_encrypted_marker").fetchone()[0]==1
+PY
+echo STOPPED_FOUR_BACKUP_RETAINED_AFTER_ROLLBACK_OK
 echo FOUR_CONTAINER_SYNTHETIC_CREDENTIAL_ROLLBACK_OK
 echo SINGLE_TO_FOUR_ROLLBACK_OK
