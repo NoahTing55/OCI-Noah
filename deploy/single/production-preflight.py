@@ -35,6 +35,17 @@ def report(*, sha: str, root: Path, runner):
         "No proven old-image boot with the current database and credentials",
         "No explicit operator-approved maintenance window",
     ]
+    if images["status"] != "IMAGE_ROLLBACK_PREREQUISITES_PRESENT":
+        blockers.insert(0, "Pinned original four-service rollback images are missing or invalid")
+    # Evidence requirements remain distinct: an image inspect result does not
+    # demonstrate the previous release can read a restored Schema 7 database.
+    rollback_prerequisites = {
+        "original_image_inventory_present": images["status"] == "IMAGE_ROLLBACK_PREREQUISITES_PRESENT",
+        "stopped_sqlite_backup_verified": False,
+        "schema7_restored_with_original_image": False,
+        "encrypted_credentials_readable_after_restore": False,
+        "old_four_services_booted_from_pinned_images": False,
+    }
     if not recorded_idle:
         blockers.insert(0, "Recorded OCI leases or nonterminal jobs may still be active")
     if not maintenance_active:
@@ -46,6 +57,7 @@ def report(*, sha: str, root: Path, runner):
         "candidate_image":manifest["candidate_image"],
         "candidate_image_id":manifest["candidate_image_id"],
         "rollback_images_present":images["status"]=="IMAGE_ROLLBACK_PREREQUISITES_PRESENT",
+        "rollback_prerequisites":rollback_prerequisites,
         "original_image_ids":manifest["original_four_image_ids"],
         "maintenance_active":inspection.get("maintenance_active"),
         "recorded_work_drained":inspection.get("recorded_work_drained"),
