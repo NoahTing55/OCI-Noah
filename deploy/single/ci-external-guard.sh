@@ -77,14 +77,14 @@ docker exec --user 10001:10001 "$workload" python -c 'import http.client;from ap
 docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("GET","/containers/create");r=c.getresponse();assert r.status==403,r.status;r.read();c.close()'
 echo "GUARD_MUTATIONS_DENIED"
 docker stop "$guard" >/dev/null
-docker exec "$workload" python -c 'from app.monitor_agent import docker_get;import sys
+docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import docker_get;import sys
 try: docker_get("/version")
 except Exception: print("GUARD_UNAVAILABLE_FAILS_CLOSED")
 else: sys.exit("FAIL_OPEN")'
 docker start "$guard" >/dev/null
 recovered=0
 for i in $(seq 1 30); do
- if docker exec "$workload" python -c 'from app.monitor_agent import docker_get;assert docker_get("/version").get("Version")' >/dev/null 2>&1;then recovered=1;break;fi
+ if docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import docker_get;assert docker_get("/version").get("Version")' >/dev/null 2>&1;then recovered=1;break;fi
  sleep 2
 done
 [[ "$recovered" == 1 ]] || exit 1
