@@ -115,6 +115,8 @@ for i in $(seq 1 45); do
   sleep 2
 done
 docker exec "$ID" python /app/health.py >/dev/null
+# Docker enables restart policy only after a container has been up for 10 seconds.
+sleep 12
 restart_before="$(docker inspect "$ID" -f '{{.RestartCount}}')"
 docker exec "$ID" python -c 'import os,signal; ids=[int(p) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(ids)==1,ids; os.kill(ids[0],signal.SIGKILL)'
 recovered=0
