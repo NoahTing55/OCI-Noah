@@ -40,6 +40,10 @@ wait_port() {
 # Compare actual HTTP-served UI bytes through every deployment generation.
 # This catches stale JS/CSS, missing VNC pages, or mismatched icons despite green health.
 STATIC_ASSETS=(/ /app.js /rc.js /ui2.js /styles.css /ui-theme.css /vnc.html /favicon.svg /favicon.ico /apple-touch-icon.png)
+capture_api_contract() {
+  curl --fail --silent --show-error --max-time 15 http://127.0.0.1:9858/api/openapi.json |
+    python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps({"paths":d.get("paths",{}),"components":d.get("components",{})},sort_keys=True,separators=(",",":")))'
+}
 capture_ui_hashes() {
   local asset
   for asset in "${STATIC_ASSETS[@]}"; do
@@ -60,6 +64,7 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   c.execute("INSERT INTO ci_switch_marker VALUES ('four-before-single')")
 PY
 capture_ui_hashes > "$DIR/four-ui.sha256"
+capture_api_contract > "$DIR/four-api.json"
 echo FOUR_CONTAINER_BASELINE_OK
 docker compose -p oci-nt -f docker-compose.yml down
 [[ -f data/oci-nt.db ]] || { echo DB_LOST_AFTER_FOUR_DOWN; exit 1; }
@@ -109,6 +114,9 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   c.execute("INSERT INTO ci_switch_marker VALUES ('single-before-rollback')")
 PY
 capture_ui_hashes > "$DIR/single-ui.sha256"
+capture_api_contract > "$DIR/single-api.json"
+diff -u "$DIR/four-api.json" "$DIR/single-api.json"
+echo SINGLE_CONTAINER_API_CONTRACT_PARITY_OK
 diff -u "$DIR/four-ui.sha256" "$DIR/single-ui.sha256"
 echo SINGLE_CONTAINER_UI_PARITY_OK
 echo FOUR_TO_SINGLE_OK
@@ -126,6 +134,9 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("SELECT message FROM ci_switch_marker ORDER BY rowid").fetchall()==[("four-before-single",),("single-before-rollback",)]
 PY
 capture_ui_hashes > "$DIR/restored-ui.sha256"
+capture_api_contract > "$DIR/restored-api.json"
+diff -u "$DIR/four-api.json" "$DIR/restored-api.json"
+echo FOUR_CONTAINER_API_ROLLBACK_PARITY_OK
 diff -u "$DIR/four-ui.sha256" "$DIR/restored-ui.sha256"
 echo FOUR_CONTAINER_UI_ROLLBACK_PARITY_OK
 echo SINGLE_TO_FOUR_ROLLBACK_OK
