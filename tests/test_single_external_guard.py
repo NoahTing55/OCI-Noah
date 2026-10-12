@@ -49,7 +49,8 @@ class ExternalGuardContract(unittest.TestCase):
         health=(ROOT/"deploy/single/health.py").read_text()
         ast.parse(supervisor)
         ast.parse(health)
-        self.assertIn("if not external_guard:",supervisor)
+        self.assertIn("if external_guard:",supervisor)
+        self.assertIn('("web", ["nginx", "-g", "daemon off;"], app_identity())',supervisor)
         self.assertIn("specs.insert(0, (\"docker-guard\"",supervisor)
         self.assertIn("external guard requires Unix socket transport",supervisor)
         self.assertIn('OCI_NT_EXTERNAL_GUARD", "0") != "1"',health)
@@ -60,6 +61,9 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn("COPY backend/app/docker_socket_guard.py",dockerfile)
         self.assertNotIn("requirements.txt",dockerfile)
         self.assertNotIn("frontend",dockerfile)
+        workload_dockerfile=(ROOT/"deploy/single/Dockerfile").read_text()
+        self.assertIn("pid /run/nginx/nginx.pid;",workload_dockerfile)
+        self.assertIn("/var/log/nginx",workload_dockerfile)
 
 if __name__=="__main__":
     unittest.main()
