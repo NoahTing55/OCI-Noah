@@ -138,6 +138,13 @@ def scenario(injected_failure):
         if injected_failure and "restore_four_pinned" not in op.calls:
             raise AssertionError(f"rollback did not execute; last stages={op.calls[-6:]}")
         return report["status"]
+    except Exception as exc:
+        print(json.dumps({"status":"CI_SCENARIO_STAGE_FAILED",
+                          "fault_injection":injected_failure or "none",
+                          "last_stages":op.calls[-8:],
+                          "reason":type(exc).__name__,
+                          "release_authorized":False}))
+        raise
     finally:
         op.cleanup()
 
