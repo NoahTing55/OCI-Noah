@@ -4,12 +4,15 @@ import http.client
 import os
 import re
 import socket
+import socketserver
+import stat
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
 SOCKET_PATH = os.getenv("DOCKER_SOCKET_PATH", "/var/run/docker.sock")
 LISTEN_HOST = os.getenv("DOCKER_GUARD_HOST", "127.0.0.1")
 LISTEN_PORT = int(os.getenv("DOCKER_GUARD_PORT", "9861"))
+LISTEN_UNIX_SOCKET = os.getenv("DOCKER_GUARD_UNIX_SOCKET", "").strip()
 MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 
 ALLOWED_PATHS = (
@@ -99,8 +102,28 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 
+class ThreadingUnixHTTPServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
+    daemon_threads = True
+
+
 def main() -> None:
-    server = ThreadingHTTPServer((LISTEN_HOST, LISTEN_PORT), Handler)
+    if LISTEN_UNIX_SOCKET:
+        directory = os.path.dirname(LISTEN_UNIX_SOCKET)
+        mode = stat.S_IMODE(os.stat(directory).st_mode)
+        if mode & 0o002:
+            raise RuntimeError("Guard Unix socket directory is world-writable")
+        try:
+            os.unlink(LISTEN_UNIX_SOCKET)
+        except FileNotFoundError:
+            pass
+        previous = os.umask(0o117)
+        try:
+            server = ThreadingUnixHTTPServer(LISTEN_UNIX_SOCKET, Handler)
+        finally:
+            os.umask(previous)
+        os.chmod(LISTEN_UNIX_SOCKET, 0o660)
+    else:
+        server = ThreadingHTTPServer((LISTEN_HOST, LISTEN_PORT), Handler)
     server.serve_forever()
 
 
