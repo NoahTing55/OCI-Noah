@@ -2,12 +2,29 @@
 # No raw host Docker socket in the workload. Sidecar guard is the isolated socket owner.
 name: oci-nt-external-guard-lab
 services:
+  guard-socket-init:
+    image: alpine:3.20
+    network_mode: none
+    restart: "no"
+    user: "0:0"
+    command: ["sh", "-ec", "chown 10001:10001 /run/oci-guard && chmod 0770 /run/oci-guard"]
+    volumes:
+      - guard-socket:/run/oci-guard
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+    security_opt:
+      - no-new-privileges:true
   docker-guard:
     build:
       context: ..
       dockerfile: deploy/single/Dockerfile.guard
     image: oci-nt-external-guard:lab
     user: "10001:10001"
+    depends_on:
+      guard-socket-init:
+        condition: service_completed_successfully
     group_add:
       - "${DOCKER_GID:?set non-root Docker socket GID}"
     network_mode: none
