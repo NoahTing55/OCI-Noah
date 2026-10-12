@@ -261,6 +261,9 @@ jobs:
       - name: Validate OCI quiescence evidence fail-closed contract
         run: python -m unittest discover -s tests -p 'test_single_quiescence_evidence.py' -v
 
+      - name: Validate consolidated single-container RC safety blockers
+        run: python -m unittest discover -s tests -p 'test_single_rc_readiness.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
