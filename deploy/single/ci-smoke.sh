@@ -61,6 +61,40 @@ docker exec "$ID" python -c 'import sqlite3; c=sqlite3.connect("/app/data/ci-per
 echo "SINGLE_CONTAINER_PERSISTENCE_RESTART_OK"
 # API/monitor run as app UID, Docker Guard runs as a separate UID with socket group only.
 docker exec "$ID" python -c 'import os; names=("app.main:app","app.monitor_agent","app.docker_socket_guard"); ps=[(p,open("/proc/"+p+"/cmdline","rb").read(),os.stat("/proc/"+p).st_uid) for p in os.listdir("/proc") if p.isdigit()]; assert all(any(n.encode() in cmd and uid==(10002 if n=="app.docker_socket_guard" else 10001) for _,cmd,uid in ps) for n in names),[(p,cmd[:120],uid) for p,cmd,uid in ps]'
+# Group separation is essential: Docker socket access is effectively host-root.
+# The API and monitor must never inherit the host socket's supplemental GID.
+docker exec "$ID" python - <<'PY'
+import os
+from pathlib import Path
+sock = os.stat("/var/run/docker.sock")
+socket_gid = sock.st_gid
+assert socket_gid > 0, "CI socket group must be non-root"
+names = {"app.main:app": 10001, "app.monitor_agent": 10001,
+         "app.docker_socket_guard": 10002}
+seen = set()
+for item in Path("/proc").iterdir():
+    if not item.name.isdigit():
+        continue
+    try:
+        cmd = (item/"cmdline").read_bytes()
+        status = (item/"status").read_text()
+    except (FileNotFoundError, ProcessLookupError, PermissionError):
+        continue
+    for name, uid in names.items():
+        if name.encode() not in cmd:
+            continue
+        fields = {line.split(":",1)[0]: line.split(":",1)[1].split()
+                  for line in status.splitlines() if ":" in line}
+        assert int(fields["Uid"][0]) == uid, (name, fields["Uid"])
+        gids = {int(gid) for gid in fields["Groups"]}
+        if name == "app.docker_socket_guard":
+            assert socket_gid in gids, (name, gids, socket_gid)
+        else:
+            assert socket_gid not in gids, (name, gids, socket_gid)
+        seen.add(name)
+assert seen == set(names), (seen, names)
+PY
+echo "SINGLE_CONTAINER_DOCKER_SOCKET_GROUP_ISOLATION_OK"
 echo "SINGLE_CONTAINER_SERVICE_UID_OK"
 # Crash one critical child; supervisor must stop the whole container, not leave partial service alive.
 docker exec "$ID" python -c 'import os,signal; found=[]; [(found.append(int(p))) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(found)==1,found; os.kill(found[0],signal.SIGKILL)'
