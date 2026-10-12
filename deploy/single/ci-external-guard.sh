@@ -65,6 +65,56 @@ for i in $(seq 1 60); do
 done
 [[ "$healthy" == 1 ]] || { docker logs "$guard";docker logs "$workload";exit 1; }
 echo "EXTERNAL_GUARD_STACK_HEALTHY"
+# Runtime permissions must match the intended separation, not just Compose text.
+docker exec -i "$workload" python - <<'PY'
+from pathlib import Path
+import os
+import stat
+
+socket = Path("/run/oci-guard/guard.sock")
+assert socket.is_socket(), "filtered guard socket missing"
+mode = stat.S_IMODE(socket.stat().st_mode)
+assert mode == 0o660, oct(mode)
+assert not Path("/var/run/docker.sock").exists(), "raw Docker socket leaked"
+required = {
+    b"app.monitor_agent": 10001,
+    b"app.main:app": 10001,
+    b"nginx: master process": 10001,
+}
+found = {}
+for path in Path("/proc").iterdir():
+    if not path.name.isdigit():
+        continue
+    try:
+        cmd = (path / "cmdline").read_bytes()
+        status = (path / "status").read_text()
+    except (OSError, PermissionError):
+        continue
+    for name, expected_uid in required.items():
+        if name not in cmd:
+            continue
+        fields = {line.split(":", 1)[0]: line.split(":", 1)[1].split()
+                  for line in status.splitlines() if ":" in line}
+        uid = int(fields["Uid"][0])
+        gids = [int(gid) for gid in fields.get("Groups", [])]
+        assert uid == expected_uid, (name, uid)
+        assert int(fields["CapEff"][0], 16) == 0, (name, "nonzero effective capabilities")
+        assert int(fields["NoNewPrivs"][0]) == 1, (name, "no-new-privileges missing")
+        found[name] = (uid, gids)
+assert set(found) == set(required), (found, required)
+print("EXTERNAL_GUARD_CHILD_IDENTITY_AND_SOCKET_MODE_OK")
+PY
+docker exec -i "$guard" python - <<'PY'
+from pathlib import Path
+p = Path("/proc/1/status")
+fields = {line.split(":", 1)[0]: line.split(":", 1)[1].split()
+          for line in p.read_text().splitlines() if ":" in line}
+assert int(fields["Uid"][0]) == 10001
+assert int(fields["CapEff"][0], 16) == 0
+assert int(fields["NoNewPrivs"][0]) == 1
+assert Path("/var/run/docker.sock").is_socket()
+print("EXTERNAL_GUARD_PROCESS_BOUNDARY_OK")
+PY
 docker exec -i --user 10001:10001 "$workload" python - <<'PY'
 import os,stat
 from app import monitor_agent
