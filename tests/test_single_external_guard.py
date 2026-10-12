@@ -32,6 +32,11 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn("name: oci-nt-external-guard-lab", src)
         self.assertNotIn("name: oci-nt\n", src)
 
+    def test_real_docker_smoke_uses_monitor_identity_for_socket(self):
+        smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
+        self.assertIn('docker exec -i --user 10001:10001 "$workload" python', smoke)
+        self.assertIn('docker exec --user 10001:10001 "$workload" python -c', smoke)
+
     def test_guard_unix_listener_and_strict_transport(self):
         guard=(ROOT/"backend/app/docker_socket_guard.py").read_text()
         monitor=(ROOT/"backend/app/monitor_agent.py").read_text()
