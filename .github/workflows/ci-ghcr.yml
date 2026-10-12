@@ -171,6 +171,11 @@ jobs:
           cp .env.example .env
           docker compose -f deploy/compose.single.yml config --quiet
 
+      - name: Verify external Unix Guard experimental isolation contracts
+        run: |
+          python -m unittest discover -s tests -p 'test_single_external_guard.py' -v
+          DOCKER_GID=997 docker compose -f deploy/compose.external-guard-lab.yml config --quiet
+
       - name: Build experimental single-container image (no push)
         run: docker build -f deploy/single/Dockerfile -t oci-nt-single:ci .
 
