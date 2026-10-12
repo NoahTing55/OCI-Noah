@@ -110,6 +110,13 @@ echo "SINGLE_CONTAINER_FAIL_FAST_OK"
 # volume must recover after a supervisor-triggered crash. Never restart prod.
 docker update --restart on-failure:3 "$ID" >/dev/null
 docker start "$ID" >/dev/null
+for i in $(seq 1 45); do
+  if docker exec "$ID" python /app/health.py >/dev/null 2>&1; then break; fi
+  sleep 2
+done
+docker exec "$ID" python /app/health.py >/dev/null
+restart_before="$(docker inspect "$ID" -f '{{.RestartCount}}')"
+docker exec "$ID" python -c 'import os,signal; ids=[int(p) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(ids)==1,ids; os.kill(ids[0],signal.SIGKILL)'
 recovered=0
 for i in $(seq 1 45); do
   if docker exec "$ID" python /app/health.py >/dev/null 2>&1; then
@@ -118,7 +125,7 @@ for i in $(seq 1 45); do
   fi
   sleep 2
 done
-[[ "$recovered" == 1 ]] || { echo "CRASH_RECOVERY_HEALTH_FAILED"; docker logs "$ID"; exit 1; }
+[[ "$recovered" == 1 && "$(docker inspect "$ID" -f '{{.RestartCount}}')" -gt "$restart_before" ]] || { echo "CRASH_RECOVERY_HEALTH_FAILED"; docker logs "$ID"; exit 1; }
 docker exec "$ID" python -c 'import sqlite3; c=sqlite3.connect("/app/data/ci-persistence.db"); assert c.execute("PRAGMA integrity_check").fetchone()[0]=="ok"; assert c.execute("SELECT COUNT(*) FROM markers WHERE value=?",("ci-persisted",)).fetchone()[0]==1; c.close()'
 echo "SINGLE_CONTAINER_CRASH_RECOVERY_PERSISTENCE_OK"
 docker update --restart no "$ID" >/dev/null
