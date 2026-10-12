@@ -49,12 +49,11 @@ def coordinate(ops, *, trusted_test_context: bool = False) -> dict:
                 maintenance_entered=True
             if step=="stop_four":
                 old_stopped=True
-            if step=="verify_backup_old_release_readability":
-                # This verification must complete before candidate can start.
-                verified_stopped_backup=True
             if step=="start_single":
                 candidate_attempted=True
             getattr(ops,step)()
+            if step=="verify_backup_old_release_readability":
+                verified_stopped_backup=True
             completed.append(step)
         return {"status":"SINGLE_HEALTHY_MAINTENANCE_HELD",
                 "completed":completed,"admission_reopened":False}
