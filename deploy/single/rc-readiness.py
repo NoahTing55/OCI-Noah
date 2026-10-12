@@ -26,6 +26,7 @@ REQUIRED = (
     "old_pinned_images_restore_verified",
     "single_service_health_verified",
     "docker_socket_threat_review_approved",
+    "root_supervisor_socket_boundary_resolved",
     "production_scope_isolated",
 )
 # An isolated CI success can support a rehearsal but cannot substitute for
@@ -41,6 +42,7 @@ LIVE_REQUIRED = (
     "credentials_restored_in_isolated_test",
     "old_pinned_images_restore_verified",
     "docker_socket_threat_review_approved",
+    "root_supervisor_socket_boundary_resolved",
     "production_scope_isolated",
 )
 BLOCKED_SCOPE = ("/opt/oci--nt",)
@@ -65,6 +67,10 @@ def assess(record):
         "missing_proofs": failed,
         "live_or_operator_proofs_not_verified_by_ci": list(LIVE_REQUIRED),
         "evidence_trust": "self_reported_unverified",
+        "unresolved_architecture_risks": [
+            "A root supervisor sharing a container mount namespace with the raw host Docker socket can bypass the HTTP guard. A read-only bind mount does not restrict Docker API writes.",
+            "Production deployment requires removing the raw socket from the all-in-one container, or an independently reviewed host-level isolation boundary; process UID separation alone is insufficient.",
+        ],
         "ci_success_is_production_authorization": False,
         "single_container_production_authorized": False,
         "cutover_apply_allowed": False,
