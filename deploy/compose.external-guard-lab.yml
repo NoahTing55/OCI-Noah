@@ -54,6 +54,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # Root supervisor must setgroups/setgid/setuid for app and monitor workers.
+    # The workload has no raw Docker socket mount or host socket GID.
+    cap_add:
+      - SETUID
+      - SETGID
     depends_on:
       - docker-guard
 volumes:
