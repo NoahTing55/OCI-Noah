@@ -63,6 +63,8 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertNotIn("frontend",dockerfile)
         workload_dockerfile=(ROOT/"deploy/single/Dockerfile").read_text()
         self.assertIn("pid /run/nginx/nginx.pid;",workload_dockerfile)
+        self.assertIn("mkdir -p /run/nginx",workload_dockerfile)
+        self.assertLess(workload_dockerfile.index("mkdir -p /run/nginx"), workload_dockerfile.index("nginx -t"))
         self.assertIn("/var/log/nginx",workload_dockerfile)
 
 if __name__=="__main__":
