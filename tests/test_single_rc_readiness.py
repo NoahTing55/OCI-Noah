@@ -28,6 +28,18 @@ class Readiness(unittest.TestCase):
                       result["live_or_operator_proofs_not_verified_by_ci"])
         self.assertFalse(result["cutover_apply_allowed"])
 
+    def test_root_supervisor_socket_risk_is_never_hidden(self):
+        self.assertIn("root_supervisor_socket_boundary_resolved", mod.REQUIRED)
+        self.assertIn("root_supervisor_socket_boundary_resolved", mod.LIVE_REQUIRED)
+        result=mod.assess(good())
+        self.assertFalse(result["cutover_apply_allowed"])
+        risk=" ".join(result["unresolved_architecture_risks"])
+        self.assertIn("root supervisor", risk)
+        self.assertIn("read-only bind mount", risk)
+        record=good()
+        record["checks"]["root_supervisor_socket_boundary_resolved"]=False
+        self.assertIn("root_supervisor_socket_boundary_resolved", mod.assess(record)["missing_proofs"])
+
     def test_every_missing_proof_blocks(self):
         for key in mod.REQUIRED:
             with self.subTest(proof=key):
