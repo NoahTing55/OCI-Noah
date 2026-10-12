@@ -15,7 +15,7 @@ class Fake:
     def __getattr__(self,name):
         def operation():
             self.called.append(name)
-            if name==self.fail:
+            if name in (self.fail if isinstance(self.fail, (set, tuple, list)) else (self.fail,)):
                 raise RuntimeError("injected failure")
         return operation
 
@@ -46,7 +46,7 @@ class BackupOrdering(unittest.TestCase):
         self.assertNotIn("start_single",ops.called)
         self.assertFalse(result["admission_reopened"])
     def test_rollback_check_failure_never_restarts_old(self):
-        ops=Fake("verify_database_for_old_release")
+        ops=Fake({"verify_single", "verify_database_for_old_release"})
         with self.assertRaises(mod.RecoveryFailed):
             mod.coordinate(ops,trusted_test_context=True)
         self.assertNotIn("restore_four_pinned",ops.called)
