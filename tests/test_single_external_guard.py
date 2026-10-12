@@ -38,6 +38,18 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn('docker exec --user 10001:10001 "$workload" python -c', smoke)
         self.assertNotIn('docker exec "$workload" python -c', smoke)
 
+    def test_runtime_ci_enforces_process_capabilities(self):
+        smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
+        for marker in (
+            "EXTERNAL_GUARD_CHILD_IDENTITY_AND_SOCKET_MODE_OK",
+            "EXTERNAL_GUARD_PROCESS_BOUNDARY_OK",
+            'assert mode == 0o660',
+            'assert int(fields["CapEff"][0], 16) == 0',
+            'assert int(fields["NoNewPrivs"][0]) == 1',
+            'assert not Path("/var/run/docker.sock").exists()',
+        ):
+            self.assertIn(marker, smoke)
+
     def test_guard_unix_listener_and_strict_transport(self):
         guard=(ROOT/"backend/app/docker_socket_guard.py").read_text()
         monitor=(ROOT/"backend/app/monitor_agent.py").read_text()
