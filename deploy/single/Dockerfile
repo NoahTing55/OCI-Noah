@@ -16,8 +16,8 @@ RUN sed -i '/^server_tokens off;$/d' /etc/nginx/conf.d/default.conf \
  && nginx -t
 COPY deploy/single/supervise.py /app/supervise.py
 COPY deploy/single/health.py /app/health.py
-RUN mkdir -p /app/data /app/logs /app/data/backups /run/nginx /var/lib/nginx/body \
- && chown -R app:app /app /run/nginx /var/lib/nginx
+RUN mkdir -p /app/data /app/logs /app/data/backups /run/nginx /var/lib/nginx/body /run/oci-guard \
+ && chown -R app:app /app /run/nginx /var/lib/nginx /run/oci-guard
 EXPOSE 9858 9859 9860 9861
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=8s --start-period=35s --retries=3 CMD python /app/health.py
