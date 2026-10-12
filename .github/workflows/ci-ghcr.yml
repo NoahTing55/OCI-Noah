@@ -252,6 +252,9 @@ jobs:
       - name: Check detached OCI worker cancellation and drain visibility
         run: python -m unittest discover -s tests -p 'test_single_detached_worker_drain.py' -v
 
+      - name: Verify offline SQLite backup integrity and fail-closed handling
+        run: python -m unittest discover -s tests -p 'test_single_offline_backup_drill.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
