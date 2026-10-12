@@ -95,6 +95,18 @@ with sqlite3.connect(f"{backup.resolve().as_uri()}?mode=ro",uri=True) as dst:
     assert dst.execute("SELECT COUNT(*) FROM ci_encrypted_marker").fetchone()[0]==1
 PY
 chmod 0400 "$DIR/stopped-four-backup.db"
+# sqlite3.connect(backup) is isolated, but host-run SQLite access may create
+# journal sidecars in the source directory. Explicitly assert app UID ownership
+# and writable SQLite/WAL state before restarting the old API in CI.
+docker run --rm --network none --user 0:0 \
+  -v "$PWD/data:/app/data" --entrypoint /bin/sh \
+  ghcr.io/noahting55/oci-noah-api:ci-switch -c \
+  'chown 10001:10001 /app/data/oci-nt.db /app/data/oci-nt.db-wal /app/data/oci-nt.db-shm 2>/dev/null || chown 10001:10001 /app/data/oci-nt.db'
+docker run --rm --network none --user 10001:10001 \
+  -v "$PWD/data:/app/data" --entrypoint python \
+  ghcr.io/noahting55/oci-noah-api:ci-switch -c \
+  'import sqlite3; c=sqlite3.connect("/app/data/oci-nt.db"); c.execute("BEGIN IMMEDIATE"); c.rollback(); c.close()'
+echo STOPPED_FOUR_DB_APP_UID_WRITE_PROBE_OK
 echo STOPPED_FOUR_SQLITE_BACKUP_VERIFIED_OK
 # Failure-injection rollback: candidate with invalid socket group must fail closed.
 # Never try this on production; CI guard at script entry is mandatory.
