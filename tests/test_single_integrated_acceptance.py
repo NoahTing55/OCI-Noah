@@ -40,6 +40,17 @@ class IntegratedSwitchContract(unittest.TestCase):
         self.assertIn('diff -u "$DIR/four-api.json" "$DIR/single-api.json"',s)
         self.assertIn('diff -u "$DIR/four-api.json" "$DIR/restored-api.json"',s)
 
+    def test_synthetic_encrypted_credential_survives_switch_and_rollback(self):
+        s=SCRIPT.read_text()
+        self.assertIn('from app.credential_crypto import encrypt_secret, decrypt_secret',s)
+        self.assertIn('CREATE TABLE ci_encrypted_marker',s)
+        self.assertIn('SELECT secret FROM ci_encrypted_marker',s)
+        self.assertIn('Fernet(Fernet.generate_key()).decrypt(token.encode("ascii"))',s)
+        self.assertIn('except InvalidToken:',s)
+        self.assertIn('SINGLE_CONTAINER_SYNTHETIC_CREDENTIAL_READ_OK',s)
+        self.assertIn('FOUR_CONTAINER_SYNTHETIC_CREDENTIAL_ROLLBACK_OK',s)
+        self.assertNotIn('real-private-key',s)
+
     def test_no_real_credentials_or_oci_actions(self):
         s=SCRIPT.read_text()
         self.assertNotIn('/root/oci-nt-backups',s)
