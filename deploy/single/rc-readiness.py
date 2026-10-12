@@ -28,6 +28,21 @@ REQUIRED = (
     "docker_socket_threat_review_approved",
     "production_scope_isolated",
 )
+# An isolated CI success can support a rehearsal but cannot substitute for
+# independent, live production proofs. These categories are report-only.
+LIVE_REQUIRED = (
+    "oci_mutation_inventory_complete",
+    "all_writers_gate_enforced",
+    "detached_tasks_drained",
+    "live_oci_leases_drained",
+    "cross_process_maintenance_persistent",
+    "four_services_stopped",
+    "stopped_sqlite_backup_verified",
+    "credentials_restored_in_isolated_test",
+    "old_pinned_images_restore_verified",
+    "docker_socket_threat_review_approved",
+    "production_scope_isolated",
+)
 BLOCKED_SCOPE = ("/opt/oci--nt",)
 ALLOWED_SCOPE = "/opt/oci-nt"
 
@@ -48,6 +63,9 @@ def assess(record):
     return {
         "status": "RC_EVIDENCE_INCOMPLETE" if failed else "RC_REPORTED_EVIDENCE_COMPLETE_NOT_AUTHORIZED",
         "missing_proofs": failed,
+        "live_or_operator_proofs_not_verified_by_ci": list(LIVE_REQUIRED),
+        "evidence_trust": "self_reported_unverified",
+        "ci_success_is_production_authorization": False,
         "single_container_production_authorized": False,
         "cutover_apply_allowed": False,
         "production_executor_integrated": False,
