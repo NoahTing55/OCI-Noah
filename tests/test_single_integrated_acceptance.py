@@ -63,6 +63,14 @@ class IntegratedSwitchContract(unittest.TestCase):
         self.assertGreater(s.index('STOPPED_FOUR_BACKUP_RETAINED_AFTER_ROLLBACK_OK'),
                            s.index('echo FOUR_CONTAINER_API_ROLLBACK_PARITY_OK'))
 
+    def test_ci_backup_preserves_api_sqlite_writable_state(self):
+        s=SCRIPT.read_text()
+        self.assertIn("STOPPED_FOUR_DB_APP_UID_WRITE_PROBE_OK",s)
+        self.assertIn("BEGIN IMMEDIATE",s)
+        self.assertIn("chown 10001:10001 /app/data/oci-nt.db",s)
+        self.assertLess(s.index("STOPPED_FOUR_DB_APP_UID_WRITE_PROBE_OK"),
+                        s.index("FAILED_SINGLE_TO_FOUR_RECOVERY_OK"))
+
     def test_no_real_credentials_or_oci_actions(self):
         s=SCRIPT.read_text()
         self.assertNotIn('/root/oci-nt-backups',s)
