@@ -25,6 +25,7 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn("cap_add:", workload)
         self.assertIn("- SETUID", workload)
         self.assertIn("- SETGID", workload)
+        self.assertIn("- KILL", workload)
         self.assertIn("cap_drop:", guard)
         self.assertIn("no-new-privileges:true", guard)
         self.assertIn("restart: \"no\"", guard)
