@@ -46,7 +46,10 @@ def main():
         ("api", [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "9858", "--proxy-headers", "--forwarded-allow-ips=*"], app_identity()),
         ("web", ["nginx", "-g", "daemon off;"], None),
     ]
-    if not external_guard:
+    if external_guard:
+        # Nginx listens on unprivileged port 9859. Avoid root startup chown/capability needs.
+        specs[-1] = ("web", ["nginx", "-g", "daemon off;"], app_identity())
+    else:
         specs.insert(0, ("docker-guard", [sys.executable, "-m", "app.docker_socket_guard"], app_identity(socket_access=True)))
     try:
         for name, argv, identity in specs:
