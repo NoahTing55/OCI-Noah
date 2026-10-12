@@ -6,6 +6,7 @@ integration remains independently covered by ci-four-single-four.sh. This test
 bridges the coordinator and Docker identity-safe operations with fault injection.
 """
 import importlib.util
+import hashlib
 import json
 import os
 import sqlite3
@@ -63,6 +64,27 @@ class DisposableOps:
                 raise RuntimeError("backup corrupted")
             if con.execute("SELECT value FROM marker").fetchone()[0]!="original-four":
                 raise RuntimeError("snapshot not consistent")
+    def verify_stopped_backup_integrity(self):
+        self._record("verify_stopped_backup_integrity")
+        if not self.backup.is_file():
+            raise RuntimeError("stopped backup missing")
+        with sqlite3.connect(self.backup) as con:
+            if con.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                raise RuntimeError("stopped backup integrity failed")
+            if con.execute("SELECT value FROM marker").fetchall() != [("original-four",)]:
+                raise RuntimeError("stopped backup content mismatch")
+        def sha256(path):
+            return hashlib.sha256(path.read_bytes()).hexdigest()
+        if sha256(self.backup) != sha256(self.db):
+            raise RuntimeError("stopped backup bytes differ from synthetic source")
+
+    def verify_backup_old_release_readability(self):
+        self._record("verify_backup_old_release_readability")
+        with sqlite3.connect(f"{self.backup.resolve().as_uri()}?mode=ro", uri=True) as con:
+            con.execute("PRAGMA query_only=ON")
+            if con.execute("SELECT value FROM marker").fetchone() != ("original-four",):
+                raise RuntimeError("old release cannot read synthetic backup marker")
+
     def start_single(self):
         self._record("start_single")
         self.identity=docker_scope.docker(
