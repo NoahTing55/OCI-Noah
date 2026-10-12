@@ -19,6 +19,18 @@ class IntegratedSwitchContract(unittest.TestCase):
         self.assertIn('docker stop --time 35 oci-nt-single-ci-switch',s)
         for marker in ("FOUR_CONTAINER_BASELINE_OK","FOUR_TO_SINGLE_OK","SINGLE_TO_FOUR_ROLLBACK_OK","FAILED_SINGLE_TO_FOUR_RECOVERY_OK","PRAGMA quick_check", "ci_switch_marker"):
             self.assertIn(marker,s)
+    def test_served_frontend_bytes_match_before_after_switch(self):
+        s=SCRIPT.read_text()
+        for asset in ("/app.js", "/rc.js", "/ui2.js", "/styles.css",
+                      "/ui-theme.css", "/vnc.html", "/favicon.svg",
+                      "/favicon.ico", "/apple-touch-icon.png"):
+            self.assertIn(asset,s)
+        self.assertIn('capture_ui_hashes > "$DIR/four-ui.sha256"',s)
+        self.assertIn('capture_ui_hashes > "$DIR/single-ui.sha256"',s)
+        self.assertIn('capture_ui_hashes > "$DIR/restored-ui.sha256"',s)
+        self.assertIn('diff -u "$DIR/four-ui.sha256" "$DIR/single-ui.sha256"',s)
+        self.assertIn('diff -u "$DIR/four-ui.sha256" "$DIR/restored-ui.sha256"',s)
+
     def test_no_real_credentials_or_oci_actions(self):
         s=SCRIPT.read_text()
         self.assertNotIn('/root/oci-nt-backups',s)
