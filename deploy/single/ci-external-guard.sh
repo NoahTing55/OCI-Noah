@@ -45,7 +45,11 @@ for m in w["volumes"]:
 assert g["network_mode"]=="none"
 '
 docker compose -p "$project" -f deploy/compose.external-guard-lab.yml -f "$compose" build
-docker compose -p "$project" -f deploy/compose.external-guard-lab.yml -f "$compose" up -d
+if ! docker compose -p "$project" -f deploy/compose.external-guard-lab.yml -f "$compose" up -d; then
+  docker compose -p "$project" -f deploy/compose.external-guard-lab.yml -f "$compose" ps -a || true
+  docker compose -p "$project" -f deploy/compose.external-guard-lab.yml -f "$compose" logs --no-color --tail=100 || true
+  exit 1
+fi
 guard="$(docker compose -p "$project" -f deploy/compose.external-guard-lab.yml -f "$compose" ps -q docker-guard)"
 workload="$(docker compose -p "$project" -f deploy/compose.external-guard-lab.yml -f "$compose" ps -q all-in-one)"
 [[ -n "$guard" && -n "$workload" ]] || exit 1
