@@ -116,7 +116,7 @@ for i in $(seq 1 45); do
 done
 docker exec "$ID" python /app/health.py >/dev/null
 restart_before="$(docker inspect "$ID" -f '{{.RestartCount}}')"
-docker exec "$ID" python -c 'import os,signal; ids=[int(p) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(ids)==1,ids; os.kill(ids[0],signal.SIGKILL)'
+docker exec "$ID" python -c 'import os,signal; ids=[int(p) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(ids)==1,ids; os.kill(ids[0],signal.SIGKILL)'
 recovered=0
 for i in $(seq 1 45); do
   if docker exec "$ID" python /app/health.py >/dev/null 2>&1; then
