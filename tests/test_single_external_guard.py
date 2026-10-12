@@ -17,6 +17,10 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn("/var/run/docker.sock:/var/run/docker.sock:ro", guard)
         self.assertIn("network_mode: none", guard)
         self.assertIn("guard-socket-init:", src)
+        initializer = src.split("  guard-socket-init:",1)[1].split("  docker-guard:",1)[0]
+        self.assertIn("- CHOWN", initializer)
+        self.assertIn("- FOWNER", initializer)
+        self.assertIn("restart: \"no\"", initializer)
         self.assertIn("condition: service_completed_successfully", guard)
         self.assertIn("cap_add:", workload)
         self.assertIn("- SETUID", workload)
