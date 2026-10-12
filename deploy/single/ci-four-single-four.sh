@@ -62,9 +62,15 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]==7
   c.execute("CREATE TABLE ci_switch_marker (message TEXT NOT NULL)")
   c.execute("INSERT INTO ci_switch_marker VALUES ('four-before-single')")
+  from app.credential_crypto import encrypt_secret, decrypt_secret
+  token=encrypt_secret("ci-synthetic-oci-secret")
+  assert decrypt_secret(token)=="ci-synthetic-oci-secret"
+  c.execute("CREATE TABLE ci_encrypted_marker (secret TEXT NOT NULL)")
+  c.execute("INSERT INTO ci_encrypted_marker VALUES (?)",(token,))
 PY
 capture_ui_hashes > "$DIR/four-ui.sha256"
 capture_api_contract > "$DIR/four-api.json"
+echo SYNTHETIC_ENCRYPTED_CREDENTIAL_CREATED_OK
 echo FOUR_CONTAINER_BASELINE_OK
 docker compose -p oci-nt -f docker-compose.yml down
 [[ -f data/oci-nt.db ]] || { echo DB_LOST_AFTER_FOUR_DOWN; exit 1; }
@@ -89,6 +95,16 @@ import sqlite3
 with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"
   assert c.execute("SELECT message FROM ci_switch_marker").fetchone()[0]=="four-before-single"
+  from app.credential_crypto import decrypt_secret
+  from cryptography.fernet import Fernet,InvalidToken
+  token=c.execute("SELECT secret FROM ci_encrypted_marker").fetchone()[0]
+  assert decrypt_secret(token)=="ci-synthetic-oci-secret"
+  try:
+    Fernet(Fernet.generate_key()).decrypt(token.encode("ascii"))
+  except InvalidToken:
+    pass
+  else:
+    raise AssertionError("wrong key unexpectedly decrypted synthetic secret")
 PY
 echo FAILED_SINGLE_TO_FOUR_RECOVERY_OK
 docker compose -p oci-nt -f docker-compose.yml down
@@ -111,6 +127,16 @@ import sqlite3
 with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"
   assert c.execute("SELECT message FROM ci_switch_marker").fetchone()[0]=="four-before-single"
+  from app.credential_crypto import decrypt_secret
+  from cryptography.fernet import Fernet,InvalidToken
+  token=c.execute("SELECT secret FROM ci_encrypted_marker").fetchone()[0]
+  assert decrypt_secret(token)=="ci-synthetic-oci-secret"
+  try:
+    Fernet(Fernet.generate_key()).decrypt(token.encode("ascii"))
+  except InvalidToken:
+    pass
+  else:
+    raise AssertionError("wrong key unexpectedly decrypted synthetic secret")
   c.execute("INSERT INTO ci_switch_marker VALUES ('single-before-rollback')")
 PY
 capture_ui_hashes > "$DIR/single-ui.sha256"
@@ -119,6 +145,7 @@ diff -u "$DIR/four-api.json" "$DIR/single-api.json"
 echo SINGLE_CONTAINER_API_CONTRACT_PARITY_OK
 diff -u "$DIR/four-ui.sha256" "$DIR/single-ui.sha256"
 echo SINGLE_CONTAINER_UI_PARITY_OK
+echo SINGLE_CONTAINER_SYNTHETIC_CREDENTIAL_READ_OK
 echo FOUR_TO_SINGLE_OK
 docker stop --time 35 oci-nt-single-ci-switch >/dev/null
 docker rm oci-nt-single-ci-switch >/dev/null
@@ -132,6 +159,9 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"
   assert c.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]==7
   assert c.execute("SELECT message FROM ci_switch_marker ORDER BY rowid").fetchall()==[("four-before-single",),("single-before-rollback",)]
+  from app.credential_crypto import decrypt_secret
+  token=c.execute("SELECT secret FROM ci_encrypted_marker").fetchone()[0]
+  assert decrypt_secret(token)=="ci-synthetic-oci-secret"
 PY
 capture_ui_hashes > "$DIR/restored-ui.sha256"
 capture_api_contract > "$DIR/restored-api.json"
@@ -139,4 +169,5 @@ diff -u "$DIR/four-api.json" "$DIR/restored-api.json"
 echo FOUR_CONTAINER_API_ROLLBACK_PARITY_OK
 diff -u "$DIR/four-ui.sha256" "$DIR/restored-ui.sha256"
 echo FOUR_CONTAINER_UI_ROLLBACK_PARITY_OK
+echo FOUR_CONTAINER_SYNTHETIC_CREDENTIAL_ROLLBACK_OK
 echo SINGLE_TO_FOUR_ROLLBACK_OK
