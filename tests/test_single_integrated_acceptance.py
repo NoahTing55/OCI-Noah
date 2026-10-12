@@ -31,6 +31,15 @@ class IntegratedSwitchContract(unittest.TestCase):
         self.assertIn('diff -u "$DIR/four-ui.sha256" "$DIR/single-ui.sha256"',s)
         self.assertIn('diff -u "$DIR/four-ui.sha256" "$DIR/restored-ui.sha256"',s)
 
+    def test_openapi_routes_and_schemas_match_both_directions(self):
+        s=SCRIPT.read_text()
+        self.assertIn("capture_api_contract()",s)
+        self.assertIn('capture_api_contract > "$DIR/four-api.json"',s)
+        self.assertIn('capture_api_contract > "$DIR/single-api.json"',s)
+        self.assertIn('capture_api_contract > "$DIR/restored-api.json"',s)
+        self.assertIn('diff -u "$DIR/four-api.json" "$DIR/single-api.json"',s)
+        self.assertIn('diff -u "$DIR/four-api.json" "$DIR/restored-api.json"',s)
+
     def test_no_real_credentials_or_oci_actions(self):
         s=SCRIPT.read_text()
         self.assertNotIn('/root/oci-nt-backups',s)
