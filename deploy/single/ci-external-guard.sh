@@ -65,7 +65,7 @@ for i in $(seq 1 60); do
 done
 [[ "$healthy" == 1 ]] || { docker logs "$guard";docker logs "$workload";exit 1; }
 echo "EXTERNAL_GUARD_STACK_HEALTHY"
-docker exec -i "$workload" python - <<'PY'
+docker exec -i --user 10001:10001 "$workload" python - <<'PY'
 import os,stat
 from app import monitor_agent
 assert not os.path.exists("/var/run/docker.sock")
@@ -73,7 +73,7 @@ assert monitor_agent.DOCKER_GUARD_UNIX_SOCKET
 assert monitor_agent.docker_get("/version").get("Version")
 print("WORKLOAD_NO_RAW_SOCKET_AND_MONITOR_OK")
 PY
-docker exec "$workload" python -c 'import http.client;from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("POST","/version");r=c.getresponse();assert r.status==405,r.status;r.read();c.close()'
+docker exec --user 10001:10001 "$workload" python -c 'import http.client;from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("POST","/version");r=c.getresponse();assert r.status==405,r.status;r.read();c.close()'
 docker exec "$workload" python -c 'from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("GET","/containers/create");r=c.getresponse();assert r.status==403,r.status;r.read();c.close()'
 echo "GUARD_MUTATIONS_DENIED"
 docker stop "$guard" >/dev/null
