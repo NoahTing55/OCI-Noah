@@ -14,6 +14,7 @@ COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 RUN sed -i '/^server_tokens off;$/d' /etc/nginx/conf.d/default.conf \
  && rm -f /etc/nginx/sites-enabled/default \
  && sed -i -E "s@^[[:space:]]*pid[[:space:]]+/run/nginx.pid;@pid /run/nginx/nginx.pid;@" /etc/nginx/nginx.conf \
+ && mkdir -p /run/nginx \
  && nginx -t
 COPY deploy/single/supervise.py /app/supervise.py
 COPY deploy/single/health.py /app/health.py
