@@ -63,7 +63,7 @@ echo "SINGLE_CONTAINER_PERSISTENCE_RESTART_OK"
 docker exec "$ID" python -c 'import os; names=("app.main:app","app.monitor_agent","app.docker_socket_guard"); ps=[(p,open("/proc/"+p+"/cmdline","rb").read(),os.stat("/proc/"+p).st_uid) for p in os.listdir("/proc") if p.isdigit()]; assert all(any(n.encode() in cmd and uid==(10002 if n=="app.docker_socket_guard" else 10001) for _,cmd,uid in ps) for n in names),[(p,cmd[:120],uid) for p,cmd,uid in ps]'
 # Group separation is essential: Docker socket access is effectively host-root.
 # The API and monitor must never inherit the host socket's supplemental GID.
-docker exec "$ID" python - <<'PY'
+docker exec -i "$ID" python - <<'PY'
 import os
 from pathlib import Path
 sock = os.stat("/var/run/docker.sock")
