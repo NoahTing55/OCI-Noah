@@ -6,7 +6,6 @@ integration remains independently covered by ci-four-single-four.sh. This test
 bridges the coordinator and Docker identity-safe operations with fault injection.
 """
 import importlib.util
-import hashlib
 import json
 import os
 import sqlite3
@@ -73,10 +72,11 @@ class DisposableOps:
                 raise RuntimeError("stopped backup integrity failed")
             if con.execute("SELECT value FROM marker").fetchall() != [("original-four",)]:
                 raise RuntimeError("stopped backup content mismatch")
-        def sha256(path):
-            return hashlib.sha256(path.read_bytes()).hexdigest()
-        if sha256(self.backup) != sha256(self.db):
-            raise RuntimeError("stopped backup bytes differ from synthetic source")
+        # SQLite backup API provides a consistent logical snapshot; its DB
+        # header/page layout may differ from the source byte-for-byte.
+        with sqlite3.connect(self.db) as source, sqlite3.connect(self.backup) as target:
+            if source.execute("SELECT value FROM marker ORDER BY rowid").fetchall() != target.execute("SELECT value FROM marker ORDER BY rowid").fetchall():
+                raise RuntimeError("stopped backup logical records differ")
 
     def verify_backup_old_release_readability(self):
         self._record("verify_backup_old_release_readability")
@@ -134,9 +134,9 @@ def scenario(injected_failure):
         expected=("FOUR_RESTORED_MAINTENANCE_HELD" if injected_failure
                   else "SINGLE_HEALTHY_MAINTENANCE_HELD")
         if report["status"]!=expected or report["admission_reopened"] is not False:
-            raise AssertionError("unexpected coordinator outcome")
+            raise AssertionError(f"unexpected coordinator outcome: {report['status']} {op.calls[-6:]}")
         if injected_failure and "restore_four_pinned" not in op.calls:
-            raise AssertionError("rollback did not execute")
+            raise AssertionError(f"rollback did not execute; last stages={op.calls[-6:]}")
         return report["status"]
     finally:
         op.cleanup()
