@@ -59,7 +59,7 @@ for i in $(seq 1 60); do
 done
 [[ "$healthy" == 1 ]] || { docker logs "$guard";docker logs "$workload";exit 1; }
 echo "EXTERNAL_GUARD_STACK_HEALTHY"
-docker exec "$workload" python - <<'PY'
+docker exec -i "$workload" python - <<'PY'
 import os,stat
 from app import monitor_agent
 assert not os.path.exists("/var/run/docker.sock")
