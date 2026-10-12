@@ -37,6 +37,16 @@ wait_port() {
   docker compose -p oci-nt -f docker-compose.yml ps || true
   return 1
 }
+# Compare actual HTTP-served UI bytes through every deployment generation.
+# This catches stale JS/CSS, missing VNC pages, or mismatched icons despite green health.
+STATIC_ASSETS=(/ /app.js /rc.js /ui2.js /styles.css /ui-theme.css /vnc.html /favicon.svg /favicon.ico /apple-touch-icon.png)
+capture_ui_hashes() {
+  local asset
+  for asset in "${STATIC_ASSETS[@]}"; do
+    printf '%s ' "$asset"
+    curl --fail --silent --show-error --max-time 10 "http://127.0.0.1:9859${asset}" | sha256sum | cut -d' ' -f1
+  done
+}
 wait_port http://127.0.0.1:9859/
 wait_port http://127.0.0.1:9859/api/v1/health
 wait_port http://127.0.0.1:9860/health
@@ -49,6 +59,7 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   c.execute("CREATE TABLE ci_switch_marker (message TEXT NOT NULL)")
   c.execute("INSERT INTO ci_switch_marker VALUES ('four-before-single')")
 PY
+capture_ui_hashes > "$DIR/four-ui.sha256"
 echo FOUR_CONTAINER_BASELINE_OK
 docker compose -p oci-nt -f docker-compose.yml down
 [[ -f data/oci-nt.db ]] || { echo DB_LOST_AFTER_FOUR_DOWN; exit 1; }
@@ -97,6 +108,9 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("SELECT message FROM ci_switch_marker").fetchone()[0]=="four-before-single"
   c.execute("INSERT INTO ci_switch_marker VALUES ('single-before-rollback')")
 PY
+capture_ui_hashes > "$DIR/single-ui.sha256"
+diff -u "$DIR/four-ui.sha256" "$DIR/single-ui.sha256"
+echo SINGLE_CONTAINER_UI_PARITY_OK
 echo FOUR_TO_SINGLE_OK
 docker stop --time 35 oci-nt-single-ci-switch >/dev/null
 docker rm oci-nt-single-ci-switch >/dev/null
@@ -111,4 +125,7 @@ with sqlite3.connect("/app/data/oci-nt.db") as c:
   assert c.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]==7
   assert c.execute("SELECT message FROM ci_switch_marker ORDER BY rowid").fetchall()==[("four-before-single",),("single-before-rollback",)]
 PY
+capture_ui_hashes > "$DIR/restored-ui.sha256"
+diff -u "$DIR/four-ui.sha256" "$DIR/restored-ui.sha256"
+echo FOUR_CONTAINER_UI_ROLLBACK_PARITY_OK
 echo SINGLE_TO_FOUR_ROLLBACK_OK
