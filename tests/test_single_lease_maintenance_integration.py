@@ -51,6 +51,52 @@ class LeaseMaintenanceIntegration(unittest.TestCase):
         token=acquire(self.db,"background:launch:12")
         release(self.db,token)
 
+    def test_competing_admission_and_maintenance_serialize(self):
+        # Two independent SQLite connections race; BEGIN IMMEDIATE must
+        # serialize the operations without a gap permitting new OCI calls.
+        import threading
+        from concurrent.futures import ThreadPoolExecutor
+        for i in range(12):
+            with self.subTest(round=i):
+                with sqlite3.connect(self.db) as con:
+                    con.execute("DELETE FROM system_settings")
+                barrier=threading.Barrier(2)
+                def start_lease():
+                    barrier.wait()
+                    try:
+                        return ("lease",acquire(self.db,"background:race"))
+                    except OCIAdmissionBlocked:
+                        return ("blocked",None)
+                def start_maintenance():
+                    barrier.wait()
+                    try:
+                        maintenance.begin(self.db,operator="ci",reason="race")
+                        return "maintenance_started"
+                    except RuntimeError:
+                        return "maintenance_blocked"
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    a=pool.submit(start_lease)
+                    b=pool.submit(start_maintenance)
+                    lease_kind,token=a.result(timeout=15)
+                    maint=b.result(timeout=15)
+                self.assertIn((lease_kind,maint),(
+                    ("lease","maintenance_blocked"),
+                    ("blocked","maintenance_started")))
+                if token:
+                    release(self.db,token)
+                if maint=="maintenance_started":
+                    self.assertTrue(maintenance.read_state(self.db)["active"])
+                    maintenance.end(self.db,operator="ci")
+
+    def test_malformed_maintenance_marker_blocks_new_lease(self):
+        for raw in ('not-json','[]','{"active":"false"}','{"active":null}'):
+            with self.subTest(raw=raw),sqlite3.connect(self.db) as con:
+                con.execute("DELETE FROM system_settings")
+                con.execute("INSERT INTO system_settings(setting_key,setting_value) VALUES (?,?)",
+                            ("oci_nt_release_maintenance_v1",raw))
+            with self.assertRaises(OCIAdmissionBlocked):
+                acquire(self.db,"background:malformed")
+
     def test_maintenance_cannot_end_with_lease(self):
         maintenance.begin(self.db,operator="ci",reason="release")
         # Deliberate synthetic leaked lease to verify fail-closed reopening.
