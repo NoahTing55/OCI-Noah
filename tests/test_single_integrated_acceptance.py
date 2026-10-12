@@ -51,6 +51,18 @@ class IntegratedSwitchContract(unittest.TestCase):
         self.assertIn('FOUR_CONTAINER_SYNTHETIC_CREDENTIAL_ROLLBACK_OK',s)
         self.assertNotIn('real-private-key',s)
 
+    def test_stopped_sqlite_snapshot_is_verified_and_retained(self):
+        s=SCRIPT.read_text()
+        self.assertIn('STOPPED_FOUR_SQLITE_BACKUP_VERIFIED_OK',s)
+        self.assertIn('STOPPED_FOUR_BACKUP_RETAINED_AFTER_ROLLBACK_OK',s)
+        self.assertIn('src.backup(dst)',s)
+        self.assertIn('PRAGMA integrity_check',s)
+        self.assertIn('chmod 0400 "$DIR/stopped-four-backup.db"',s)
+        self.assertLess(s.index('STOPPED_FOUR_SQLITE_BACKUP_VERIFIED_OK'),
+                        s.index('docker run -d --name oci-nt-single-ci-switch'))
+        self.assertGreater(s.index('STOPPED_FOUR_BACKUP_RETAINED_AFTER_ROLLBACK_OK'),
+                           s.index('echo FOUR_CONTAINER_API_ROLLBACK_PARITY_OK'))
+
     def test_no_real_credentials_or_oci_actions(self):
         s=SCRIPT.read_text()
         self.assertNotIn('/root/oci-nt-backups',s)
