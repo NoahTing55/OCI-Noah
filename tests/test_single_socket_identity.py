@@ -30,5 +30,36 @@ class SocketIdentityTests(unittest.TestCase):
         self.assertIn('-e DOCKER_GUARD_HOST=127.0.0.1',smoke)
         self.assertIn('-e DOCKER_GUARD_PORT=9861',smoke)
         self.assertIn('10002 if n=="app.docker_socket_guard"',smoke)
+    def test_docker_guard_rejects_mutating_and_ambiguous_paths(self):
+        # All tests are offline: no Docker socket requests are sent.
+        import sys
+        sys.path.insert(0, str(ROOT/"backend"))
+        from app.docker_socket_guard import allowed_target, Handler
+        accepted = (
+            "/version", "/containers/json?all=1",
+            "/containers/" + "a"*12 + "/json",
+            "/containers/" + "a"*64 + "/stats?stream=false",
+        )
+        rejected = (
+            "/containers/create", "/containers/prune", "/images/json",
+            "/events", "/exec/123/start", "/containers/json",
+            "/containers/json?all=0", "/containers/json?all=1&size=1",
+            "/containers/" + "a"*12 + "/restart",
+            "/containers/" + "a"*12 + "/kill",
+            "/containers/" + "a"*12 + "/stats?stream=true",
+            "/containers/%61" + "a"*11 + "/json",
+            "http://127.0.0.1/version", "//evil.example/version",
+            "/version#fragment", "/version\\\\evil", "/version?bad=1",
+            "/"+"x"*300,
+        )
+        for target in accepted:
+            with self.subTest(accepted=target):
+                self.assertTrue(allowed_target(target))
+        for target in rejected:
+            with self.subTest(rejected=target):
+                self.assertFalse(allowed_target(target))
+        for method in ("do_POST","do_PUT","do_PATCH","do_DELETE"):
+            self.assertIs(getattr(Handler,method), Handler.do_POST)
+
 if __name__=="__main__":
     unittest.main()
