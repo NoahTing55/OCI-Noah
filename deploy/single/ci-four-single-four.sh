@@ -108,7 +108,13 @@ for i in $(seq 1 20); do
 done
 [[ "$(docker inspect -f '{{.State.Running}}' oci-nt-single-ci-failed)" == "false" ]] || { echo FAILURE_INJECTION_NOT_REJECTED; exit 1; }
 docker rm -f oci-nt-single-ci-failed >/dev/null
-docker compose -p oci-nt -f docker-compose.yml up -d --no-build
+if ! docker compose -p oci-nt -f docker-compose.yml up -d --no-build; then
+  echo "FOUR_CONTAINER_RECOVERY_START_FAILED"
+  docker compose -p oci-nt -f docker-compose.yml ps || true
+  docker logs --tail 120 oci-nt-api || true
+  ls -lan data/oci-nt.db* || true
+  exit 1
+fi
 wait_port http://127.0.0.1:9859/api/v1/health
 wait_port http://127.0.0.1:9860/health
 wait_port http://127.0.0.1:9861/health
