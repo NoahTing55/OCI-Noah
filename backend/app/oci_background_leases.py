@@ -88,7 +88,9 @@ async def await_registered_workers(*, timeout_seconds: float = 20.0) -> dict:
     )
     pending = {task for pool in pools for task in pool if not task.done()}
     if not pending:
-        return {"observed": 0, "remaining": 0, "complete": True}
+        return {"observed": 0, "remaining": 0, "complete": True,
+                "production_quiescence_attested": False}
     _done, still_running = await asyncio.wait(pending, timeout=timeout_seconds)
     return {"observed": len(pending), "remaining": len(still_running),
-            "complete": not still_running}
+            "complete": not still_running,
+            "production_quiescence_attested": False}
