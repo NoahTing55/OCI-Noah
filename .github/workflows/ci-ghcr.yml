@@ -198,6 +198,9 @@ jobs:
       - name: Disposable single-container runtime smoke and fail-fast test
         run: bash deploy/single/ci-smoke.sh
 
+      - name: Disposable external Guard / all-in-one real Docker integration
+        run: bash deploy/single/ci-external-guard.sh
+
       - name: Verify integrated switch test isolation contracts
         run: python -m unittest discover -s tests -p 'test_single_integrated_acceptance.py' -v
 
