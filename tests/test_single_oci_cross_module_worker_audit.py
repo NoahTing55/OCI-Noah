@@ -45,8 +45,6 @@ class CrossModuleWorkerAudit(unittest.TestCase):
     def test_cross_module_oci_imports_still_checked(self):
         for filename,(module,symbol) in CROSS_MODULE_IMPORTS.items():
             tree=ast.parse((APP/filename).read_text())
-            names={n.name for n in tree.body if isinstance(n,ast.ImportFrom)
-                   and n.module==module for alias in n.names if alias.name==symbol}
             # Presence is tested explicitly; no unused expectation may silently vanish.
             self.assertTrue(any(isinstance(n,ast.ImportFrom) and n.module==module
                                 and any(a.name==symbol for a in n.names)
