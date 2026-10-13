@@ -39,7 +39,7 @@ class GlobalDrainCoverageContract(unittest.TestCase):
 
     def test_route_guard_does_not_claim_complete_sdk_interception(self):
         s=(APP/"maintenance_route_guard.py").read_text()
-        self.assertIn("not an atomic task admission",s)
+        self.assertIn("not an atomic task admission", " ".join(s.split()))
         self.assertIn("def protected_oci_request(",s)
         self.assertIn('method.upper() != "GET"',s)
         self.assertIn('subpath.startswith(("resources/", "launch/resources/", "oci/"))',s)
