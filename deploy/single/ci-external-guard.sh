@@ -156,7 +156,13 @@ before_started="$(docker inspect "$guard" --format '{{.State.StartedAt}}')"
 before_pid="$(docker inspect "$guard" --format '{{.State.Pid}}')"
 # A Docker exec process has its own PID namespace context and may not be
 # permitted to signal PID 1. Detect injection failure instead of hiding it.
-docker exec "$guard" python -c 'import os,signal;os.kill(1,signal.SIGKILL)'
+# Resolve the exact Docker-managed container init PID in this disposable CI run.
+# Sending SIGKILL from an exec process to PID 1 can be ignored by the runtime.
+guard_host_pid="$(docker inspect "$guard" --format '{{.State.Pid}}')"
+[[ "$guard_host_pid" =~ ^[0-9]+$ && "$guard_host_pid" -gt 1 ]] || { echo "INVALID_CI_GUARD_PID"; exit 1; }
+[[ "$guard_host_pid" == "$before_pid" ]] || { echo "GUARD_PID_CHANGED_BEFORE_TEST"; exit 1; }
+sudo kill -KILL "$guard_host_pid"
+echo "GUARD_INIT_CRASH_SIGNAL_SENT"
 auto=0
 for i in $(seq 1 35); do
   after="$(docker inspect "$guard" --format '{{.RestartCount}}')"
