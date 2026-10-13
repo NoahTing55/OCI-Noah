@@ -277,6 +277,9 @@ jobs:
       - name: Verify scheduled OCI checks register durable background leases
         run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
 
+      - name: Verify production cutover readiness report always blocks unproven quiescence
+        run: python -m unittest discover -s tests -p 'test_single_cutover_readiness_report.py' -v
+
       - name: Verify explicit offline Schema 7 snapshot gate fails closed
         run: python -m unittest discover -s tests -p 'test_single_offline_snapshot_compatibility.py' -v
 
