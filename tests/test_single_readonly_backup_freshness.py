@@ -31,10 +31,15 @@ class BackupFreshness(unittest.TestCase):
             p=Path(d)/"snapshot.db"
             make_db(p,27)
             dummy=[{"running":True,"health":"healthy","compose_project":"oci-nt"}]*4
+            real_stat=audit.os.stat
+            def socket_only_stat(path,*args,**kwargs):
+                if str(path)=="/var/run/docker.sock":
+                    return type("SocketStat",(),{"st_uid":0,"st_gid":997,"st_mode":0o140660})()
+                return real_stat(path,*args,**kwargs)
             with patch.object(audit,"docker_inventory",return_value=dummy), \
                  patch.object(audit,"database_inventory",return_value={"schema":7,"accounts":26}), \
                  patch.object(audit,"runtime_process_inventory",return_value=[]), \
-                 patch.object(audit.os,"stat",return_value=type("Stat",(),{"st_uid":0,"st_gid":997,"st_mode":0o660})()), \
+                 patch.object(audit.os,"stat",side_effect=socket_only_stat), \
                  patch.object(audit,"EXPECTED_BACKUP_SHA",hashlib.sha256(p.read_bytes()).hexdigest()):
                 result=audit.report(root=audit.ROOT,backup=p)
             self.assertTrue(result["backup"]["sha256_match"])
