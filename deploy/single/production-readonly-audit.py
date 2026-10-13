@@ -85,13 +85,16 @@ def report(root=ROOT,backup=BACKUP):
     inv=docker_inventory()
     db=database_inventory(root/"data/oci-nt.db")
     import hashlib
-    backup_state={"exists":backup.is_file() and not backup.is_symlink(),"sha256_match":False,"schema":None}
+    backup_state={"exists":backup.is_file() and not backup.is_symlink(),"sha256_match":False,"schema":None,"accounts":None,"account_count_matches_live":False,"current_recovery_point_proven":False}
     if backup_state["exists"]:
         h=hashlib.sha256()
         with backup.open("rb") as f:
             for chunk in iter(lambda:f.read(1024*1024),b""):h.update(chunk)
         backup_state["sha256_match"]=h.hexdigest()==EXPECTED_BACKUP_SHA
         backup_state["schema"]=database_inventory_schema(backup)
+        backup_state["accounts"]=database_account_count(backup)
+        backup_state["account_count_matches_live"]=(backup_state["accounts"]==db["accounts"])
+        # Equal counts alone cannot prove row-level equality or snapshot freshness.
     processes=runtime_process_inventory()
     socket=os.stat("/var/run/docker.sock")
     active=len(inv)==4 and all(x["running"] and x["health"]=="healthy" and x["compose_project"]=="oci-nt" for x in inv)
@@ -102,6 +105,7 @@ def report(root=ROOT,backup=BACKUP):
             "backup":backup_state,"docker_socket":{"uid":socket.st_uid,"gid":socket.st_gid,"mode":oct(socket.st_mode & 0o777)},
             "blockers":["Full OCI SDK and detached worker quiescence unproven",
                         "No operator-approved cutover window",
+                        "Verified historical backup does not prove current recovery point",
                         "Rollback evidence must be independently attested live",
                         "No approved production cutover executor"]}
 
@@ -110,6 +114,13 @@ def database_inventory_schema(p):
     try:
         c.execute("PRAGMA query_only=ON")
         return c.execute("SELECT version FROM schema_version WHERE singleton_id=1").fetchone()[0]
+    finally:c.close()
+
+def database_account_count(p):
+    c=sqlite3.connect(p.resolve().as_uri()+"?mode=ro",uri=True,timeout=5)
+    try:
+        c.execute("PRAGMA query_only=ON")
+        return c.execute("SELECT COUNT(*) FROM oci_accounts").fetchone()[0]
     finally:c.close()
 
 def main():
