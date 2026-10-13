@@ -24,7 +24,7 @@ class ReadOnlyAudit(unittest.TestCase):
         values=[]
         for n in audit.NAMES[0],audit.NAMES[2],audit.NAMES[3]:
             values.append({"container":n,"oci_thread_quiescence_proven":False})
-        result=subprocess.CompletedProcess([],0,stdout="PID PPID COMMAND\\n123 1 python\\n",stderr="")
+        result=subprocess.CompletedProcess([],0,stdout="PID PPID COMMAND\n123 1 python\n",stderr="")
         with patch.object(audit.subprocess,"run",return_value=result) as runner:
             actual=audit.runtime_process_inventory()
         self.assertEqual(len(actual),3)
