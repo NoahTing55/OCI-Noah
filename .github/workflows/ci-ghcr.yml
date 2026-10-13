@@ -268,6 +268,9 @@ jobs:
       - name: Verify Docker container ownership and independent-project isolation
         run: python -m unittest discover -s tests -p 'test_single_docker_scope_adapter.py' -v
 
+      - name: Verify scheduled OCI checks register durable background leases
+        run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
+
       - name: Check OCI-facing route declarations against durable HTTP lease admission
         run: python -m unittest discover -s tests -p 'test_single_oci_entrypoint_route_coverage.py' -v
 
