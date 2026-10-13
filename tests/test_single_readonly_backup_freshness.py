@@ -1,5 +1,6 @@
 """Read-only backup comparison must never confuse old verified backup with a fresh recovery point."""
 import importlib.util
+import hashlib
 from pathlib import Path
 from unittest.mock import patch
 import tempfile
@@ -34,8 +35,9 @@ class BackupFreshness(unittest.TestCase):
                  patch.object(audit,"database_inventory",return_value={"schema":7,"accounts":26}), \
                  patch.object(audit,"runtime_process_inventory",return_value=[]), \
                  patch.object(audit.os,"stat",return_value=type("Stat",(),{"st_uid":0,"st_gid":997,"st_mode":0o660})()), \
-                 patch.object(audit,"EXPECTED_BACKUP_SHA","not-the-hash"):
+                 patch.object(audit,"EXPECTED_BACKUP_SHA",hashlib.sha256(p.read_bytes()).hexdigest()):
                 result=audit.report(root=audit.ROOT,backup=p)
+            self.assertTrue(result["backup"]["sha256_match"])
             self.assertEqual(result["backup"]["accounts"],27)
             self.assertFalse(result["backup"]["account_count_matches_live"])
             self.assertFalse(result["backup"]["current_recovery_point_proven"])
