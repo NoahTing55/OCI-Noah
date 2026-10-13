@@ -183,6 +183,22 @@ jobs:
       - name: Test immutable external Guard RC manifest admission
         run: python -m unittest discover -s tests -p 'test_single_external_guard_release_manifest.py' -v
 
+      - name: Verify published RC pair in isolated review-only Compose
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python -m unittest discover -s tests -p 'test_single_rc_pinned_pair.py' -v
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/data" "$tmp/logs"
+          cp .env.example "$tmp/candidate.env"
+          export DOCKER_GID=997
+          export OCI_NT_RC_ENV_FILE="$tmp/candidate.env"
+          export OCI_NT_RC_DATA_DIR="$tmp/data"
+          export OCI_NT_RC_LOG_DIR="$tmp/logs"
+          docker compose -f deploy/compose.external-guard-rc.review.yml config --format json |
+            python deploy/single/validate-external-guard-rc.py
+
       - name: Build experimental single-container image (no push)
         run: docker build -f deploy/single/Dockerfile -t oci-nt-single:ci .
 
