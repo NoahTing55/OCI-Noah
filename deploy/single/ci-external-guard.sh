@@ -152,7 +152,9 @@ echo "GUARD_RESTART_RECOVERED"
 docker update --restart on-failure:3 "$guard" >/dev/null
 sleep 11
 before="$(docker inspect "$guard" --format '{{.RestartCount}}')"
-docker exec "$guard" python -c 'import os,signal;os.kill(1,signal.SIGKILL)' >/dev/null 2>&1 || true
+# A Docker exec process has its own PID namespace context and may not be
+# permitted to signal PID 1. Detect injection failure instead of hiding it.
+docker exec "$guard" python -c 'import os,signal;os.kill(1,signal.SIGKILL)'
 auto=0
 for i in $(seq 1 35); do
   after="$(docker inspect "$guard" --format '{{.RestartCount}}')"
