@@ -152,13 +152,18 @@ echo "GUARD_RESTART_RECOVERED"
 docker update --restart on-failure:3 "$guard" >/dev/null
 sleep 11
 before="$(docker inspect "$guard" --format '{{.RestartCount}}')"
+before_started="$(docker inspect "$guard" --format '{{.State.StartedAt}}')"
+before_pid="$(docker inspect "$guard" --format '{{.State.Pid}}')"
 # A Docker exec process has its own PID namespace context and may not be
 # permitted to signal PID 1. Detect injection failure instead of hiding it.
 docker exec "$guard" python -c 'import os,signal;os.kill(1,signal.SIGKILL)'
 auto=0
 for i in $(seq 1 35); do
   after="$(docker inspect "$guard" --format '{{.RestartCount}}')"
-  if [[ "$after" -gt "$before" ]] &&
+  after_started="$(docker inspect "$guard" --format '{{.State.StartedAt}}')"
+  after_pid="$(docker inspect "$guard" --format '{{.State.Pid}}')"
+  # A new PID and StartedAt with no manual docker start prove engine recovery.
+  if [[ "$after" -gt "$before" || ( "$after_started" != "$before_started" && "$after_pid" != "$before_pid" ) ]] &&
      docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import docker_get;assert docker_get("/version").get("Version")' >/dev/null 2>&1; then
     auto=1
     break
@@ -168,6 +173,7 @@ done
 if [[ "$auto" != 1 ]]; then
   echo "GUARD_AUTO_RESTART_TIMEOUT"
   docker inspect "$guard" --format 'Policy={{json .HostConfig.RestartPolicy}} RestartCount={{.RestartCount}} State={{json .State}}' || true
+  echo "BeforeStarted=$before_started BeforePid=$before_pid AfterStarted=$after_started AfterPid=$after_pid"
   docker inspect "$workload" --format 'Workload={{json .State}}' || true
   docker exec --user 10001:10001 "$workload" python -c 'import os,stat; p="/run/oci-guard/guard.sock"; print("guard_socket_exists:",os.path.exists(p)); print("guard_socket_mode:",oct(stat.S_IMODE(os.stat(p).st_mode)) if os.path.exists(p) else "missing")' || true
   docker logs --tail 80 "$guard" || true
