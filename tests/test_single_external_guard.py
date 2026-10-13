@@ -39,6 +39,13 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn('docker exec --user 10001:10001 "$workload" python -c', smoke)
         self.assertNotIn('docker exec "$workload" python -c', smoke)
 
+    def test_monitor_outage_health_is_explicit(self):
+        smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
+        self.assertIn("MONITOR_UNAVAILABLE_REPORTS_503",smoke)
+        self.assertIn("MONITOR_FALSE_HEALTHY",smoke)
+        self.assertIn("e.code == 503",smoke)
+        self.assertIn("GUARD_RESTART_RECOVERED",smoke)
+
     def test_runtime_ci_enforces_process_capabilities(self):
         smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
         for marker in (
