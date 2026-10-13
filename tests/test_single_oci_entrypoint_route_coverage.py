@@ -59,6 +59,11 @@ class OCIEntrypointCoverage(unittest.TestCase):
                 self.assertIn((method,path),found)
                 self.assertTrue(guard.protected_oci_request(method,path),
                                 "OCI request route not admitted through durable lease")
+    def test_account_root_creation_is_oci_leased(self):
+        self.assertTrue(guard.protected_oci_write("POST","/api/v1/accounts"))
+        self.assertTrue(guard.protected_oci_request("POST","/api/v1/accounts"))
+        self.assertFalse(guard.protected_oci_request("GET","/api/v1/accounts"))
+
     def test_local_only_routes_do_not_grab_oci_lease(self):
         for method,path in (("GET","/api/v1/auth/me"),("GET","/api/v1/system/release"),
                             ("GET","/api/v1/health")):
