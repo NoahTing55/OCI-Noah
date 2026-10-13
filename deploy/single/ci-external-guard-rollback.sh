@@ -90,6 +90,20 @@ with sqlite3.connect(sys.argv[2]) as db:
 PY
 chmod 0400 "$T/rollback.db"
 echo STOPPED_SCHEMA7_BACKUP_VERIFIED
+# The GitHub runner's host SQLite backup opens may create WAL/SHM sidecars as
+# runner UID 1001. Reconcile ONLY disposable CI DB sidecars while all old
+# containers are stopped; never touch any production database.
+[[ "$PWD" == "$T/src" && "${RUNNER_ENVIRONMENT:-}" == github-hosted ]] || exit 3
+for file in data/oci-nt.db data/oci-nt.db-wal data/oci-nt.db-shm; do
+  [[ ! -e "$file" || ( -f "$file" && ! -L "$file" ) ]] || { echo "UNSAFE_DB_PATH: $file"; exit 3; }
+done
+sudo chown 10001:10001 data/oci-nt.db*
+chmod 0777 data
+docker run --rm --network none --user 10001:10001 \
+  -v "$PWD/data:/app/data" --entrypoint python \
+  ghcr.io/noahting55/oci-noah-api:ci-switch -c \
+  'import sqlite3; d=sqlite3.connect("/app/data/oci-nt.db"); d.execute("BEGIN IMMEDIATE"); d.rollback(); d.close()'
+echo CI_SCHEMA7_WAL_OWNERSHIP_WRITE_PROBE_OK
 # Candidate is always pinned and never receives the raw host Docker socket.
 $NEW up -d --no-build
 wait_http http://127.0.0.1:9859/api/v1/health
