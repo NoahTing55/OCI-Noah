@@ -277,6 +277,9 @@ jobs:
       - name: Verify scheduled OCI checks register durable background leases
         run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
 
+      - name: Audit cross-module OCI task workers and launch notifications
+        run: python -m unittest discover -s tests -p 'test_single_oci_cross_module_worker_audit.py' -v
+
       - name: Audit direct OCI SDK service call routes for durable HTTP leases
         run: python -m unittest discover -s tests -p 'test_single_oci_direct_sdk_route_audit.py' -v
 
