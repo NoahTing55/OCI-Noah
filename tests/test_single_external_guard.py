@@ -46,6 +46,12 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn("e.code == 503",smoke)
         self.assertIn("GUARD_RESTART_RECOVERED",smoke)
 
+    def test_disposable_guard_auto_recovery(self):
+        smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
+        for marker in ("--restart on-failure:3", "RestartCount", "GUARD_AUTOMATIC_CRASH_RECOVERY_OK", "docker update --restart no"):
+            self.assertIn(marker,smoke)
+        self.assertIn('docker exec --user 10001:10001 "$workload" python -c',smoke)
+
     def test_runtime_ci_enforces_process_capabilities(self):
         smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
         for marker in (
