@@ -35,6 +35,7 @@ class ExternalGuardContract(unittest.TestCase):
     def test_real_docker_smoke_uses_monitor_identity_for_socket(self):
         smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
         self.assertIn('docker exec -i --user 10001:10001 "$workload" python', smoke)
+        self.assertNotIn('docker exec -i "$workload" python', smoke)
         self.assertIn('docker exec --user 10001:10001 "$workload" python -c', smoke)
         self.assertNotIn('docker exec "$workload" python -c', smoke)
 
