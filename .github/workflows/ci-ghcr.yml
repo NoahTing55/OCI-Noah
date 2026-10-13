@@ -277,6 +277,9 @@ jobs:
       - name: Verify scheduled OCI checks register durable background leases
         run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
 
+      - name: Audit direct OCI SDK service call routes for durable HTTP leases
+        run: python -m unittest discover -s tests -p 'test_single_oci_direct_sdk_route_audit.py' -v
+
       - name: Check OCI-facing route declarations against durable HTTP lease admission
         run: python -m unittest discover -s tests -p 'test_single_oci_entrypoint_route_coverage.py' -v
 
