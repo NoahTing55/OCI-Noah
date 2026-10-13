@@ -277,6 +277,9 @@ jobs:
       - name: Verify scheduled OCI checks register durable background leases
         run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
 
+      - name: Exercise FastAPI HTTP maintenance middleware with isolated SQLite
+        run: python -m unittest discover -s tests -p 'test_single_oci_http_middleware_admission.py' -v
+
       - name: Exercise isolated OCI maintenance admission block and recovery
         run: python -m unittest discover -s tests -p 'test_single_oci_maintenance_end_to_end.py' -v
 
