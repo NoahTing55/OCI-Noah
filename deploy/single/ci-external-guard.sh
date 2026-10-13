@@ -66,7 +66,7 @@ done
 [[ "$healthy" == 1 ]] || { docker logs "$guard";docker logs "$workload";exit 1; }
 echo "EXTERNAL_GUARD_STACK_HEALTHY"
 # Runtime permissions must match the intended separation, not just Compose text.
-docker exec -i "$workload" python - <<'PY'
+docker exec -i --user 10001:10001 "$workload" python - <<'PY'
 from pathlib import Path
 import os
 import stat
