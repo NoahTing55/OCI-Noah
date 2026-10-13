@@ -1,0 +1,65 @@
+# REVIEW-ONLY OCI-N&T 2.0 external Guard RC. DO NOT deploy to the live host.
+# Separate project, explicit disposable data/log paths, pinned GHCR image indexes.
+name: oci-nt-external-guard-rc-review
+services:
+  guard-socket-init:
+    image: alpine:3.20
+    restart: "no"
+    network_mode: none
+    user: "0:0"
+    command: ["sh", "-ec", "chmod 0770 /run/oci-guard && chown 10001:10001 /run/oci-guard"]
+    volumes:
+      - guard-socket:/run/oci-guard
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER]
+    security_opt: [no-new-privileges:true]
+  docker-guard:
+    image: ghcr.io/noahting55/oci-noah-guard@sha256:776cac89106015ee7475690cc3cc19e163cd846816baec7db1d5fb65c32aab01
+    user: "10001:10001"
+    restart: unless-stopped
+    depends_on:
+      guard-socket-init:
+        condition: service_completed_successfully
+    group_add:
+      - "${DOCKER_GID:?Non-root host Docker socket group is required}"
+    network_mode: none
+    environment:
+      DOCKER_GUARD_UNIX_SOCKET: /run/oci-guard/guard.sock
+      DOCKER_SOCKET_PATH: /var/run/docker.sock
+    volumes:
+      - guard-socket:/run/oci-guard
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  all-in-one:
+    image: ghcr.io/noahting55/oci-noah-single@sha256:e662ba844f851e763cb6080d177cf4ecb99f96478f92fcb154a1040824830980
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ${OCI_NT_RC_ENV_FILE:?Provide isolated candidate env file}
+    environment:
+      OCI_NT_EXTERNAL_GUARD: "1"
+      DOCKER_GUARD_UNIX_SOCKET: /run/oci-guard/guard.sock
+      MONITOR_AGENT_HOST: 127.0.0.1
+      MONITOR_AGENT_PORT: "9860"
+      DATA_DIR: /app/data
+      DB_PATH: /app/data/oci-nt.db
+      BACKUP_DIR: /app/data/backups
+      HOST_PROC_PATH: /host/proc
+      HOST_SYS_PATH: /host/sys
+      HOST_ETC_PATH: /host/etc
+    volumes:
+      - ${OCI_NT_RC_DATA_DIR:?Provide isolated test data directory}:/app/data
+      - ${OCI_NT_RC_LOG_DIR:?Provide isolated test log directory}:/app/logs
+      - guard-socket:/run/oci-guard:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/hostname:/host/etc/hostname:ro
+    cap_drop: [ALL]
+    cap_add: [SETUID, SETGID, KILL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      - docker-guard
+volumes:
+  guard-socket:
