@@ -304,6 +304,9 @@ jobs:
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
 
+      - name: Exercise pinned external Guard RC to legacy four-container rollback
+        run: bash deploy/single/ci-external-guard-rollback.sh
+
       - name: Verify isolated real Docker lifecycle and container identity
         run: python deploy/single/ci-docker-lifecycle.py
 
