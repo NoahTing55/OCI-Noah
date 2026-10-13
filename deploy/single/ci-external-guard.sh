@@ -147,6 +147,25 @@ done
 [[ "$recovered" == 1 ]] || exit 1
 docker exec --user 10001:10001 "$workload" python -c 'import urllib.request; assert urllib.request.urlopen("http://127.0.0.1:9860/health",timeout=4).status == 200'
 echo "GUARD_RESTART_RECOVERED"
+# CI-only: verify Docker automatic crash recovery for this disposable Guard.
+# Restore the original restart policy before the temporary stack is removed.
+docker update --restart on-failure:3 "$guard" >/dev/null
+sleep 11
+before="$(docker inspect "$guard" --format '{{.RestartCount}}')"
+docker exec "$guard" python -c 'import os,signal;os.kill(1,signal.SIGKILL)' >/dev/null 2>&1 || true
+auto=0
+for i in $(seq 1 35); do
+  after="$(docker inspect "$guard" --format '{{.RestartCount}}')"
+  if [[ "$after" -gt "$before" ]] &&
+     docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import docker_get;assert docker_get("/version").get("Version")' >/dev/null 2>&1; then
+    auto=1
+    break
+  fi
+  sleep 2
+done
+[[ "$auto" == 1 ]] || { docker logs "$guard"; exit 1; }
+docker update --restart no "$guard" >/dev/null
+echo "GUARD_AUTOMATIC_CRASH_RECOVERY_OK"
 docker stop --time 35 "$workload" >/dev/null
 [[ "$(docker inspect "$workload" -f '{{.State.ExitCode}}')" == 0 ]] || exit 1
 echo "WORKLOAD_GRACEFUL_STOP_OK"
