@@ -55,6 +55,9 @@ class ExternalGuardContract(unittest.TestCase):
         self.assertIn("before_pid=",smoke)
         self.assertIn("after_started=",smoke)
         self.assertIn("after_pid=",smoke)
+        self.assertIn("GUARD_INIT_CRASH_SIGNAL_SENT",smoke)
+        self.assertIn('sudo kill -KILL "$guard_host_pid"',smoke)
+        self.assertNotIn("os.kill(1,signal.SIGKILL)",smoke)
 
     def test_runtime_ci_enforces_process_capabilities(self):
         smoke=(ROOT/"deploy/single/ci-external-guard.sh").read_text()
