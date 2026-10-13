@@ -126,11 +126,18 @@ PY
 docker exec --user 10001:10001 "$workload" python -c 'import http.client;from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("POST","/version");r=c.getresponse();assert r.status==405,r.status;r.read();c.close()'
 docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import UnixHTTPConnection,DOCKER_GUARD_UNIX_SOCKET as p;c=UnixHTTPConnection(p);c.request("GET","/containers/create");r=c.getresponse();assert r.status==403,r.status;r.read();c.close()'
 echo "GUARD_MUTATIONS_DENIED"
+# Monitor health must explicitly report backend unavailability, not a false 200.
+docker exec --user 10001:10001 "$workload" python -c 'import urllib.request; assert urllib.request.urlopen("http://127.0.0.1:9860/health",timeout=4).status == 200'
 docker stop "$guard" >/dev/null
 docker exec --user 10001:10001 "$workload" python -c 'from app.monitor_agent import docker_get;import sys
 try: docker_get("/version")
 except Exception: print("GUARD_UNAVAILABLE_FAILS_CLOSED")
 else: sys.exit("FAIL_OPEN")'
+docker exec --user 10001:10001 "$workload" python -c 'import urllib.request,urllib.error; u="http://127.0.0.1:9860/health"
+try: urllib.request.urlopen(u,timeout=4)
+except urllib.error.HTTPError as e: assert e.code == 503,e.code
+else: raise SystemExit("MONITOR_FALSE_HEALTHY")'
+echo "MONITOR_UNAVAILABLE_REPORTS_503"
 docker start "$guard" >/dev/null
 recovered=0
 for i in $(seq 1 30); do
@@ -138,6 +145,7 @@ for i in $(seq 1 30); do
  sleep 2
 done
 [[ "$recovered" == 1 ]] || exit 1
+docker exec --user 10001:10001 "$workload" python -c 'import urllib.request; assert urllib.request.urlopen("http://127.0.0.1:9860/health",timeout=4).status == 200'
 echo "GUARD_RESTART_RECOVERED"
 docker stop --time 35 "$workload" >/dev/null
 [[ "$(docker inspect "$workload" -f '{{.State.ExitCode}}')" == 0 ]] || exit 1
