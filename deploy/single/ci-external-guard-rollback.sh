@@ -4,8 +4,12 @@
 set -Eeuo pipefail
 [[ "${GITHUB_ACTIONS:-}" == true && "${RUNNER_ENVIRONMENT:-}" == github-hosted && -n "${GITHUB_RUN_ID:-}" ]] || exit 3
 [[ "$PWD" == "${GITHUB_WORKSPACE:-}" ]] || exit 3
-[[ ! -e data/oci-nt.db ]] || { echo EXISTING_DB_REFUSED; exit 3; }
 T="$(mktemp -d)"
+mkdir -p "$T/src"
+# All relative Compose paths resolve inside a fresh disposable copy.
+tar --exclude=.git --exclude=data --exclude=logs --exclude=.env -cf - . | (cd "$T/src" && tar -xf -)
+cd "$T/src"
+[[ ! -e data/oci-nt.db ]] || { echo EXISTING_DB_REFUSED; exit 3; }
 mkdir -p data logs
 chmod 777 data logs
 PROJECT="oci-nt-rollback-rc-${GITHUB_RUN_ID}"
