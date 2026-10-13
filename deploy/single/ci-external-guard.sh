@@ -163,7 +163,14 @@ for i in $(seq 1 35); do
   fi
   sleep 2
 done
-[[ "$auto" == 1 ]] || { docker logs "$guard"; exit 1; }
+if [[ "$auto" != 1 ]]; then
+  echo "GUARD_AUTO_RESTART_TIMEOUT"
+  docker inspect "$guard" --format 'Policy={{json .HostConfig.RestartPolicy}} RestartCount={{.RestartCount}} State={{json .State}}' || true
+  docker inspect "$workload" --format 'Workload={{json .State}}' || true
+  docker exec --user 10001:10001 "$workload" python -c 'import os,stat; p="/run/oci-guard/guard.sock"; print("guard_socket_exists:",os.path.exists(p)); print("guard_socket_mode:",oct(stat.S_IMODE(os.stat(p).st_mode)) if os.path.exists(p) else "missing")' || true
+  docker logs --tail 80 "$guard" || true
+  exit 1
+fi
 docker update --restart no "$guard" >/dev/null
 echo "GUARD_AUTOMATIC_CRASH_RECOVERY_OK"
 docker stop --time 35 "$workload" >/dev/null
