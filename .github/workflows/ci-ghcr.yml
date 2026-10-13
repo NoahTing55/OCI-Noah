@@ -277,6 +277,9 @@ jobs:
       - name: Verify scheduled OCI checks register durable background leases
         run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
 
+      - name: Reject stale historical backups as current production recovery evidence
+        run: python -m unittest discover -s tests -p 'test_single_readonly_backup_freshness.py' -v
+
       - name: Exercise FastAPI HTTP maintenance middleware with isolated SQLite
         run: python -m unittest discover -s tests -p 'test_single_oci_http_middleware_admission.py' -v
 
