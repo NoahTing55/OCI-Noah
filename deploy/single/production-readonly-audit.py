@@ -61,6 +61,25 @@ def database_inventory(path):
     finally:
         con.close()
 
+def runtime_process_inventory():
+    """Docker top observes processes only; never certifies OCI SDK thread drain."""
+    observed=[]
+    for name in (NAMES[0],NAMES[2],NAMES[3]):
+        result=subprocess.run(["docker","top",name,"-eo","pid,ppid,comm"],
+                              capture_output=True,text=True,check=True,timeout=15)
+        rows=result.stdout.splitlines()
+        if not rows or rows[0].split()[:3]!=["PID","PPID","COMMAND"]:
+            raise ValueError("unexpected docker top columns")
+        processes=[]
+        for line in rows[1:]:
+            parts=line.split(None,2)
+            if len(parts)!=3 or not all(n.isdigit() for n in parts[:2]):
+                raise ValueError("unparseable docker top process")
+            processes.append({"pid":int(parts[0]),"ppid":int(parts[1]),"command":parts[2]})
+        observed.append({"container":name,"process_count":len(processes),"processes":processes,
+                         "oci_thread_quiescence_proven":False})
+    return observed
+
 def report(root=ROOT,backup=BACKUP):
     assert root==ROOT, "only official production path supported"
     inv=docker_inventory()
@@ -73,11 +92,13 @@ def report(root=ROOT,backup=BACKUP):
             for chunk in iter(lambda:f.read(1024*1024),b""):h.update(chunk)
         backup_state["sha256_match"]=h.hexdigest()==EXPECTED_BACKUP_SHA
         backup_state["schema"]=database_inventory_schema(backup)
+    processes=runtime_process_inventory()
     socket=os.stat("/var/run/docker.sock")
     active=len(inv)==4 and all(x["running"] and x["health"]=="healthy" and x["compose_project"]=="oci-nt" for x in inv)
     return {"status":"READ_ONLY_OBSERVATION","production_cutover_authorized":False,
             "global_oci_quiescence_proven":False,"operator_window_confirmed":False,
-            "four_containers_healthy":active,"containers":inv,"database":db,
+            "four_containers_healthy":active,"containers":inv,"process_snapshot":processes,
+            "process_snapshot_is_oci_quiescence_proof":False,"database":db,
             "backup":backup_state,"docker_socket":{"uid":socket.st_uid,"gid":socket.st_gid,"mode":oct(socket.st_mode & 0o777)},
             "blockers":["Full OCI SDK and detached worker quiescence unproven",
                         "No operator-approved cutover window",
