@@ -47,7 +47,18 @@ wait_http() {
     curl -fsS --max-time 3 "$url" >/dev/null 2>&1 && return 0
     sleep 2
   done
-  echo "HEALTH_TIMEOUT $url"; return 1
+  echo "HEALTH_TIMEOUT $url"
+  echo "CANDIDATE_COMPOSE_STATUS"
+  $NEW ps -a || true
+  echo "CANDIDATE_LOGS"
+  $NEW logs --no-color --tail=120 || true
+  echo "OLD_COMPOSE_STATUS"
+  $OLD ps -a || true
+  echo "PORT_LISTENERS"
+  ss -lntp | grep -E ':(9858|9859|9860|9861)[[:space:]]' || true
+  echo "CI_DATABASE_PERMISSIONS"
+  ls -ldn data logs data/oci-nt.db* || true
+  return 1
 }
 capture_contract() {
   curl -fsS --max-time 10 http://127.0.0.1:9858/api/openapi.json |
