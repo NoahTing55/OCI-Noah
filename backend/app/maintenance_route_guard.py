@@ -20,6 +20,9 @@ def protected_oci_write(method: str, path: str) -> bool:
     # Cancellation remains available to drain in-flight work safely.
     if subpath.endswith("/cancel"):
         return False
+    # Account creation/import validates OCI credentials and can make SDK calls.
+    if subpath == "accounts":
+        return True
     # Protection intentionally errs on the side of blocking OCI mutations;
     # authentication, backups and observability remain available.
     return (
