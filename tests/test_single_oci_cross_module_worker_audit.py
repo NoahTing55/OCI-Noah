@@ -54,8 +54,14 @@ class CrossModuleWorkerAudit(unittest.TestCase):
         tree=ast.parse((APP/"launch_task_service.py").read_text())
         funcs={x.name:x for x in tree.body if isinstance(x,(ast.FunctionDef,ast.AsyncFunctionDef))}
         notify=funcs["_notify_launch_instance_success"]
-        names={n.func.id for n in ast.walk(notify) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name)}
-        self.assertIn("resolve_instance_public_ip",names)
+        thread_calls=[n for n in ast.walk(notify) if isinstance(n,ast.Call)
+                      and isinstance(n.func,ast.Attribute)
+                      and isinstance(n.func.value,ast.Name)
+                      and n.func.value.id=="asyncio" and n.func.attr=="to_thread"]
+        self.assertTrue(any(n.args and isinstance(n.args[0],ast.Name)
+                            and n.args[0].id=="resolve_instance_public_ip"
+                            for n in thread_calls),
+                        "public-IP OCI lookup must remain inside asyncio.to_thread")
         spawn=funcs["_spawn_launch_success_notification"]
         calls={n.func.id for n in ast.walk(spawn) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name)}
         self.assertIn("run_with_lease",calls)
