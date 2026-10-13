@@ -419,18 +419,37 @@ jobs:
           provenance: true
           sbom: true
 
+      - name: Build and publish exact RC Guard image
+        id: guard_build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./deploy/single/Dockerfile.guard
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/noahting55/oci-noah-guard:sha-${{ github.sha }}
+          provenance: true
+          sbom: true
+
       - name: Report immutable digest and prohibited production actions
         env:
           RC_DIGEST: ${{ steps.build.outputs.digest }}
+          GUARD_DIGEST: ${{ steps.guard_build.outputs.digest }}
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$RC_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$GUARD_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
           {
             echo "Single-container RC artifact (isolated testing only)"
             echo ""
             echo 'Tag: `ghcr.io/noahting55/oci-noah-single:sha-${{ github.sha }}`'
             echo "Digest: `$RC_DIGEST`"
+            echo ""
+            echo "External read-only Docker Guard RC artifact (isolated testing only)"
+            echo ""
+            echo 'Tag: `ghcr.io/noahting55/oci-noah-guard:sha-${{ github.sha }}`'
+            echo "Digest: `$GUARD_DIGEST`"
             echo ""
             echo "No production pull, restart, Compose or cutover performed."
           } >> "$GITHUB_STEP_SUMMARY"
