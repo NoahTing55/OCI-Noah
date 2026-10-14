@@ -38,3 +38,18 @@ This document describes a **proposed** state machine, not a shell runbook. **No 
 - Bind-mount `:ro` on Docker socket is not an authorization boundary by itself; application Guard whitelist must be verified.
 - A process-exit record proves only that host processes exited, **not** completed remote OCI operations; requests may have already been accepted remotely.
 - STOP/NO-GO at any unverified gate. This file must not be converted to an unattended production migration without separate design and user approval.
+
+
+## Deployment executor acceptance contract — unimplemented (Stage 54)
+
+A production executor **must not** be advertised as ready until all these behaviors have automated negative tests:
+- Mandatory CLI flags must identify the exact production host, approved maintenance window, operator approval token and current immutable baseline; missing/mismatched inputs exit before any mutation.
+- Preflight can read host state without modifying it; fail closed on mismatched Compose SHA, image IDs, unexpected container names, extra host listeners on 9858–9861, unverified proxy ownership, insufficient disk and unreadable backup.
+- A separate human action is required to enable OCI-only site ingress freeze. The executor must refuse to treat Nginx 503 as a global API/SDK admission gate and refuse to use a mere 'zero tasks' observation as SDK drain attestation.
+- A separately approved stop action must wait for/verify all legacy processes have exited, then create and independently restore a current SQLite snapshot; verify WAL consistency, account IDs/count, cipher validation, integrity and hash. Never dump secrets.
+- New Compose and Guard host Docker socket permissions must be reviewed on an ephemeral host; do not mount the host socket into the main container.
+- Rollback refuses to overwrite the current DB unless snapshot restores are approved after inspecting whether the candidate wrote data; verify no candidate processes before restoring old four services.
+- Default mode is dry-run **without any state-altering subprocesses**; nonzero exits must not be disguised as successful GO status.
+- Full synthetic four→two→four CI and negative-path tests required before considering a live window. PR remains Draft until then.
+
+**Open blocker:** There is no production-grade executable satisfying these properties in this branch. The existing `deploy/compose.external-guard-rc.review.yml` is still review-only. Do not execute it on production.
