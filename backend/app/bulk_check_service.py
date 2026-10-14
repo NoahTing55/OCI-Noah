@@ -14,6 +14,8 @@ from .bulk_check_repository import (
     set_waiting,
     start_job,
 )
+from .config import settings
+from .oci_background_leases import run_with_lease
 from .database import add_audit_log
 from .telegram_service import format_bulk_check_message, send_configured_telegram
 
@@ -69,12 +71,15 @@ async def start_bulk_check(
         raise BulkCheckBusyError(str(exc)) from exc
 
     task = asyncio.create_task(
-        _run_bulk_check(
+        run_with_lease(
+            settings.db_path, kind="bulk-check", task_id=int(job["id"]),
+            coroutine=_run_bulk_check(
             job_id=int(job["id"]),
             accounts=accounts,
             requested_by=requested_by,
             ip_address=ip_address,
             interval_seconds=interval_seconds,
+            ),
         )
     )
     _tasks[int(job["id"])] = task
