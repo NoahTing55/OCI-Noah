@@ -47,6 +47,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r backend/requirements.txt pytest httpx2
 
+      - name: Guard upstream disconnection regression
+        run: python -m unittest discover -s tests -p 'test_guard_upstream_disconnect.py' -v
+
       - name: Compile backend
         run: python -m compileall -q backend/app
 
