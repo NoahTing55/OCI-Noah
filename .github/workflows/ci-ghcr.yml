@@ -277,6 +277,9 @@ jobs:
       - name: Verify scheduled OCI checks register durable background leases
         run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
 
+      - name: Verify bulk lease denial and cancellation semantics
+        run: python -m unittest discover -s tests -p 'test_single_bulk_lease_failure.py' -v
+
       - name: Verify OCI background and GET entrypoint drain coverage
         run: python -m unittest discover -s tests -p 'test_single_oci_entrypoint_drain_coverage.py' -v
 
