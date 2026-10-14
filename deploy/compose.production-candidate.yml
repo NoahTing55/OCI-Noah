@@ -1,0 +1,63 @@
+# PRODUCTION CANDIDATE - validation only. NEVER run before approved cutover.\n# Must not coexist with live old four containers: host ports collide.\nname: oci-nt-v2
+services:
+  guard-socket-init:
+    image: alpine:3.20
+    restart: "no"
+    network_mode: none
+    user: "0:0"
+    command: ["sh", "-ec", "chmod 0770 /run/oci-guard && chown 10001:10001 /run/oci-guard"]
+    volumes:
+      - guard-socket:/run/oci-guard
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER]
+    security_opt: [no-new-privileges:true]
+  docker-guard:
+    image: ghcr.io/noahting55/oci-noah-guard@sha256:ecece550ded5e45f6db0acb3a7f71e629438de3f725d926da74618f1174ddbee
+    user: "10001:10001"
+    restart: unless-stopped
+    depends_on:
+      guard-socket-init:
+        condition: service_completed_successfully
+    group_add:
+      - "${DOCKER_GID:?Non-root host Docker socket group is required}"
+    network_mode: none
+    environment:
+      DOCKER_GUARD_UNIX_SOCKET: /run/oci-guard/guard.sock
+      DOCKER_SOCKET_PATH: /var/run/docker.sock
+    volumes:
+      - guard-socket:/run/oci-guard
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  all-in-one:
+    image: ghcr.io/noahting55/oci-noah-single@sha256:395e79d83495edd5f659b566d797ed160396a05ebb5ef098d62d853bf90da8bd
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ${OCI_NT_PROD_ENV_FILE:?Provide reviewed production env file}
+    environment:
+      OCI_NT_EXTERNAL_GUARD: "1"
+      DOCKER_GUARD_UNIX_SOCKET: /run/oci-guard/guard.sock
+      MONITOR_AGENT_HOST: 127.0.0.1
+      MONITOR_AGENT_PORT: "9860"
+      DATA_DIR: /app/data
+      DB_PATH: /app/data/oci-nt.db
+      BACKUP_DIR: /app/data/backups
+      HOST_PROC_PATH: /host/proc
+      HOST_SYS_PATH: /host/sys
+      HOST_ETC_PATH: /host/etc
+    volumes:
+      - ${OCI_NT_PROD_DATA_DIR:?Provide explicit production data directory}:/app/data
+      - ${OCI_NT_PROD_LOG_DIR:?Provide explicit production log directory}:/app/logs
+      - guard-socket:/run/oci-guard:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/hostname:/host/etc/hostname:ro
+    cap_drop: [ALL]
+    cap_add: [SETUID, SETGID, KILL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      - docker-guard
+volumes:
+  guard-socket:
