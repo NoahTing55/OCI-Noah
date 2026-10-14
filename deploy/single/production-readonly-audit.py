@@ -13,8 +13,8 @@ import subprocess
 
 NAMES=("oci-nt-api","oci-nt-web","oci-nt-monitor-agent","oci-nt-docker-guard")
 ROOT=Path("/opt/oci-nt")
-BACKUP=Path("/root/oci-nt-backups/oci-nt-schema7-20261012-095820-626576.db")
-EXPECTED_BACKUP_SHA="d959aae4c0f3f03688745edd19fd9c9cd1fae4b8ce80df362a3268daf7b25d2c"
+BACKUP=Path("/root/oci-nt-backups/oci-nt-schema7-20261013-170718-026721.db")
+EXPECTED_BACKUP_SHA="05fe07b54909132ecaa4678b0f36f6190e912388bd6c391c2bf480fb42481e8b"
 
 def docker_inventory():
     raw=subprocess.run(["docker","inspect",*NAMES],capture_output=True,text=True,check=True,timeout=20)
@@ -95,12 +95,22 @@ def report(root=ROOT,backup=BACKUP):
         backup_state["accounts"]=database_account_count(backup)
         backup_state["account_count_matches_live"]=(backup_state["accounts"]==db["accounts"])
         # Equal counts alone cannot prove row-level equality or snapshot freshness.
+    # Compose bytes only: never render environment/credentials.
+    compose=root/"docker-compose.yml"
+    expected_compose="497417a52b8ea1a7304a3a510ff6dfb2600731e67953e101966f349c3d8b39dc"
+    compose_sha=hashlib.sha256(compose.read_bytes()).hexdigest() if compose.is_file() and not compose.is_symlink() else None
+    expected_images={
+        "oci-nt-api":"sha256:d67ca61ac5129207e421d67834f5daa727aab1162541efee1f23dc1abb90bc27",
+        "oci-nt-web":"sha256:21fbeac7176e41ba59773fba21887d05d10a6632f78bb61dd73e2d2f4d8002b4",
+        "oci-nt-monitor-agent":"sha256:d67ca61ac5129207e421d67834f5daa727aab1162541efee1f23dc1abb90bc27",
+        "oci-nt-docker-guard":"sha256:d67ca61ac5129207e421d67834f5daa727aab1162541efee1f23dc1abb90bc27"}
+    image_match=all(x.get("image_id")==expected_images.get(x.get("name")) for x in inv)
     processes=runtime_process_inventory()
     socket=os.stat("/var/run/docker.sock")
     active=len(inv)==4 and all(x["running"] and x["health"]=="healthy" and x["compose_project"]=="oci-nt" for x in inv)
     return {"status":"READ_ONLY_OBSERVATION","production_cutover_authorized":False,
             "global_oci_quiescence_proven":False,"operator_window_confirmed":False,
-            "four_containers_healthy":active,"containers":inv,"process_snapshot":processes,
+            "four_containers_healthy":active,"containers":inv,\n            "baseline":{"compose_sha256_matches":compose_sha==expected_compose,\n                        "original_image_ids_match":image_match},"process_snapshot":processes,
             "process_snapshot_is_oci_quiescence_proof":False,"database":db,
             "backup":backup_state,"docker_socket":{"uid":socket.st_uid,"gid":socket.st_gid,"mode":oct(socket.st_mode & 0o777)},
             "blockers":["Full OCI SDK and detached worker quiescence unproven",
