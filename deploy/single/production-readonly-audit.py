@@ -110,7 +110,9 @@ def report(root=ROOT,backup=BACKUP):
     active=len(inv)==4 and all(x["running"] and x["health"]=="healthy" and x["compose_project"]=="oci-nt" for x in inv)
     return {"status":"READ_ONLY_OBSERVATION","production_cutover_authorized":False,
             "global_oci_quiescence_proven":False,"operator_window_confirmed":False,
-            "four_containers_healthy":active,"containers":inv,\n            "baseline":{"compose_sha256_matches":compose_sha==expected_compose,\n                        "original_image_ids_match":image_match},"process_snapshot":processes,
+            "four_containers_healthy":active,"containers":inv,
+            "baseline":{"compose_sha256_matches":compose_sha==expected_compose,
+                        "original_image_ids_match":image_match},"process_snapshot":processes,
             "process_snapshot_is_oci_quiescence_proof":False,"database":db,
             "backup":backup_state,"docker_socket":{"uid":socket.st_uid,"gid":socket.st_gid,"mode":oct(socket.st_mode & 0o777)},
             "blockers":["Full OCI SDK and detached worker quiescence unproven",
