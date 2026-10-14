@@ -277,6 +277,9 @@ jobs:
       - name: Verify scheduled OCI checks register durable background leases
         run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
 
+      - name: Verify stopped OCI generation evidence fails closed
+        run: python -m unittest discover -s tests -p 'test_single_stopped_generation_evidence.py' -v
+
       - name: Verify controlled cutover order remains plan-only and blocked
         run: python -m unittest discover -s tests -p 'test_single_controlled_cutover_sequence.py' -v
 
