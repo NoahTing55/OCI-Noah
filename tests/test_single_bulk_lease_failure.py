@@ -1,10 +1,20 @@
 import asyncio
+import os
 from unittest.mock import patch
 import unittest
 
 class BulkLeaseFailureTests(unittest.IsolatedAsyncioTestCase):
     async def test_lease_refusal_finalizes_persisted_job(self):
-        from app import bulk_check_service as service
+        # CI can carry empty integer env vars from previous tests; keep this
+        # isolated import deterministic without modifying application defaults.
+        with patch.dict(os.environ, {
+            "SECRET_KEY": "test-only-secret",
+            "CREDENTIAL_ENCRYPTION_KEY": "pX6YVfFGhm8Cg1V0scP78CvWVDsj2-4WsC7C3LmD8ZE=",
+            "ADMIN_PASSWORD": "test-only-password",
+            "ACCESS_TOKEN_MINUTES": "1440",
+            "BULK_CHECK_INTERVAL_SECONDS": "30",
+        }):
+            from app import bulk_check_service as service
         finished=[]
         async def refuse(*args,coroutine,**kwargs):
             coroutine.close()
