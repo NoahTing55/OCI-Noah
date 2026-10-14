@@ -6,8 +6,9 @@ FILE=Path(__file__).resolve().parents[1]/"deploy/compose.single-offline-review.y
 class OfflineReviewManifest(unittest.TestCase):
     def test_offline_manifest_has_no_production_contact(self):
         text=FILE.read_text()
-        import yaml
-        data=yaml.safe_load(text)
+        import json, subprocess
+        rendered=subprocess.check_output(["docker","compose","-f",str(FILE),"config","--format","json"],text=True)
+        data=json.loads(rendered)
         self.assertEqual(set(data["services"]),{"all-in-one","guard-image-inspect"})
         for name,service in data["services"].items():
             self.assertEqual(service["network_mode"],"none")
