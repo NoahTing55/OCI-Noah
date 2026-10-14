@@ -78,12 +78,13 @@ async def await_registered_workers(*, timeout_seconds: float = 20.0) -> dict:
 
     Timeout is NOT proof of drain; unresolved SQLite leases remain authoritative.
     """
-    from . import task_service, instance_batch_service, launch_task_service
+    from . import task_service, instance_batch_service, launch_task_service, bulk_check_service
     pools = (
         tuple(task_service._tasks.values()),
         tuple(instance_batch_service._runtime_tasks.values()),
         tuple(launch_task_service._tasks.values()),
         tuple(launch_task_service._notification_tasks),
+        tuple(bulk_check_service._tasks.values()),
         tuple(_detached_workers),
     )
     pending = {task for pool in pools for task in pool if not task.done()}
