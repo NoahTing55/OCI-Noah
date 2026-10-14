@@ -27,6 +27,13 @@ class ProductionPreflightTests(unittest.TestCase):
         with patch.object(preflight,"module",side_effect=lambda name:FakeController() if name=="release-controller.py" else real_module(name)):
             value=preflight.report(sha=sha,root=Path("/tmp/test"),runner=fake)
         self.assertTrue(value["rollback_images_present"])
+        prereq=value["rollback_prerequisites"]
+        self.assertTrue(prereq["original_image_inventory_present"])
+        for name in ("stopped_sqlite_backup_verified",
+                     "schema7_restored_with_original_image",
+                     "encrypted_credentials_readable_after_restore",
+                     "old_four_services_booted_from_pinned_images"):
+            self.assertFalse(prereq[name],name)
         self.assertEqual(value["status"],"OBSERVATION_ONLY")
         self.assertTrue(value["blockers"])
         self.assertIn("Durable maintenance admission is not active",value["blockers"])

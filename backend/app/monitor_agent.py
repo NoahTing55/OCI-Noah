@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse
 
 SOCKET_PATH = os.getenv("DOCKER_SOCKET_PATH", "/var/run/docker.sock")
 DOCKER_GUARD_HOST = os.getenv("DOCKER_GUARD_HOST", "").strip()
+DOCKER_GUARD_UNIX_SOCKET = os.getenv("DOCKER_GUARD_UNIX_SOCKET", "").strip()
 DOCKER_GUARD_PORT = int(os.getenv("DOCKER_GUARD_PORT", "9861"))
 LISTEN_HOST = os.getenv("MONITOR_AGENT_HOST", "127.0.0.1")
 LISTEN_PORT = int(os.getenv("MONITOR_AGENT_PORT", "9860"))
@@ -29,7 +30,9 @@ class UnixHTTPConnection(http.client.HTTPConnection):
 
 def docker_get(path: str) -> dict | list:
     connection = (
-        http.client.HTTPConnection(
+        UnixHTTPConnection(DOCKER_GUARD_UNIX_SOCKET)
+        if DOCKER_GUARD_UNIX_SOCKET
+        else http.client.HTTPConnection(
             DOCKER_GUARD_HOST,
             DOCKER_GUARD_PORT,
             timeout=3.0,

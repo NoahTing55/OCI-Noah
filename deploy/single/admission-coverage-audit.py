@@ -9,6 +9,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import re
 
 ROOT = Path(__file__).resolve().parents[2]
 TRACKED = {
@@ -34,6 +35,32 @@ def audit(base: Path = BASE) -> dict:
         "explicitly_process_local": "current_api_process_only" in runtime,
         "never_authorizes_release": '"release_authorized": False' in runtime,
     }
+    # Discovery is deliberately broader than the three known task pools.
+    # Each call site is reported for human review. A static occurrence of
+    # run_with_lease is NOT proof that every spawned task is protected.
+    patterns = {
+        "asyncio_create_task": re.compile(r"\b(?:asyncio\.)?create_task\s*\("),
+        "asyncio_to_thread": re.compile(r"\basyncio\.to_thread\s*\("),
+        "run_in_executor": re.compile(r"\brun_in_executor\s*\("),
+        "threading_thread": re.compile(r"\bthreading\.Thread\s*\("),
+    }
+    spawn_inventory = []
+    for source in sorted(base.rglob("*.py")):
+        if source.is_symlink() or not source.is_file():
+            raise OSError("unexpected source link")
+        data = source.read_text(encoding="utf-8")
+        for lineno, line in enumerate(data.splitlines(), 1):
+            if line.lstrip().startswith("#"):
+                continue
+            for kind, pattern in patterns.items():
+                if pattern.search(line):
+                    spawn_inventory.append({
+                        "file": str(source.relative_to(base)),
+                        "line": lineno,
+                        "kind": kind,
+                        "requires_manual_oci_egress_review": True,
+                    })
+    checked["spawn_inventory"] = {"scan_completed": True}
     gaps = [
         "Static source checks do not prove every asynchronous OCI operation is registered",
         "Launch-success notifications and detached callbacks require separate lifecycle review",
@@ -42,7 +69,8 @@ def audit(base: Path = BASE) -> dict:
     ]
     passed = all(all(states.values()) for states in checked.values())
     return {"status":"STATIC_CONTRACT_OK" if passed else "STATIC_CONTRACT_FAILED",
-            "checks":checked,"unverified_runtime_paths":gaps,
+            "checks":checked,"spawn_inventory":spawn_inventory,
+            "unverified_runtime_paths":gaps,
             "release_authorized":False,"production_cutover_allowed":False}
 
 def main():

@@ -13,11 +13,13 @@ COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 # Debian nginx.conf already defines server_tokens off; keep it in only one context.
 RUN sed -i '/^server_tokens off;$/d' /etc/nginx/conf.d/default.conf \
  && rm -f /etc/nginx/sites-enabled/default \
+ && sed -i -E "s@^[[:space:]]*pid[[:space:]]+/run/nginx.pid;@pid /run/nginx/nginx.pid;@" /etc/nginx/nginx.conf \
+ && mkdir -p /run/nginx \
  && nginx -t
 COPY deploy/single/supervise.py /app/supervise.py
 COPY deploy/single/health.py /app/health.py
-RUN mkdir -p /app/data /app/logs /app/data/backups /run/nginx /var/lib/nginx/body \
- && chown -R app:app /app /run/nginx /var/lib/nginx
+RUN mkdir -p /app/data /app/logs /app/data/backups /run/nginx /var/lib/nginx/body /var/log/nginx /run/oci-guard \
+ && chown -R app:app /app /run/nginx /var/lib/nginx /var/log/nginx /run/oci-guard
 EXPOSE 9858 9859 9860 9861
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=8s --start-period=35s --retries=3 CMD python /app/health.py

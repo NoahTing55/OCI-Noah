@@ -43,5 +43,34 @@ class DetachedWorkers(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(workers.detached_worker_snapshot()["active"],0)
             self.assertFalse(workers.detached_worker_snapshot()["release_authorized"])
 
+    async def test_cancelled_inner_worker_keeps_durable_lease(self):
+        started=asyncio.Event()
+        async def operation():
+            started.set()
+            await asyncio.Event().wait()
+        with patch.object(workers,"acquire",return_value="cancelled-inner") as acquire, \
+             patch.object(workers,"release") as release:
+            request=asyncio.create_task(workers.run_with_lease(
+                Path("/unused"),kind="test",task_id=2,coroutine=operation()))
+            await started.wait()
+            inner=next(t for t in workers._detached_workers if not t.done())
+            inner.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await request
+            await asyncio.sleep(0)
+            acquire.assert_called_once()
+            release.assert_not_called()
+            self.assertEqual(workers.detached_worker_snapshot()["active"],0)
+
+    async def test_lease_acquisition_refusal_closes_unstarted_coroutine(self):
+        async def operation():
+            raise AssertionError("should not execute")
+        coro=operation()
+        with patch.object(workers,"acquire",side_effect=RuntimeError("maintenance")):
+            with self.assertRaisesRegex(RuntimeError,"maintenance"):
+                await workers.run_with_lease(Path("/unused"),
+                    kind="test",task_id=3,coroutine=coro)
+        self.assertIsNone(coro.cr_frame)
+
 if __name__=="__main__":
     unittest.main()

@@ -61,6 +61,40 @@ docker exec "$ID" python -c 'import sqlite3; c=sqlite3.connect("/app/data/ci-per
 echo "SINGLE_CONTAINER_PERSISTENCE_RESTART_OK"
 # API/monitor run as app UID, Docker Guard runs as a separate UID with socket group only.
 docker exec "$ID" python -c 'import os; names=("app.main:app","app.monitor_agent","app.docker_socket_guard"); ps=[(p,open("/proc/"+p+"/cmdline","rb").read(),os.stat("/proc/"+p).st_uid) for p in os.listdir("/proc") if p.isdigit()]; assert all(any(n.encode() in cmd and uid==(10002 if n=="app.docker_socket_guard" else 10001) for _,cmd,uid in ps) for n in names),[(p,cmd[:120],uid) for p,cmd,uid in ps]'
+# Group separation is essential: Docker socket access is effectively host-root.
+# The API and monitor must never inherit the host socket's supplemental GID.
+docker exec -i "$ID" python - <<'PY'
+import os
+from pathlib import Path
+sock = os.stat("/var/run/docker.sock")
+socket_gid = sock.st_gid
+assert socket_gid > 0, "CI socket group must be non-root"
+names = {"app.main:app": 10001, "app.monitor_agent": 10001,
+         "app.docker_socket_guard": 10002}
+seen = set()
+for item in Path("/proc").iterdir():
+    if not item.name.isdigit():
+        continue
+    try:
+        cmd = (item/"cmdline").read_bytes()
+        status = (item/"status").read_text()
+    except (FileNotFoundError, ProcessLookupError, PermissionError):
+        continue
+    for name, uid in names.items():
+        if name.encode() not in cmd:
+            continue
+        fields = {line.split(":",1)[0]: line.split(":",1)[1].split()
+                  for line in status.splitlines() if ":" in line}
+        assert int(fields["Uid"][0]) == uid, (name, fields["Uid"])
+        gids = {int(gid) for gid in fields["Groups"]}
+        if name == "app.docker_socket_guard":
+            assert socket_gid in gids, (name, gids, socket_gid)
+        else:
+            assert socket_gid not in gids, (name, gids, socket_gid)
+        seen.add(name)
+assert seen == set(names), (seen, names)
+PY
+echo "SINGLE_CONTAINER_DOCKER_SOCKET_GROUP_ISOLATION_OK"
 echo "SINGLE_CONTAINER_SERVICE_UID_OK"
 # Crash one critical child; supervisor must stop the whole container, not leave partial service alive.
 docker exec "$ID" python -c 'import os,signal; found=[]; [(found.append(int(p))) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(found)==1,found; os.kill(found[0],signal.SIGKILL)'
@@ -72,3 +106,29 @@ for i in $(seq 1 20); do
 done
 [[ "$status" == exited ]] || { echo "FAIL_FAST_NOT_WORKING: $status"; docker logs "$ID"; exit 1; }
 echo "SINGLE_CONTAINER_FAIL_FAST_OK"
+# CI-only restart-policy recovery: the same ephemeral container and SQLite
+# volume must recover after a supervisor-triggered crash. Never restart prod.
+docker update --restart on-failure:3 "$ID" >/dev/null
+docker start "$ID" >/dev/null
+for i in $(seq 1 45); do
+  if docker exec "$ID" python /app/health.py >/dev/null 2>&1; then break; fi
+  sleep 2
+done
+docker exec "$ID" python /app/health.py >/dev/null
+# Docker enables restart policy only after a container has been up for 10 seconds.
+sleep 12
+restart_before="$(docker inspect "$ID" -f '{{.RestartCount}}')"
+docker exec "$ID" python -c 'import os,signal; ids=[int(p) for p in os.listdir("/proc") if p.isdigit() and os.path.exists("/proc/"+p+"/cmdline") and b"uvicorn\x00app.main:app" in open("/proc/"+p+"/cmdline","rb").read()]; assert len(ids)==1,ids; os.kill(ids[0],signal.SIGKILL)'
+recovered=0
+for i in $(seq 1 45); do
+  if docker exec "$ID" python /app/health.py >/dev/null 2>&1; then
+    recovered=1
+    break
+  fi
+  sleep 2
+done
+[[ "$recovered" == 1 && "$(docker inspect "$ID" -f '{{.RestartCount}}')" -gt "$restart_before" ]] || { echo "CRASH_RECOVERY_HEALTH_FAILED"; docker logs "$ID"; exit 1; }
+docker exec "$ID" python -c 'import sqlite3; c=sqlite3.connect("/app/data/ci-persistence.db"); assert c.execute("PRAGMA integrity_check").fetchone()[0]=="ok"; assert c.execute("SELECT COUNT(*) FROM markers WHERE value=?",("ci-persisted",)).fetchone()[0]==1; c.close()'
+echo "SINGLE_CONTAINER_CRASH_RECOVERY_PERSISTENCE_OK"
+docker update --restart no "$ID" >/dev/null
+

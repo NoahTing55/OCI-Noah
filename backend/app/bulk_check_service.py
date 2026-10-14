@@ -14,6 +14,8 @@ from .bulk_check_repository import (
     set_waiting,
     start_job,
 )
+from .config import settings
+from .oci_background_leases import run_with_lease
 from .database import add_audit_log
 from .telegram_service import format_bulk_check_message, send_configured_telegram
 
@@ -46,6 +48,30 @@ def _result_snapshot(account: dict) -> dict:
     }
 
 
+async def _run_bulk_check_with_lease(*, job_id: int, accounts: list[dict],
+                                    requested_by: str, ip_address: str | None,
+                                    interval_seconds: int) -> None:
+    try:
+        await run_with_lease(
+            settings.db_path, kind="bulk-check", task_id=job_id,
+            coroutine=_run_bulk_check(
+                job_id=job_id, accounts=accounts, requested_by=requested_by,
+                ip_address=ip_address, interval_seconds=interval_seconds,
+            ),
+        )
+    except asyncio.CancelledError:
+        # A shielded worker may still hold a lease and complete later.
+        raise
+    except Exception as exc:
+        # Lease admission can fail before _run_bulk_check starts. Never leave
+        # the persisted job PENDING and block all future bulk checks.
+        finish_job(
+            job_id, status="FAILED", alive=0, abnormal=0, unknown=0,
+            results=[], error=f"OCI admission failed: {type(exc).__name__}",
+        )
+        raise
+
+
 async def start_bulk_check(
     *,
     requested_by: str,
@@ -69,11 +95,9 @@ async def start_bulk_check(
         raise BulkCheckBusyError(str(exc)) from exc
 
     task = asyncio.create_task(
-        _run_bulk_check(
-            job_id=int(job["id"]),
-            accounts=accounts,
-            requested_by=requested_by,
-            ip_address=ip_address,
+        _run_bulk_check_with_lease(
+            job_id=int(job["id"]), accounts=accounts,
+            requested_by=requested_by, ip_address=ip_address,
             interval_seconds=interval_seconds,
         )
     )

@@ -38,12 +38,19 @@ def app_identity(socket_access=False):
 def main():
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
+    external_guard = os.environ.get("OCI_NT_EXTERNAL_GUARD", "0") == "1"
+    if external_guard and not os.environ.get("DOCKER_GUARD_UNIX_SOCKET"):
+        raise RuntimeError("external guard requires Unix socket transport")
     specs = [
-        ("docker-guard", [sys.executable, "-m", "app.docker_socket_guard"], app_identity(socket_access=True)),
         ("monitor", [sys.executable, "-m", "app.monitor_agent"], app_identity()),
         ("api", [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "9858", "--proxy-headers", "--forwarded-allow-ips=*"], app_identity()),
         ("web", ["nginx", "-g", "daemon off;"], None),
     ]
+    if external_guard:
+        # Nginx listens on unprivileged port 9859. Avoid root startup chown/capability needs.
+        specs[-1] = ("web", ["nginx", "-g", "daemon off;"], app_identity())
+    else:
+        specs.insert(0, ("docker-guard", [sys.executable, "-m", "app.docker_socket_guard"], app_identity(socket_access=True)))
     try:
         for name, argv, identity in specs:
             proc = subprocess.Popen(argv, preexec_fn=identity, start_new_session=True)

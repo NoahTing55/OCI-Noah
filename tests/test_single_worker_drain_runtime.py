@@ -24,6 +24,7 @@ class WorkerDrainRuntimeTests(unittest.IsolatedAsyncioTestCase):
             report=await await_registered_workers(timeout_seconds=0.01)
             self.assertTrue(report["complete"])
             self.assertEqual(report["observed"],0)
+            self.assertFalse(report["production_quiescence_attested"])
 
     async def test_timeout_leaves_real_work_running(self):
         started=asyncio.Event()
@@ -36,6 +37,7 @@ class WorkerDrainRuntimeTests(unittest.IsolatedAsyncioTestCase):
         with patch.dict(task_service._tasks,{1:task},clear=True),patch.dict(instance_batch_service._runtime_tasks,{},clear=True),patch.dict(launch_task_service._tasks,{},clear=True),patch.object(launch_task_service,"_notification_tasks",set()):
             report=await await_registered_workers(timeout_seconds=0.01)
             self.assertFalse(report["complete"])
+            self.assertFalse(report["production_quiescence_attested"])
             self.assertEqual(report["remaining"],1)
             self.assertFalse(task.cancelled())
             self.assertFalse(task.done())
@@ -52,6 +54,7 @@ class WorkerDrainRuntimeTests(unittest.IsolatedAsyncioTestCase):
             report=await await_registered_workers(timeout_seconds=0.2)
         self.assertEqual(report["observed"],1)
         self.assertTrue(report["complete"])
+        self.assertFalse(report["production_quiescence_attested"])
 
 if __name__=="__main__":
     unittest.main()

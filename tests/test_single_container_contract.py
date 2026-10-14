@@ -24,6 +24,17 @@ class SingleContainerContract(unittest.TestCase):
         health=(ROOT/"deploy/single/health.py").read_text()
         for port in ("9858","9859","9860","9861"):
             self.assertIn(port,health)
+    def test_manual_rc_publish_is_branch_scoped_and_sha_pinned(self):
+        workflow=(ROOT/".github/workflows/ci-ghcr.yml").read_text()
+        self.assertIn("publish_single_rc:",workflow)
+        self.assertIn("inputs.publish_single_rc == true",workflow)
+        self.assertIn("refs/heads/release/2.0-single-container-rc",workflow)
+        self.assertIn("needs: test",workflow)
+        self.assertIn("ghcr.io/noahting55/oci-noah-single:sha-${{ github.sha }}",workflow)
+        self.assertIn("steps.build.outputs.digest",workflow)
+        self.assertIn("github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'",workflow)
+        self.assertNotIn("docker compose up",workflow)
+
     def test_build_context(self):
         dockerfile=(ROOT/"deploy/single/Dockerfile").read_text()
         for name in ("backend/requirements.txt","frontend/","nginx", "supervise.py","sites-enabled/default"):

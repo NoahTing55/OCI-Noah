@@ -18,6 +18,23 @@ class AdmissionCoverageTests(unittest.TestCase):
         self.assertIn('kind="launch_notification"',notification)
         self.assertIn("run_with_lease(",notification)
 
+    def test_async_spawn_inventory_exposes_new_unreviewed_sites(self):
+        with tempfile.TemporaryDirectory() as d:
+            base=Path(d)
+            for filename in (*mod.TRACKED,"main.py","runtime_drain_snapshot.py"):
+                (base/filename).write_text("asyncio.create_task(\n",encoding="utf8")
+            (base/"new_background_job.py").write_text(
+                "import asyncio\nasync def run():\n"
+                "    asyncio.create_task(worker())\n"
+                "    await asyncio.to_thread(call_oci)\n",encoding="utf8")
+            result=mod.audit(base)
+            found={(item["file"],item["kind"]) for item in result["spawn_inventory"]}
+            self.assertIn(("new_background_job.py","asyncio_create_task"),found)
+            self.assertIn(("new_background_job.py","asyncio_to_thread"),found)
+            self.assertTrue(all(item["requires_manual_oci_egress_review"]
+                                for item in result["spawn_inventory"]))
+            self.assertFalse(result["production_cutover_allowed"])
+
     def test_missing_guard_fails_closed(self):
         with tempfile.TemporaryDirectory() as d:
             base=Path(d)

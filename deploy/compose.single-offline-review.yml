@@ -1,0 +1,26 @@
+# PLAN/REVIEW ONLY. Never run on a production host.
+# No raw Docker socket, no host networking, no OCI credentials or persistent DB.
+name: oci-nt-single-offline-review
+services:
+  all-in-one:
+    image: ghcr.io/noahting55/oci-noah-single@sha256:5604e5be723dc0775917647afc952f464ac1cf7e2a2f0febcac45dd313e8d91a
+    network_mode: none
+    read_only: true
+    user: "10001:10001"
+    entrypoint: ["python", "-c"]
+    command:
+      - "import sqlite3; print('OFFLINE_IMAGE_IMPORT_OK', sqlite3.sqlite_version)"
+    restart: "no"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  guard-image-inspect:
+    image: ghcr.io/noahting55/oci-noah-guard@sha256:a9b17be027578b99ef391e57d170d4073a0e1833bb87be6802524cfca67bbe7b
+    network_mode: none
+    read_only: true
+    user: "10001:10001"
+    entrypoint: ["python", "-c"]
+    command:
+      - "import sys; print('OFFLINE_GUARD_PYTHON_OK', sys.version_info.major)"
+    restart: "no"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]

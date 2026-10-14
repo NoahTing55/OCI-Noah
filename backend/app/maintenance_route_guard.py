@@ -20,6 +20,9 @@ def protected_oci_write(method: str, path: str) -> bool:
     # Cancellation remains available to drain in-flight work safely.
     if subpath.endswith("/cancel"):
         return False
+    # Account creation/import validates OCI credentials and can make SDK calls.
+    if subpath == "accounts":
+        return True
     # Protection intentionally errs on the side of blocking OCI mutations;
     # authentication, backups and observability remain available.
     return (
@@ -61,6 +64,11 @@ def protected_oci_request(method: str, path: str) -> bool:
     if method.upper() != "GET" or not path.startswith("/api/v1/"):
         return False
     subpath = path[len("/api/v1/"):]
+    # Safe-resume GET preview performs live OCI instance queries.
+    if subpath.startswith("tasks/") and subpath.endswith("/safe-resume-preview"):
+        return True
+    # Legacy account-check GET is generally cached, but OCI-facing endpoints
+    # require fail-closed admission during release maintenance.
     if subpath == "instances" or subpath.startswith("instances/"):
         return True
     if subpath.startswith("accounts/") and (

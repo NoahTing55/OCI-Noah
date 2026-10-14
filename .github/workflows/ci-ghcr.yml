@@ -10,6 +10,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      publish_single_rc:
+        description: 'Publish single-container RC image for isolated verification only'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -39,7 +45,10 @@ jobs:
       - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r backend/requirements.txt pytest
+          python -m pip install -r backend/requirements.txt pytest httpx2
+
+      - name: Guard upstream disconnection regression
+        run: python -m unittest discover -s tests -p 'test_guard_upstream_disconnect.py' -v
 
       - name: Compile backend
         run: python -m compileall -q backend/app
@@ -165,6 +174,34 @@ jobs:
           cp .env.example .env
           docker compose -f deploy/compose.single.yml config --quiet
 
+      - name: Verify external Unix Guard experimental isolation contracts
+        run: |
+          python -m unittest discover -s tests -p 'test_single_external_guard.py' -v
+          python -m unittest discover -s tests -p 'test_single_external_guard_transport.py' -v
+          DOCKER_GID=997 docker compose -f deploy/compose.external-guard-lab.yml config --quiet
+
+      - name: Validate explicitly gated paired RC image publication
+        run: python -m unittest discover -s tests -p 'test_single_rc_pair_publish.py' -v
+
+      - name: Test immutable external Guard RC manifest admission
+        run: python -m unittest discover -s tests -p 'test_single_external_guard_release_manifest.py' -v
+
+      - name: Verify published RC pair in isolated review-only Compose
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python -m unittest discover -s tests -p 'test_single_rc_pinned_pair.py' -v
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/data" "$tmp/logs"
+          cp .env.example "$tmp/candidate.env"
+          export DOCKER_GID=997
+          export OCI_NT_RC_ENV_FILE="$tmp/candidate.env"
+          export OCI_NT_RC_DATA_DIR="$tmp/data"
+          export OCI_NT_RC_LOG_DIR="$tmp/logs"
+          docker compose -f deploy/compose.external-guard-rc.review.yml config --format json |
+            python deploy/single/validate-external-guard-rc.py
+
       - name: Build experimental single-container image (no push)
         run: docker build -f deploy/single/Dockerfile -t oci-nt-single:ci .
 
@@ -185,6 +222,9 @@ jobs:
 
       - name: Disposable single-container runtime smoke and fail-fast test
         run: bash deploy/single/ci-smoke.sh
+
+      - name: Disposable external Guard / all-in-one real Docker integration
+        run: bash deploy/single/ci-external-guard.sh
 
       - name: Verify integrated switch test isolation contracts
         run: python -m unittest discover -s tests -p 'test_single_integrated_acceptance.py' -v
@@ -231,6 +271,69 @@ jobs:
       - name: Verify Docker container ownership and independent-project isolation
         run: python -m unittest discover -s tests -p 'test_single_docker_scope_adapter.py' -v
 
+      - name: Verify blocking OCI thread retains lease across task cancellation
+        run: python -m unittest discover -s tests -p 'test_single_oci_thread_lease_boundary.py' -v
+
+      - name: Exercise OCI worker lease real asyncio cancellation lifecycle
+        run: PYTHONPATH=backend python -m unittest discover -s tests -p 'test_single_oci_worker_lease_lifecycle.py' -v
+
+      - name: Verify scheduled OCI checks register durable background leases
+        run: python -m unittest discover -s tests -p 'test_single_oci_scheduler_admission_chain.py' -v
+
+      - name: Verify offline-only candidate review manifest safety
+        run: python -m unittest discover -s tests -p 'test_single_offline_review_manifest.py' -v
+
+      - name: Audit OCI SDK drain call graph and scoped evidence
+        run: python -m unittest discover -s tests -p 'test_single_oci_sdk_drain_matrix.py' -v
+
+      - name: Verify bulk lease denial and cancellation semantics
+        run: python -m unittest discover -s tests -p 'test_single_bulk_lease_failure.py' -v
+
+      - name: Verify OCI background and GET entrypoint drain coverage
+        run: python -m unittest discover -s tests -p 'test_single_oci_entrypoint_drain_coverage.py' -v
+
+      - name: Verify final rollback admission rejects missing evidence
+        run: python -m unittest discover -s tests -p 'test_single_final_rollback_admission.py' -v
+
+      - name: Verify immutable cutover snapshot integrity gate
+        run: python -m unittest discover -s tests -p 'test_single_cutover_snapshot_gate.py' -v
+
+      - name: Verify stopped OCI generation evidence fails closed
+        run: python -m unittest discover -s tests -p 'test_single_stopped_generation_evidence.py' -v
+
+      - name: Verify controlled cutover order remains plan-only and blocked
+        run: python -m unittest discover -s tests -p 'test_single_controlled_cutover_sequence.py' -v
+
+      - name: Verify production cutover readiness report always blocks unproven quiescence
+        run: python -m unittest discover -s tests -p 'test_single_cutover_readiness_report.py' -v
+
+      - name: Verify explicit offline Schema 7 snapshot gate fails closed
+        run: python -m unittest discover -s tests -p 'test_single_offline_snapshot_compatibility.py' -v
+
+      - name: Reject stale historical backups as current production recovery evidence
+        run: python -m unittest discover -s tests -p 'test_single_readonly_backup_freshness.py' -v
+
+      - name: Exercise FastAPI HTTP maintenance middleware with isolated SQLite
+        run: python -m unittest discover -s tests -p 'test_single_oci_http_middleware_admission.py' -v
+
+      - name: Exercise isolated OCI maintenance admission block and recovery
+        run: python -m unittest discover -s tests -p 'test_single_oci_maintenance_end_to_end.py' -v
+
+      - name: Audit cross-module OCI task workers and launch notifications
+        run: python -m unittest discover -s tests -p 'test_single_oci_cross_module_worker_audit.py' -v
+
+      - name: Audit direct OCI SDK service call routes for durable HTTP leases
+        run: python -m unittest discover -s tests -p 'test_single_oci_direct_sdk_route_audit.py' -v
+
+      - name: Check OCI-facing route declarations against durable HTTP lease admission
+        run: python -m unittest discover -s tests -p 'test_single_oci_entrypoint_route_coverage.py' -v
+
+      - name: Verify OCI HTTP and background worker lease boundaries remain fail-closed
+        run: python -m unittest discover -s tests -p 'test_single_oci_global_drain_contract.py' -v
+
+      - name: Verify production inventory audit remains observational only
+        run: python -m unittest discover -s tests -p 'test_single_production_readonly_audit.py' -v
+
       - name: Verify consolidated production preflight stays read-only
         run: python -m unittest discover -s tests -p 'test_single_production_preflight.py' -v
 
@@ -261,8 +364,14 @@ jobs:
       - name: Validate OCI quiescence evidence fail-closed contract
         run: python -m unittest discover -s tests -p 'test_single_quiescence_evidence.py' -v
 
+      - name: Validate consolidated single-container RC safety blockers
+        run: python -m unittest discover -s tests -p 'test_single_rc_readiness.py' -v
+
       - name: Disposable four-to-single-to-four container and SQLite drill
         run: bash deploy/single/ci-four-single-four.sh
+
+      - name: Exercise pinned external Guard RC to legacy four-container rollback
+        run: bash deploy/single/ci-external-guard-rollback.sh
 
       - name: Verify isolated real Docker lifecycle and container identity
         run: python deploy/single/ci-docker-lifecycle.py
@@ -291,7 +400,7 @@ jobs:
 
   publish:
     name: Publish ${{ matrix.name }} image
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -349,3 +458,86 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  publish_single_rc:
+    name: Publish isolated single-container RC
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/release/2.0-single-container-rc' &&
+      inputs.publish_single_rc == true &&
+      github.repository == 'NoahTing55/OCI-Noah'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout exact RC commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate immutable RC reference
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$GITHUB_REF" == "refs/heads/release/2.0-single-container-rc" ]]
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Sign in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish exact RC single image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./deploy/single/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/noahting55/oci-noah-single:sha-${{ github.sha }}
+          provenance: true
+          sbom: true
+
+      - name: Build and publish exact RC Guard image
+        id: guard_build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./deploy/single/Dockerfile.guard
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/noahting55/oci-noah-guard:sha-${{ github.sha }}
+          provenance: true
+          sbom: true
+
+      - name: Report immutable digest and prohibited production actions
+        env:
+          RC_DIGEST: ${{ steps.build.outputs.digest }}
+          GUARD_DIGEST: ${{ steps.guard_build.outputs.digest }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$RC_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$GUARD_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          {
+            echo "Single-container RC artifact (isolated testing only)"
+            echo ""
+            echo 'Tag: `ghcr.io/noahting55/oci-noah-single:sha-${{ github.sha }}`'
+            echo "Digest: `$RC_DIGEST`"
+            echo ""
+            echo "External read-only Docker Guard RC artifact (isolated testing only)"
+            echo ""
+            echo 'Tag: `ghcr.io/noahting55/oci-noah-guard:sha-${{ github.sha }}`'
+            echo "Digest: `$GUARD_DIGEST`"
+            echo ""
+            echo "No production pull, restart, Compose or cutover performed."
+          } >> "$GITHUB_STEP_SUMMARY"

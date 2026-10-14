@@ -1,0 +1,84 @@
+# DISPOSABLE EXPERIMENT ONLY; never overlay the production four-container Compose.
+# No raw host Docker socket in the workload. Sidecar guard is the isolated socket owner.
+name: oci-nt-external-guard-lab
+services:
+  guard-socket-init:
+    image: alpine:3.20
+    network_mode: none
+    restart: "no"
+    user: "0:0"
+    command: ["sh", "-ec", "chmod 0770 /run/oci-guard && chown 10001:10001 /run/oci-guard"]
+    volumes:
+      - guard-socket:/run/oci-guard
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+    security_opt:
+      - no-new-privileges:true
+  docker-guard:
+    build:
+      context: ..
+      dockerfile: deploy/single/Dockerfile.guard
+    image: oci-nt-external-guard:lab
+    user: "10001:10001"
+    depends_on:
+      guard-socket-init:
+        condition: service_completed_successfully
+    group_add:
+      - "${DOCKER_GID:?set non-root Docker socket GID}"
+    network_mode: none
+    restart: "no"
+    environment:
+      DOCKER_GUARD_UNIX_SOCKET: /run/oci-guard/guard.sock
+      DOCKER_SOCKET_PATH: /var/run/docker.sock
+    volumes:
+      - guard-socket:/run/oci-guard
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+  all-in-one:
+    build:
+      context: ..
+      dockerfile: deploy/single/Dockerfile
+    image: oci-nt-single:external-guard-lab
+    restart: "no"
+    network_mode: host
+    env_file:
+      - ../.env
+    environment:
+      OCI_NT_EXTERNAL_GUARD: "1"
+      DOCKER_GUARD_UNIX_SOCKET: /run/oci-guard/guard.sock
+      MONITOR_AGENT_HOST: 127.0.0.1
+      MONITOR_AGENT_PORT: "9860"
+      DATA_DIR: /app/data
+      DB_PATH: /app/data/oci-nt.db
+      BACKUP_DIR: /app/data/backups
+      HOST_PROC_PATH: /host/proc
+      HOST_SYS_PATH: /host/sys
+      HOST_ETC_PATH: /host/etc
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - guard-socket:/run/oci-guard:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/hostname:/host/etc/hostname:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Root supervisor must setgroups/setgid/setuid for app and monitor workers.
+    # The workload has no raw Docker socket mount or host socket GID.
+    cap_add:
+      - SETUID
+      - SETGID
+      - KILL
+    depends_on:
+      - docker-guard
+volumes:
+  guard-socket:
