@@ -4,8 +4,8 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 REVIEW=ROOT/"deploy/compose.external-guard-rc.review.yml"
-SINGLE="e662ba844f851e763cb6080d177cf4ecb99f96478f92fcb154a1040824830980"
-GUARD="776cac89106015ee7475690cc3cc19e163cd846816baec7db1d5fb65c32aab01"
+SINGLE="395e79d83495edd5f659b566d797ed160396a05ebb5ef098d62d853bf90da8bd"
+GUARD="ecece550ded5e45f6db0acb3a7f71e629438de3f725d926da74618f1174ddbee"
 
 class PublishedPair(unittest.TestCase):
     def test_exact_pinned_digests_and_isolation(self):
