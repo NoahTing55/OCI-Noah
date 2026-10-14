@@ -84,10 +84,13 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(body)
-        except (BrokenPipeError, ConnectionResetError):
-            return
         except (OSError, http.client.HTTPException) as exc:
-            self.send_plain(502, f"docker unavailable: {type(exc).__name__}")
+            # RemoteDisconnected also inherits ConnectionResetError. Treat it as
+            # an upstream failure, not as a disconnected downstream client.
+            try:
+                self.send_plain(502, f"docker unavailable: {type(exc).__name__}")
+            except (BrokenPipeError, ConnectionResetError):
+                pass
         finally:
             upstream.close()
 
