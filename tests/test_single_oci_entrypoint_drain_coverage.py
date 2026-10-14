@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]/"backend/app"
 class OCIEntrypointDrainCoverage(unittest.TestCase):
     def test_bulk_worker_has_durable_lease(self):
         tree=ast.parse((ROOT/"bulk_check_service.py").read_text())
-        fn=next(n for n in tree.body if isinstance(n,ast.AsyncFunctionDef) and n.name=="start_bulk_check")
+        fn=next(n for n in tree.body if isinstance(n,ast.AsyncFunctionDef) and n.name=="_run_bulk_check_with_lease")
         calls=[n for n in ast.walk(fn) if isinstance(n,ast.Call)]
         lease=[n for n in calls if isinstance(n.func,ast.Name) and n.func.id=="run_with_lease"]
         self.assertEqual(len(lease),1)
