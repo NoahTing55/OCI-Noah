@@ -1,4 +1,6 @@
-# PRODUCTION CANDIDATE - validation only. NEVER run before approved cutover.\n# Must not coexist with live old four containers: host ports collide.\nname: oci-nt-v2
+# PRODUCTION CANDIDATE - validation only. NEVER run before approved cutover.
+# Must not coexist with live old four containers: host ports collide.
+name: oci-nt-v2
 services:
   guard-socket-init:
     image: alpine:3.20
