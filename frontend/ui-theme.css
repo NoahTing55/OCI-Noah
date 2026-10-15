@@ -2805,3 +2805,33 @@ body, input, select, textarea, button { font-weight: var(--nt-font-weight); }
   .sidebar .nav { font-size: 12px !important; font-weight: 400 !important; }
   .main-column :is(input,select,textarea,.button,td) { font-size: 14px !important; }
 }
+
+/* OCI-N&T UI polish pass · 2026-10-15
+ * Appended last so it wins ties; no HTML/JS changes.
+ * 1) Semantic status accents on summary cards (warn/bad/neutral) so state scans at a glance.
+ * 2) Subtle hover lift + smooth transitions for tactility.
+ * 3) Visible keyboard focus; quiet scrollbars; reduced-motion respect. */
+
+/* --- 1 · semantic summary-card accents --- */
+.api-summary-proxy::before{background:#b66b16!important}
+.api-summary-proxy>b{border-color:#f0dcae!important;background:#fff6e8!important;color:#b66b16!important}
+.api-summary-abnormal::before{background:#ca4050!important}
+.api-summary-abnormal>b{border-color:#f3c2c9!important;background:#fff0f2!important;color:#ca4050!important}
+.instance-summary-stopped::before,.instance-summary-ip::before,.launch-summary-failure::before{background:#94a3b8!important}
+.instance-summary-stopped>b,.instance-summary-ip>b,.launch-summary-failure>b{border-color:#dbe2ea!important;background:#f1f5f9!important;color:#64748b!important}
+
+/* --- 2 · micro-interactions --- */
+.dashboard-stat-card,.api-summary-card,.instance-summary-card,.launch-summary-card,.task-summary-grid>article,.dashboard-system-stat,.monitor-resource-card{transition:transform .16s ease,box-shadow .16s ease!important}
+.dashboard-stat-card:hover,.api-summary-card:hover,.instance-summary-card:hover,.launch-summary-card:hover,.task-summary-grid>article:hover,.dashboard-system-stat:hover,.monitor-resource-card:hover{transform:translateY(-1px)!important;box-shadow:0 6px 18px rgba(31,45,61,.07)!important}
+.button,.nav,.header-button{transition:background-color .15s ease,border-color .15s ease,color .15s ease!important}
+
+/* --- 3 · focus, scrollbars, reduced motion --- */
+.button:focus-visible,.nav:focus-visible,.header-button:focus-visible{outline:2px solid #1677ff!important;outline-offset:2px!important}
+::-webkit-scrollbar{width:10px!important;height:10px!important}
+::-webkit-scrollbar-track{background:transparent!important}
+::-webkit-scrollbar-thumb{background:#cbd5e1!important;border:2px solid #f4f7fb!important;border-radius:8px!important}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8!important}
+@media (prefers-reduced-motion:reduce){
+.dashboard-stat-card,.api-summary-card,.instance-summary-card,.launch-summary-card,.task-summary-grid>article,.dashboard-system-stat,.monitor-resource-card,.button,.nav,.header-button{transition:none!important}
+.dashboard-stat-card:hover,.api-summary-card:hover,.instance-summary-card:hover,.launch-summary-card:hover,.task-summary-grid>article:hover,.dashboard-system-stat:hover,.monitor-resource-card:hover{transform:none!important}
+}
